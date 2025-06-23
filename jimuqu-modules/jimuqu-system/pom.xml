@@ -65,6 +65,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.dromara.hutool</groupId>
+            <artifactId>hutool-http</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.jimuqu</groupId>
             <artifactId>jimuqu-common-log</artifactId>
         </dependency>

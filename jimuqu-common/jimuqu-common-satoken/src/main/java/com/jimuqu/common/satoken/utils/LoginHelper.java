@@ -10,6 +10,7 @@ import com.jimuqu.common.core.domain.model.LoginUser;
 import com.jimuqu.common.core.enums.UserType;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.dromara.hutool.core.util.ObjUtil;
 
 import java.util.function.Supplier;
@@ -26,6 +27,7 @@ import java.util.function.Supplier;
  *
  * @author Lion Li,chengliang4810
  */
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LoginHelper {
 

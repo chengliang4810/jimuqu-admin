@@ -1,0 +1,71 @@
+package com.jimuqu.system.domain.vo;
+
+import lombok.Data;
+import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.util.Date;
+
+/**
+ * 在线用户信息
+ */
+@Data
+@Accessors(chain = true)
+public class SysUserOnlineVo implements Serializable {
+
+    /**
+     * 会话编号
+     */
+    private String tokenId;
+
+    /**
+     * 部门名称
+     */
+    private String deptName;
+
+    /**
+     * 用户名称
+     */
+    private String userName;
+
+    /**
+     * 用户昵称
+     */
+    private String nickName;
+
+    /**
+     * 客户端
+     */
+    private String clientKey;
+
+    /**
+     * 设备类型
+     */
+    private String deviceType;
+
+    /**
+     * 登录IP地址
+     */
+    private String ipaddr;
+
+    /**
+     * 登录地址
+     */
+    private String loginLocation;
+
+    /**
+     * 浏览器类型
+     */
+    private String browser;
+
+    /**
+     * 操作系统
+     */
+    private String os;
+
+    /**
+     * 登录时间
+     */
+    private Date loginTime;
+
+}

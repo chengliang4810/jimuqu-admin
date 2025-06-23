@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -55,12 +56,12 @@ public class LoginUser implements Serializable {
     /**
      * 登录时间
      */
-    private Long loginTime;
+    private Date loginTime;
 
     /**
      * 过期时间
      */
-    private Long expireTime;
+    private Date expireTime;
 
     /**
      * 登录IP地址
