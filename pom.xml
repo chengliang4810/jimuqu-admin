@@ -40,7 +40,7 @@
         <sqlite.version>3.47.2.0</sqlite.version>
         <hikaricp.version>4.0.3</hikaricp.version>
         <therapi-javadoc.version>0.15.0</therapi-javadoc.version>
-        <autotable.version>2.4.6</autotable.version>
+        <autotable.version>2.5.1.1</autotable.version>
         <xbatis.version>1.8.8</xbatis.version>
         <anyline.version>8.7.2-jdk17-20250520</anyline.version>
         <velocity.version>2.3</velocity.version>
