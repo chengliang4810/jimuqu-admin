@@ -74,6 +74,11 @@
             <artifactId>jimuqu-common-log</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-oss</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

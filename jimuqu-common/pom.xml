@@ -27,6 +27,7 @@
         <module>jimuqu-common-social</module>
         <module>jimuqu-common-excel</module>
         <module>jimuqu-common-cache</module>
+        <module>jimuqu-common-oss</module>
     </modules>
 
 </project>

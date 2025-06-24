@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.jimuqu</groupId>
+        <artifactId>jimuqu-common</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>jimuqu-common-oss</artifactId>
+
+    <description>文件OSS模块</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.dromara.x-file-storage</groupId>
+            <artifactId>x-file-storage-solon</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon.web.staticfiles</artifactId>
+        </dependency>
+
+        <!-- minio 其他平台请参考官方说明添加依赖 https://x-file-storage.xuyanwu.cn/#/%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8?id=%e9%85%8d%e7%bd%ae-->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

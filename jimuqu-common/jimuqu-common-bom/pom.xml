@@ -83,6 +83,12 @@
                 <artifactId>jimuqu-common-web</artifactId>
                 <version>${revision}</version>
             </dependency>
+            <!-- OSS模块 -->
+            <dependency>
+                <groupId>com.jimuqu</groupId>
+                <artifactId>jimuqu-common-oss</artifactId>
+                <version>${revision}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

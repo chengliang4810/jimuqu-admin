@@ -46,6 +46,9 @@
         <velocity.version>2.3</velocity.version>
         <beetl.version>3.19.0.RELEASE</beetl.version>
         <sa-token.version>1.44.0</sa-token.version>
+        <!-- 文件上传 -->
+        <x-file-storage.version>2.3.0</x-file-storage.version>
+        <minio.version>8.5.2</minio.version>
         <!-- excel -->
         <alibaba-ttl.version>2.14.4</alibaba-ttl.version>
         <easyexcel.version>4.0.2</easyexcel.version>
@@ -191,6 +194,17 @@
                 <groupId>com.github.therapi</groupId>
                 <artifactId>therapi-runtime-javadoc</artifactId>
                 <version>${therapi-javadoc.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.dromara.x-file-storage</groupId>
+                <artifactId>x-file-storage-solon</artifactId>
+                <version>${x-file-storage.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${minio.version}</version>
             </dependency>
 
             <!-- velocity代码生成使用模板 -->
