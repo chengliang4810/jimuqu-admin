@@ -11,6 +11,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.dromara.autotable.annotation.AutoColumn;
+import org.dromara.autotable.annotation.mysql.MysqlTypeConstant;
 
 import java.io.Serial;
 
@@ -115,27 +116,27 @@ public class SysFileDetail extends TenantEntity {
     /**
      * 文件元数据
      */
-    @AutoColumn(comment = "文件元数据", length = 65535)
+    @AutoColumn(comment = "文件元数据", type = MysqlTypeConstant.TEXT)
     private String metadata;
     /**
      * 文件用户元数据
      */
-    @AutoColumn(comment = "文件用户元数据", length = 65535)
+    @AutoColumn(comment = "文件用户元数据", type = MysqlTypeConstant.TEXT)
     private String userMetadata;
     /**
      * 缩略图元数据
      */
-    @AutoColumn(comment = "缩略图元数据", length = 65535)
+    @AutoColumn(comment = "缩略图元数据", type = MysqlTypeConstant.TEXT)
     private String thMetadata;
     /**
      * 缩略图用户元数据
      */
-    @AutoColumn(comment = "缩略图用户元数据", length = 65535)
+    @AutoColumn(comment = "缩略图用户元数据", type = MysqlTypeConstant.TEXT)
     private String thUserMetadata;
     /**
      * 附加属性
      */
-    @AutoColumn(comment = "附加属性", length = 65535)
+    @AutoColumn(comment = "附加属性", type = MysqlTypeConstant.TEXT)
     private String attr;
     /**
      * 文件ACL
@@ -150,7 +151,7 @@ public class SysFileDetail extends TenantEntity {
     /**
      * 哈希信息
      */
-    @AutoColumn(comment = "哈希信息", length = 65535)
+    @AutoColumn(comment = "哈希信息", type = MysqlTypeConstant.TEXT)
     private String hashInfo;
     /**
      * 上传ID，仅在手动分片上传时使用

@@ -2,7 +2,8 @@ package com.jimuqu.system.domain;
 
 import cn.xbatis.core.incrementer.IdentifierGeneratorType;
 import cn.xbatis.db.IdAutoType;
-import cn.xbatis.db.annotations.*;
+import cn.xbatis.db.annotations.Table;
+import cn.xbatis.db.annotations.TableId;
 import com.jimuqu.common.mybatis.core.entity.TenantEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,6 +12,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.dromara.autotable.annotation.AutoColumn;
+import org.dromara.autotable.annotation.mysql.MysqlTypeConstant;
 
 import java.io.Serial;
 
@@ -65,7 +67,7 @@ public class SysFilePartDetail extends TenantEntity {
     /**
      * 哈希信息
      */
-    @AutoColumn(comment = "哈希信息", length = 65535)
+    @AutoColumn(comment = "哈希信息", type = MysqlTypeConstant.TEXT)
     private String hashInfo;
 
 }
