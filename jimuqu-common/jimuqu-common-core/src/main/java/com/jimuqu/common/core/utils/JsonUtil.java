@@ -6,6 +6,8 @@ import org.dromara.hutool.core.map.Dict;
 import org.dromara.hutool.core.util.ObjUtil;
 import org.noear.snack.ONode;
 
+import java.lang.reflect.Type;
+
 /**
  * JSON 工具类
  *
@@ -32,14 +34,14 @@ public class JsonUtil {
      * Json字符串转对象
      *
      * @param jsonString json 字符串
-     * @param clazz      类型
+     * @param type      类型
      * @return 实体类型
      */
-    public static <T> T parseObject(String jsonString, Class<T> clazz) {
+    public static <T> T parseObject(String jsonString, Type type) {
         if (StringUtil.isEmpty(jsonString)) {
             return null;
         }
-        return ONode.deserialize(jsonString, clazz);
+        return ONode.deserialize(jsonString, type);
     }
 
     /**
