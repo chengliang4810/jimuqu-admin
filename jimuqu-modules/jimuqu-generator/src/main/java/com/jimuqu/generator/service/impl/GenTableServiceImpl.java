@@ -197,8 +197,8 @@ public class GenTableServiceImpl implements IGenTableService {
      */
     @Override
 //    @DynamicDs("${dataName}")
-    public List<GenTableVo> selectDbTableListByNames(String[] tableNames, String dataName) {
-        Set<String> tableNameSet = new HashSet<>(List.of(tableNames));
+    public List<GenTableVo> selectDbTableListByNames(List<String> tableNames, String dataName) {
+        Set<String> tableNameSet = new HashSet<>(tableNames);
         LinkedHashMap<String, Table<?>> tablesMap = ServiceProxy.service().metadata().tables();
 
         if (CollUtil.isEmpty(tablesMap)) {
@@ -206,7 +206,7 @@ public class GenTableServiceImpl implements IGenTableService {
         }
 
         List<Table<?>> tableList = tablesMap.values().stream()
-                .filter(x -> cn.hutool.core.util.StrUtil.containsAnyIgnoreCase(x.getName(), TABLE_IGNORE))
+                .filter(x -> !cn.hutool.core.util.StrUtil.containsAnyIgnoreCase(x.getName(), TABLE_IGNORE))
                 .filter(x -> tableNameSet.contains(x.getName())).toList();
 
         if (CollUtil.isEmpty(tableList)) {

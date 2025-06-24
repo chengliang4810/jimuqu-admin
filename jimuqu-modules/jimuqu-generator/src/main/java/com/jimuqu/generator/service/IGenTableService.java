@@ -48,7 +48,7 @@ public interface IGenTableService {
      * @param dataName   数据源名称
      * @return 数据库表集合
      */
-    List<GenTableVo> selectDbTableListByNames(String[] tableNames, String dataName);
+    List<GenTableVo> selectDbTableListByNames(List<String> tableNames, String dataName);
 
     /**
      * 查询所有表信息
