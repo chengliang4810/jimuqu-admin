@@ -12,14 +12,14 @@ solon.dataSources.jimuqu!: #数据源（!结尾表示 typed=true）
   default: "master" #指定默认数据源
   master:
     dataSourceClassName: "com.zaxxer.hikari.HikariDataSource"
-    driverClassName: com.p6spy.engine.spy.P6SpyDriver
-    jdbcUrl: jdbc:p6spy:mysql://localhost:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://localhost:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
     username: root
     password: P@ssw0rd
   slave:
     dataSourceClassName: "com.zaxxer.hikari.HikariDataSource"
-    driverClassName: com.p6spy.engine.spy.P6SpyDriver
-    jdbcUrl: jdbc:p6spy:mysql://localhost:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl:  jdbc:mysql://localhost:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
     username: root
     password: P@ssw0rd
 
