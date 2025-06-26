@@ -67,7 +67,7 @@ public class SysFileController extends BaseController {
     @Mapping("/upload")
     @NoRepeatSubmit
     @SaCheckPermission("system:file:upload")
-    @Log(title = "上传文件", businessType = BusinessType.ADD)
+    @Log(title = "上传文件", businessType = BusinessType.UPLOAD)
     public FileInfo upload(UploadedFile file) {
         return fileStorageService.of(file).upload();
     }
