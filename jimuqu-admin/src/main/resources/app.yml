@@ -76,6 +76,8 @@ auto-table:
   auto-drop-column: false
   # 自动删除数据库中多余的索引
   auto-drop-index: false
+  # 数据库不存在自动创建
+  auto-build-database: true
   # update(默认)：系统启动时，会自动判断哪些表是新建的，哪些字段要新增修改，哪些索引/约束要新增删除等。
   model: update
   # 记录表信息维护过程中执行的SQL
