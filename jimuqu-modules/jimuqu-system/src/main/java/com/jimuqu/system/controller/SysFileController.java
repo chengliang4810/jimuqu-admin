@@ -7,9 +7,9 @@ import com.jimuqu.common.log.enums.BusinessType;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.common.web.core.BaseController;
-import com.jimuqu.system.domain.query.SysFileDetailQuery;
-import com.jimuqu.system.domain.vo.SysFileDetailVo;
-import com.jimuqu.system.service.SysFileDetailService;
+import com.jimuqu.system.domain.query.SysFileQuery;
+import com.jimuqu.system.domain.vo.SysFileVo;
+import com.jimuqu.system.service.SysFileService;
 import lombok.RequiredArgsConstructor;
 import org.dromara.x.file.storage.core.FileInfo;
 import org.dromara.x.file.storage.core.FileStorageService;
@@ -33,20 +33,20 @@ import java.util.List;
 @Post
 @Controller
 @RequiredArgsConstructor
-@Mapping("/system/fileDetail")
-public class SysFileDetailController extends BaseController {
+@Mapping("/system/file")
+public class SysFileController extends BaseController {
 
+    private final SysFileService sysFileService;
     private final FileStorageService fileStorageService;
-    private final SysFileDetailService sysFileDetailService;
 
     /**
      * 查询文件记录列表
      */
     @Get
     @Mapping("/list")
-    @SaCheckPermission("system:fileDetail:list")
-    public Page<SysFileDetailVo> list(SysFileDetailQuery query, PageQuery pageQuery) {
-        return sysFileDetailService.queryPageList(query, pageQuery);
+    @SaCheckPermission("system:file:list")
+    public Page<SysFileVo> list(SysFileQuery query, PageQuery pageQuery) {
+        return sysFileService.queryPageList(query, pageQuery);
     }
 
     /**
@@ -56,9 +56,9 @@ public class SysFileDetailController extends BaseController {
      */
     @Get
     @Mapping("/{id}")
-    @SaCheckPermission("system:fileDetail:query")
-    public SysFileDetailVo getInfo(@NotNull(message = "文件记录主键不能为空") String id) {
-        return sysFileDetailService.queryById(id);
+    @SaCheckPermission("system:file:detail")
+    public SysFileVo getInfo(@NotNull(message = "文件记录主键不能为空") String id) {
+        return sysFileService.queryById(id);
     }
 
     /**
@@ -66,7 +66,7 @@ public class SysFileDetailController extends BaseController {
      */
     @Mapping("/upload")
     @NoRepeatSubmit
-    @SaCheckPermission("system:fileDetail:upload")
+    @SaCheckPermission("system:file:upload")
     @Log(title = "上传文件", businessType = BusinessType.ADD)
     public FileInfo upload(UploadedFile file) {
         return fileStorageService.of(file).upload();
@@ -76,10 +76,10 @@ public class SysFileDetailController extends BaseController {
      * 删除文件记录
      */
     @Mapping("/delete/{ids}")
-    @SaCheckPermission("system:fileDetail:delete")
+    @SaCheckPermission("system:file:delete")
     @Log(title = "删除文件记录", businessType = BusinessType.DELETE)
     public Integer delete(@NotEmpty(message = "主键不能为空") List<String> ids) {
-        Integer num = sysFileDetailService.deleteByIds(ids);
+        Integer num = sysFileService.deleteByIds(ids);
         Assert.gtZero(num, "删除文件记录失败");
         return num;
     }

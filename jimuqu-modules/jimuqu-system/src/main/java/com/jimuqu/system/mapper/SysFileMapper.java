@@ -1,8 +1,8 @@
 package com.jimuqu.system.mapper;
 
 import com.jimuqu.common.mybatis.core.mapper.BaseMapperPlus;
-import com.jimuqu.system.domain.SysFileDetail;
-import com.jimuqu.system.domain.vo.SysFileDetailVo;
+import com.jimuqu.system.domain.SysFile;
+import com.jimuqu.system.domain.vo.SysFileVo;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -11,6 +11,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 2025-06-24
  */
 @Mapper
-public interface SysFileDetailMapper extends BaseMapperPlus<SysFileDetail, SysFileDetailVo> {
+public interface SysFileMapper extends BaseMapperPlus<SysFile, SysFileVo> {
 
 }

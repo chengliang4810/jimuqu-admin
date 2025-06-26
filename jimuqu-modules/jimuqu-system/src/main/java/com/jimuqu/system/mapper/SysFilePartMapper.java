@@ -10,6 +10,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 2025-06-24
  */
 @Mapper
-public interface SysFilePartDetailMapper extends BaseMapperPlus<SysFilePartDetail, SysFilePartDetail> {
+public interface SysFilePartMapper extends BaseMapperPlus<SysFilePartDetail, SysFilePartDetail> {
 
 }
