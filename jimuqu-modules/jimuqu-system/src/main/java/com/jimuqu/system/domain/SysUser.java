@@ -5,7 +5,7 @@ import cn.xbatis.db.IdAutoType;
 import cn.xbatis.db.annotations.Table;
 import cn.xbatis.db.annotations.TableId;
 import com.jimuqu.common.core.constant.UserConstants;
-import com.jimuqu.common.mybatis.core.entity.TenantEntity;
+import com.jimuqu.common.mybatis.core.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -29,7 +29,7 @@ import java.util.Date;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Table(value = "sys_user")
-public class SysUser extends TenantEntity {
+public class SysUser extends BaseEntity {
 
     @Serial
     private static final long serialVersionUID = 1L;

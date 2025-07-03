@@ -4,7 +4,7 @@ import cn.xbatis.core.incrementer.IdentifierGeneratorType;
 import cn.xbatis.db.IdAutoType;
 import cn.xbatis.db.annotations.Table;
 import cn.xbatis.db.annotations.TableId;
-import com.jimuqu.common.mybatis.core.entity.TenantEntity;
+import com.jimuqu.common.mybatis.core.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -28,7 +28,7 @@ import java.io.Serial;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Table(value = "sys_file_part_detail")
-public class SysFilePartDetail extends TenantEntity {
+public class SysFilePartDetail extends BaseEntity {
 
     @Serial
     private static final long serialVersionUID = 1L;
