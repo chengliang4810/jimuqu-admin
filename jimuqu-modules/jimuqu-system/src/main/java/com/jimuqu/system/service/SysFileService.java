@@ -2,8 +2,8 @@ package com.jimuqu.system.service;
 
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
-import com.jimuqu.system.domain.query.SysFileDetailQuery;
-import com.jimuqu.system.domain.vo.SysFileDetailVo;
+import com.jimuqu.system.domain.query.SysFileQuery;
+import com.jimuqu.system.domain.vo.SysFileVo;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,32 +14,32 @@ import java.util.List;
  * @author chengliang4810
  * @since 2025-06-24
  */
-public interface SysFileDetailService {
+public interface SysFileService {
 
     /**
      * 根据主键查询文件记录
      *
      * @param id 文件记录主键
-     * @return {@link SysFileDetailVo } 文件记录视图对象
+     * @return {@link SysFileVo } 文件记录视图对象
      */
-   SysFileDetailVo queryById(String id);
+    SysFileVo queryById(String id);
 
     /**
      * 查询文件记录分页列表
      *
-     * @param query 查询条件对象
+     * @param query     查询条件对象
      * @param pageQuery 分页条件
-     * @return {@link Page }<{@link SysFileDetailVo }> 文件记录分页对象
+     * @return {@link Page }<{@link SysFileVo }> 文件记录分页对象
      */
-    Page<SysFileDetailVo> queryPageList(SysFileDetailQuery query, PageQuery pageQuery);
+    Page<SysFileVo> queryPageList(SysFileQuery query, PageQuery pageQuery);
 
-   /**
+    /**
      * 查询文件记录列表
      *
      * @param query 查询条件对象
-     * @return {@link List }<{@link SysFileDetailVo }> 文件记录列表
+     * @return {@link List }<{@link SysFileVo }> 文件记录列表
      */
-    List<SysFileDetailVo> queryList(SysFileDetailQuery query);
+    List<SysFileVo> queryList(SysFileQuery query);
 
     /**
      * 批量删除代码生成模板信息

@@ -9,13 +9,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
-import com.jimuqu.system.domain.SysFileDetail;
+import com.jimuqu.system.domain.SysFile;
 import com.jimuqu.system.domain.SysFilePartDetail;
-import com.jimuqu.system.domain.query.SysFileDetailQuery;
-import com.jimuqu.system.domain.vo.SysFileDetailVo;
-import com.jimuqu.system.mapper.SysFileDetailMapper;
-import com.jimuqu.system.mapper.SysFilePartDetailMapper;
-import com.jimuqu.system.service.SysFileDetailService;
+import com.jimuqu.system.domain.query.SysFileQuery;
+import com.jimuqu.system.domain.vo.SysFileVo;
+import com.jimuqu.system.mapper.SysFileMapper;
+import com.jimuqu.system.mapper.SysFilePartMapper;
+import com.jimuqu.system.service.SysFileService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -39,26 +39,26 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecorder {
+public class SysFileServiceImpl implements SysFileService, FileRecorder {
 
-    private final SysFileDetailMapper sysFileDetailMapper;
-    private final SysFilePartDetailMapper sysFilePartDetailMapper;
+    private final SysFileMapper sysFileMapper;
+    private final SysFilePartMapper sysFilePartMapper;
 
     /**
      * 查询文件记录
      */
     @Override
-    public SysFileDetailVo queryById(String id) {
-        return sysFileDetailMapper.getVoById(id);
+    public SysFileVo queryById(String id) {
+        return sysFileMapper.getVoById(id);
     }
 
     /**
      * 查询文件记录分页列表
      */
     @Override
-    public Page<SysFileDetailVo> queryPageList(SysFileDetailQuery query, PageQuery pageQuery) {
+    public Page<SysFileVo> queryPageList(SysFileQuery query, PageQuery pageQuery) {
         return buildQueryChain(query)
-                .returnType(SysFileDetailVo.class)
+                .returnType(SysFileVo.class)
                 .paging(pageQuery.build());
     }
 
@@ -66,9 +66,9 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
      * 查询文件记录列表
      */
     @Override
-    public List<SysFileDetailVo> queryList(SysFileDetailQuery query) {
-        QueryChain<SysFileDetail> queryChain = buildQueryChain(query);
-        return queryChain.returnType(SysFileDetailVo.class).list();
+    public List<SysFileVo> queryList(SysFileQuery query) {
+        QueryChain<SysFile> queryChain = buildQueryChain(query);
+        return queryChain.returnType(SysFileVo.class).list();
     }
 
     /**
@@ -77,8 +77,8 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
      * @param query 查询对象
      * @return 查询条件对象
      */
-    private QueryChain<SysFileDetail> buildQueryChain(SysFileDetailQuery query) {
-        return QueryChain.of(sysFileDetailMapper)
+    private QueryChain<SysFile> buildQueryChain(SysFileQuery query) {
+        return QueryChain.of(sysFileMapper)
                 .forSearch(true)
                 .where(query);
     }
@@ -88,7 +88,7 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
      */
     @Override
     public Integer deleteByIds(Collection<String> ids) {
-        return sysFileDetailMapper.deleteByIds(ids);
+        return sysFileMapper.deleteByIds(ids);
     }
 
 
@@ -100,8 +100,8 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
     @Override
     @SneakyThrows
     public boolean save(FileInfo fileInfo) {
-        SysFileDetail detail = toSysFileDetail(fileInfo);
-        boolean b = sysFileDetailMapper.save(detail) > 0;
+        SysFile detail = toSysFileDetail(fileInfo);
+        boolean b = sysFileMapper.save(detail) > 0;
         if (b) {
             fileInfo.setId(detail.getId());
         }
@@ -117,10 +117,10 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
     @Override
     @SneakyThrows
     public void update(FileInfo fileInfo) {
-        SysFileDetail detail = toSysFileDetail(fileInfo);
-        sysFileDetailMapper.update(detail, where -> where
-                .eq(detail.getUrl() != null, SysFileDetail::getUrl, detail.getUrl())
-                .eq(detail.getId() != null, SysFileDetail::getId, detail.getId())
+        SysFile detail = toSysFileDetail(fileInfo);
+        sysFileMapper.update(detail, where -> where
+                .eq(detail.getUrl() != null, SysFile::getUrl, detail.getUrl())
+                .eq(detail.getId() != null, SysFile::getId, detail.getId())
         );
     }
 
@@ -132,8 +132,8 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
     @Override
     @SneakyThrows
     public FileInfo getByUrl(String url) {
-        SysFileDetail sysFileDetail = sysFileDetailMapper.get(where -> where.eq(SysFileDetail::getUrl, url));
-        return toFileInfo(sysFileDetail);
+        SysFile sysFile = sysFileMapper.get(where -> where.eq(SysFile::getUrl, url));
+        return toFileInfo(sysFile);
     }
 
     /**
@@ -143,7 +143,7 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
      */
     @Override
     public boolean delete(String url) {
-        return sysFileDetailMapper.delete(where -> where.eq(SysFileDetail::getUrl, url)) > 0;
+        return sysFileMapper.delete(where -> where.eq(SysFile::getUrl, url)) > 0;
     }
 
     /**
@@ -155,8 +155,8 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
     @SneakyThrows
     public void saveFilePart(FilePartInfo filePartInfo) {
         SysFilePartDetail detail = toFilePartDetail(filePartInfo);
-        int save = sysFilePartDetailMapper.save(detail);
-        if (save > 0){
+        int save = sysFilePartMapper.save(detail);
+        if (save > 0) {
             filePartInfo.setId(detail.getId());
         }
     }
@@ -168,12 +168,13 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
      */
     @Override
     public void deleteFilePartByUploadId(String uploadId) {
-        sysFilePartDetailMapper.delete(where -> where.eq(SysFilePartDetail::getUploadId, uploadId));
+        sysFilePartMapper.delete(where -> where.eq(SysFilePartDetail::getUploadId, uploadId));
     }
 
 
     /**
      * 将 FilePartInfo 转成 FilePartDetail
+     *
      * @param info 文件分片信息
      */
     public SysFilePartDetail toFilePartDetail(FilePartInfo info) throws JsonProcessingException {
@@ -190,9 +191,9 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
     /**
      * 将 FileInfo 转为 SysFileDetail
      */
-    public SysFileDetail toSysFileDetail(FileInfo info) throws JsonProcessingException {
-        SysFileDetail detail = BeanUtil.copyProperties(
-                info, SysFileDetail.class, "metadata", "userMetadata", "thMetadata", "thUserMetadata", "attr", "hashInfo");
+    public SysFile toSysFileDetail(FileInfo info) throws JsonProcessingException {
+        SysFile detail = BeanUtil.copyProperties(
+                info, SysFile.class, "metadata", "userMetadata", "thMetadata", "thUserMetadata", "attr", "hashInfo");
 
         // 这里手动获 元数据 并转成 json 字符串，方便存储在数据库中
         detail.setMetadata(valueToJson(info.getMetadata()));
@@ -209,7 +210,7 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
     /**
      * 将 SysFileDetail 转为 FileInfo
      */
-    public FileInfo toFileInfo(SysFileDetail detail) throws JsonProcessingException {
+    public FileInfo toFileInfo(SysFile detail) throws JsonProcessingException {
         FileInfo info = BeanUtil.copyProperties(
                 detail, FileInfo.class, "metadata", "userMetadata", "thMetadata", "thUserMetadata", "attr", "hashInfo");
 
@@ -232,7 +233,7 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
         if (value == null) {
             return null;
         }
-        return JsonUtil.toJsonString( value);
+        return JsonUtil.toJsonString(value);
     }
 
     /**
@@ -242,7 +243,8 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
         if (StrUtil.isBlank(json)) {
             return null;
         }
-        return JsonUtil.parseObject(json, new TypeReference<Map<String, String>>() {});
+        return JsonUtil.parseObject(json, new TypeReference<Map<String, String>>() {
+        });
     }
 
     /**
@@ -251,7 +253,8 @@ public class SysFileDetailServiceImpl implements SysFileDetailService, FileRecor
     public Dict jsonToDict(String json) throws JsonProcessingException {
         if (StrUtil.isBlank(json)) {
             return null;
-        };
+        }
+        ;
         return JsonUtil.parseObject(json, cn.hutool.core.lang.Dict.class);
     }
 

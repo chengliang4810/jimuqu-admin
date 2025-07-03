@@ -3,7 +3,7 @@ package com.jimuqu.system.domain;
 import cn.xbatis.core.incrementer.IdentifierGeneratorType;
 import cn.xbatis.db.IdAutoType;
 import cn.xbatis.db.annotations.*;
-import com.jimuqu.common.mybatis.core.entity.BaseEntity;
+import com.jimuqu.common.mybatis.core.entity.TenantEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -26,8 +26,8 @@ import java.io.Serial;
 @Accessors(chain = true)
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-@Table(value = "sys_file_detail")
-public class SysFileDetail extends BaseEntity {
+@Table(value = "sys_file")
+public class SysFile extends BaseEntity {
 
     @Serial
     private static final long serialVersionUID = 1L;
