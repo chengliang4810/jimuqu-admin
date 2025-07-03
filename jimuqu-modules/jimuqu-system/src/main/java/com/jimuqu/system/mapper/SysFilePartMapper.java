@@ -1,7 +1,7 @@
 package com.jimuqu.system.mapper;
 
 import com.jimuqu.common.mybatis.core.mapper.BaseMapperPlus;
-import com.jimuqu.system.domain.SysFilePartDetail;
+import com.jimuqu.system.domain.SysFilePart;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -10,6 +10,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 2025-06-24
  */
 @Mapper
-public interface SysFilePartMapper extends BaseMapperPlus<SysFilePartDetail, SysFilePartDetail> {
+public interface SysFilePartMapper extends BaseMapperPlus<SysFilePart, SysFilePart> {
 
 }

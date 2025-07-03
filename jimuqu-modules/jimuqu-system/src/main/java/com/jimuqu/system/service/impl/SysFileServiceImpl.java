@@ -10,7 +10,7 @@ import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.system.domain.SysFile;
-import com.jimuqu.system.domain.SysFilePartDetail;
+import com.jimuqu.system.domain.SysFilePart;
 import com.jimuqu.system.domain.query.SysFileQuery;
 import com.jimuqu.system.domain.vo.SysFileVo;
 import com.jimuqu.system.mapper.SysFileMapper;
@@ -154,7 +154,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
     @Override
     @SneakyThrows
     public void saveFilePart(FilePartInfo filePartInfo) {
-        SysFilePartDetail detail = toFilePartDetail(filePartInfo);
+        SysFilePart detail = toFilePartDetail(filePartInfo);
         int save = sysFilePartMapper.save(detail);
         if (save > 0) {
             filePartInfo.setId(detail.getId());
@@ -168,7 +168,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
      */
     @Override
     public void deleteFilePartByUploadId(String uploadId) {
-        sysFilePartMapper.delete(where -> where.eq(SysFilePartDetail::getUploadId, uploadId));
+        sysFilePartMapper.delete(where -> where.eq(SysFilePart::getUploadId, uploadId));
     }
 
 
@@ -177,8 +177,8 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
      *
      * @param info 文件分片信息
      */
-    public SysFilePartDetail toFilePartDetail(FilePartInfo info) throws JsonProcessingException {
-        SysFilePartDetail detail = new SysFilePartDetail();
+    public SysFilePart toFilePartDetail(FilePartInfo info) throws JsonProcessingException {
+        SysFilePart detail = new SysFilePart();
         detail.setPlatform(info.getPlatform());
         detail.setUploadId(info.getUploadId());
         detail.setETag(info.getETag());

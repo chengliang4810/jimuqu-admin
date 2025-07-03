@@ -27,8 +27,8 @@ import java.io.Serial;
 @Accessors(chain = true)
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-@Table(value = "sys_file_part_detail")
-public class SysFilePartDetail extends BaseEntity {
+@Table(value = "sys_file_part")
+public class SysFilePart extends BaseEntity {
 
     @Serial
     private static final long serialVersionUID = 1L;
