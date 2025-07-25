@@ -2,7 +2,7 @@ package com.jimuqu.system.service;
 
 import com.jimuqu.system.domain.bo.SysDeptBo;
 import com.jimuqu.system.domain.vo.SysDeptVo;
-import org.dromara.hutool.core.tree.MapTree;
+import cn.hutool.v7.core.tree.MapTree;
 
 import java.util.List;
 

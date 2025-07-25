@@ -3,8 +3,8 @@ package com.jimuqu.common.core.utils.ip;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.file.FileUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.io.resource.ClassPathResource;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.io.resource.ClassPathResource;
+import cn.hutool.v7.core.util.ObjUtil;
 import org.lionsoul.ip2region.xdb.Searcher;
 
 import java.io.File;

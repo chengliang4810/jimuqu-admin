@@ -25,7 +25,7 @@ import com.jimuqu.system.domain.SysUser;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.mapper.SysUserMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.data.cache.CacheService;

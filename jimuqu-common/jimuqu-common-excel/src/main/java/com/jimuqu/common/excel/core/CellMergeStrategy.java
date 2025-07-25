@@ -12,8 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.dromara.hutool.core.collection.CollUtil;
-import org.dromara.hutool.core.reflect.FieldUtil;
+import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.v7.core.reflect.FieldUtil;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

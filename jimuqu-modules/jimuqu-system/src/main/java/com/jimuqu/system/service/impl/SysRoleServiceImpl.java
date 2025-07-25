@@ -13,7 +13,7 @@ import com.jimuqu.system.mapper.SysRoleMapper;
 import com.jimuqu.system.service.SysRoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Component;
 
 import java.util.Collection;

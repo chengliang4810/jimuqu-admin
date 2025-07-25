@@ -1,7 +1,7 @@
 package com.jimuqu.common.core.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.net.NetUtil;
+import cn.hutool.v7.core.net.NetUtil;
 
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -23,7 +23,7 @@ public class IdUtil {
     private final long maxDatacenterId = -1L ^ (-1L << datacenterIdBits);
 
     public static Long getId() {
-        return org.dromara.hutool.core.data.id.IdUtil.getSnowflake(workerId, datacenterId).next();
+        return cn.hutool.v7.core.data.id.IdUtil.getSnowflake(workerId, datacenterId).next();
     }
 
     private IdUtil() {

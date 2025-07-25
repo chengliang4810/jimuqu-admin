@@ -1,6 +1,6 @@
 package com.jimuqu.common.core.constant;
 
-import org.dromara.hutool.core.regex.RegexPool;
+import cn.hutool.v7.core.regex.RegexPool;
 
 /**
  * 常用正则表达式字符串

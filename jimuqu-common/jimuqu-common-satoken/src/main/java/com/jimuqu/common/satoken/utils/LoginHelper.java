@@ -11,7 +11,7 @@ import com.jimuqu.common.core.enums.UserType;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.util.ObjUtil;
 
 import java.util.function.Supplier;
 

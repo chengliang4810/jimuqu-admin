@@ -8,7 +8,7 @@ import db.sql.api.impl.cmd.Methods;
 import db.sql.api.impl.cmd.basic.OrderByDirection;
 import db.sql.api.impl.cmd.struct.query.OrderBy;
 import lombok.Data;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.util.ObjUtil;
 
 import java.io.Serial;
 import java.io.Serializable;

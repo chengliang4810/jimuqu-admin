@@ -2,11 +2,11 @@ package com.jimuqu.common.core.checker;
 
 import com.jimuqu.common.core.exception.check.AssertException;
 import com.jimuqu.common.core.utils.StringUtil;
-import org.dromara.hutool.core.array.ArrayUtil;
-import org.dromara.hutool.core.collection.CollUtil;
-import org.dromara.hutool.core.map.MapUtil;
-import org.dromara.hutool.core.text.StrUtil;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.array.ArrayUtil;
+import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.v7.core.map.MapUtil;
+import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.v7.core.util.ObjUtil;
 
 import java.util.Map;
 import java.util.function.Supplier;

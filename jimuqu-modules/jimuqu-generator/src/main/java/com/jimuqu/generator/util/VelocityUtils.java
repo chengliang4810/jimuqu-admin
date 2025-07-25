@@ -16,9 +16,9 @@ import org.beetl.core.Configuration;
 import org.beetl.core.GroupTemplate;
 import org.beetl.core.Template;
 import org.beetl.core.resource.StringTemplateResourceLoader;
-import org.dromara.hutool.core.convert.ConvertUtil;
-import org.dromara.hutool.core.map.Dict;
-import org.dromara.hutool.core.map.MapUtil;
+import cn.hutool.v7.core.convert.ConvertUtil;
+import cn.hutool.v7.core.map.Dict;
+import cn.hutool.v7.core.map.MapUtil;
 import org.noear.solon.Solon;
 
 import java.util.*;

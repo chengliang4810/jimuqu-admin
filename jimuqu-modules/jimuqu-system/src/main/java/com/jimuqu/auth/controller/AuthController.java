@@ -23,7 +23,7 @@ import me.zhyd.oauth.model.AuthResponse;
 import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.request.AuthRequest;
 import me.zhyd.oauth.utils.AuthStateUtils;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.*;
 import org.noear.solon.validation.ValidUtils;
 

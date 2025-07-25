@@ -12,8 +12,8 @@ import com.jimuqu.system.mapper.SysDictDataMapper;
 import com.jimuqu.system.service.SysDictDataService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.collection.ListUtil;
-import org.dromara.hutool.core.text.StrUtil;
+import cn.hutool.v7.core.collection.ListUtil;
+import cn.hutool.v7.core.text.StrUtil;
 import org.noear.solon.annotation.Component;
 
 import java.util.Collection;

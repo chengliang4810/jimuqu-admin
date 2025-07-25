@@ -2,10 +2,10 @@ package com.jimuqu.common.core.utils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.dromara.hutool.core.collection.CollUtil;
-import org.dromara.hutool.core.collection.ListUtil;
-import org.dromara.hutool.core.collection.set.SetUtil;
-import org.dromara.hutool.core.map.MapUtil;
+import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.v7.core.collection.ListUtil;
+import cn.hutool.v7.core.collection.set.SetUtil;
+import cn.hutool.v7.core.map.MapUtil;
 
 import java.util.*;
 import java.util.function.BiFunction;

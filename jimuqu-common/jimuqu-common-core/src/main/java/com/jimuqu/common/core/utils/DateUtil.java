@@ -83,7 +83,7 @@ public class DateUtil {
      */
     public static String datePath() {
         Date now = new Date();
-        return org.dromara.hutool.core.date.DateUtil.format(now, "yyyy/MM/dd" );
+        return cn.hutool.v7.core.date.DateUtil.format(now, "yyyy/MM/dd" );
     }
 
     /**
@@ -91,7 +91,7 @@ public class DateUtil {
      */
     public static String dateTime() {
         Date now = new Date();
-        return org.dromara.hutool.core.date.DateUtil.format(now, "yyyyMMdd" );
+        return cn.hutool.v7.core.date.DateUtil.format(now, "yyyyMMdd" );
     }
 
     /**

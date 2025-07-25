@@ -8,8 +8,8 @@ import com.jimuqu.common.core.domain.model.LoginUser;
 import com.jimuqu.common.core.utils.ip.AddressUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.http.useragent.UserAgent;
-import org.dromara.hutool.http.useragent.UserAgentUtil;
+import cn.hutool.v7.http.useragent.UserAgent;
+import cn.hutool.v7.http.useragent.UserAgentUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.core.handle.Context;
 

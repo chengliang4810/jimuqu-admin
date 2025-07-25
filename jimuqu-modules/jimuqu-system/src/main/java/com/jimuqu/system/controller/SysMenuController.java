@@ -21,7 +21,7 @@ import com.jimuqu.system.domain.vo.RouterVo;
 import com.jimuqu.system.domain.vo.SysMenuVo;
 import com.jimuqu.system.service.SysMenuService;
 import lombok.RequiredArgsConstructor;
-import org.dromara.hutool.core.tree.MapTree;
+import cn.hutool.v7.core.tree.MapTree;
 import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Mapping;

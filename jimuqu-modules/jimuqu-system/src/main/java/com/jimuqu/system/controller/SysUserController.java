@@ -29,7 +29,7 @@ import com.jimuqu.system.service.SysPostService;
 import com.jimuqu.system.service.SysRoleService;
 import com.jimuqu.system.service.SysUserService;
 import lombok.RequiredArgsConstructor;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Mapping;

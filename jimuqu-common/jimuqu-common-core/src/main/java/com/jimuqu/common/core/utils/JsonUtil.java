@@ -2,8 +2,8 @@ package com.jimuqu.common.core.utils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.dromara.hutool.core.map.Dict;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.map.Dict;
+import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.snack.ONode;
 
 import java.lang.reflect.Type;

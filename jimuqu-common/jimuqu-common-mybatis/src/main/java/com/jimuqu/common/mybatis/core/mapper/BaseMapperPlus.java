@@ -5,9 +5,9 @@ import cn.xbatis.core.sql.executor.Where;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
-import org.dromara.hutool.core.collection.CollUtil;
-import org.dromara.hutool.core.collection.ListUtil;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.v7.core.collection.ListUtil;
+import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.core.util.GenericUtil;
 
 import java.io.Serializable;

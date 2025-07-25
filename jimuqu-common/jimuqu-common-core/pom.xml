@@ -34,7 +34,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.dromara.hutool</groupId>
+            <groupId>cn.hutool.v7</groupId>
             <artifactId>hutool-core</artifactId>
         </dependency>
 

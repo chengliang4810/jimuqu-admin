@@ -7,7 +7,7 @@ import com.alibaba.excel.exception.ExcelDataConvertException;
 import com.jimuqu.common.core.utils.JsonUtil;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.text.StrUtil;
+import cn.hutool.v7.core.text.StrUtil;
 import org.noear.solon.validation.ValidUtils;
 
 import java.util.Map;

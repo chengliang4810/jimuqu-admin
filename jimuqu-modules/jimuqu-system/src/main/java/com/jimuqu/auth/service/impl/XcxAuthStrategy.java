@@ -14,7 +14,7 @@ import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.SysClient;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.validation.ValidUtils;

@@ -18,10 +18,10 @@ import com.jimuqu.system.mapper.SysUserMapper;
 import com.jimuqu.system.service.SysDeptService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.collection.CollUtil;
-import org.dromara.hutool.core.collection.ListUtil;
-import org.dromara.hutool.core.tree.MapTree;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.v7.core.collection.ListUtil;
+import cn.hutool.v7.core.tree.MapTree;
+import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Component;
 
 import java.util.ArrayList;

@@ -1,7 +1,7 @@
 package com.jimuqu.common.web.interceptor;
 
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.text.StrUtil;
+import cn.hutool.v7.core.text.StrUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.core.handle.Action;
 import org.noear.solon.core.handle.Context;

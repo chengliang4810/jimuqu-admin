@@ -4,7 +4,7 @@ import com.jimuqu.common.core.utils.StringUtil;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.net.NetUtil;
+import cn.hutool.v7.core.net.NetUtil;
 
 
 /**

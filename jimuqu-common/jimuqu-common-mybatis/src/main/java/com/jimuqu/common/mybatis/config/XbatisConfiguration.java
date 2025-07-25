@@ -5,7 +5,7 @@ import cn.xbatis.core.tenant.TenantContext;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.mybatis.core.mapper.BaseMapper;
 import com.jimuqu.common.satoken.utils.LoginHelper;
-import org.dromara.hutool.core.text.StrUtil;
+import cn.hutool.v7.core.text.StrUtil;
 import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Configuration;
 

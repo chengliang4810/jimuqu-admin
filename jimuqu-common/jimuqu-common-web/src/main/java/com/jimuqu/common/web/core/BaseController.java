@@ -2,7 +2,7 @@ package com.jimuqu.common.web.core;
 
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.exception.ServiceException;
-import org.dromara.hutool.core.text.StrUtil;
+import cn.hutool.v7.core.text.StrUtil;
 import org.noear.solon.core.handle.Context;
 import org.noear.solon.core.handle.DownloadedFile;
 import org.noear.solon.core.handle.ModelAndView;

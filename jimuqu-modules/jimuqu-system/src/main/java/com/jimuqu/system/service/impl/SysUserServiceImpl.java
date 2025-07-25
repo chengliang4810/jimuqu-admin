@@ -19,8 +19,8 @@ import com.jimuqu.system.mapper.*;
 import com.jimuqu.system.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.collection.CollUtil;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
 

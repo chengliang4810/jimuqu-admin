@@ -6,7 +6,7 @@ import cn.xbatis.page.PagerField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import org.dromara.hutool.core.collection.ListUtil;
+import cn.hutool.v7.core.collection.ListUtil;
 
 import java.util.List;
 

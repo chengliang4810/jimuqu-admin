@@ -4,7 +4,7 @@ import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.context.model.SaStorage;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.dromara.hutool.core.util.ObjUtil;
+import cn.hutool.v7.core.util.ObjUtil;
 
 import java.util.HashMap;
 import java.util.Map;

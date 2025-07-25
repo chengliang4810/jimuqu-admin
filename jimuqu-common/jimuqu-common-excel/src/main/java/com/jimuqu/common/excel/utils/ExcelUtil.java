@@ -12,9 +12,9 @@ import com.jimuqu.common.excel.convert.ExcelBigNumberConvert;
 import com.jimuqu.common.excel.core.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.dromara.hutool.core.collection.CollUtil;
-import org.dromara.hutool.core.data.id.IdUtil;
-import org.dromara.hutool.core.io.resource.ClassPathResource;
+import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.v7.core.data.id.IdUtil;
+import cn.hutool.v7.core.io.resource.ClassPathResource;
 
 import java.io.IOException;
 import java.io.InputStream;

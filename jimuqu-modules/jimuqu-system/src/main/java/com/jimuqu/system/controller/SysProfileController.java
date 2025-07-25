@@ -15,8 +15,8 @@ import com.jimuqu.system.domain.vo.AvatarVo;
 import com.jimuqu.system.domain.vo.ProfileVo;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.service.SysUserService;
-import org.dromara.hutool.core.bean.BeanUtil;
-import org.dromara.hutool.core.io.file.FileNameUtil;
+import cn.hutool.v7.core.bean.BeanUtil;
+import cn.hutool.v7.core.io.file.FileNameUtil;
 import org.noear.solon.annotation.*;
 import org.noear.solon.core.handle.UploadedFile;
 

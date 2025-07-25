@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
  * @author Lion Li,chengliang4810
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class FileUtil extends org.dromara.hutool.core.io.file.FileUtil {
+public class FileUtil extends cn.hutool.v7.core.io.file.FileUtil {
 
     /**
      * 百分号编码工具方法

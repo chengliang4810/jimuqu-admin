@@ -5,7 +5,7 @@ import com.jimuqu.system.domain.bo.SysMenuBo;
 import com.jimuqu.system.domain.query.SysMenuQuery;
 import com.jimuqu.system.domain.vo.RouterVo;
 import com.jimuqu.system.domain.vo.SysMenuVo;
-import org.dromara.hutool.core.tree.MapTree;
+import cn.hutool.v7.core.tree.MapTree;
 
 import java.util.List;
 import java.util.Set;

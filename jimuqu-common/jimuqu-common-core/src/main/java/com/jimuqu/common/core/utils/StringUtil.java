@@ -2,13 +2,13 @@ package com.jimuqu.common.core.utils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.dromara.hutool.core.collection.CollUtil;
-import org.dromara.hutool.core.convert.ConvertUtil;
-import org.dromara.hutool.core.lang.Validator;
-import org.dromara.hutool.core.regex.ReUtil;
-import org.dromara.hutool.core.text.AntPathMatcher;
-import org.dromara.hutool.core.text.StrUtil;
-import org.dromara.hutool.core.text.split.SplitUtil;
+import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.v7.core.convert.ConvertUtil;
+import cn.hutool.v7.core.lang.Validator;
+import cn.hutool.v7.core.regex.ReUtil;
+import cn.hutool.v7.core.text.AntPathMatcher;
+import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.v7.core.text.split.SplitUtil;
 
 import java.util.*;
 import java.util.function.Function;

@@ -17,8 +17,8 @@ import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import me.zhyd.oauth.utils.StringUtils;
 import org.dromara.autotable.annotation.AutoColumn;
-import org.dromara.hutool.core.lang.Validator;
-import org.dromara.hutool.core.text.StrPool;
+import cn.hutool.v7.core.lang.Validator;
+import cn.hutool.v7.core.text.StrPool;
 
 import java.io.Serial;
 import java.util.ArrayList;

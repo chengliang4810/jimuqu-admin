@@ -3,11 +3,11 @@ package com.jimuqu.common.core.utils;
 import com.jimuqu.common.core.utils.reflect.ReflectUtil;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.dromara.hutool.core.collection.CollUtil;
-import org.dromara.hutool.core.tree.MapTree;
-import org.dromara.hutool.core.tree.TreeNodeConfig;
-import org.dromara.hutool.core.tree.TreeUtil;
-import org.dromara.hutool.core.tree.parser.NodeParser;
+import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.v7.core.tree.MapTree;
+import cn.hutool.v7.core.tree.TreeNodeConfig;
+import cn.hutool.v7.core.tree.TreeUtil;
+import cn.hutool.v7.core.tree.parser.NodeParser;
 
 import java.util.ArrayList;
 import java.util.List;

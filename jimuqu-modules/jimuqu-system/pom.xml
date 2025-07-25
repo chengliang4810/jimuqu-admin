@@ -60,12 +60,12 @@
 <!--        </dependency>-->
 
         <dependency>
-            <groupId>org.dromara.hutool</groupId>
+            <groupId>cn.hutool.v7</groupId>
             <artifactId>hutool-crypto</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.dromara.hutool</groupId>
+            <groupId>cn.hutool.v7</groupId>
             <artifactId>hutool-http</artifactId>
         </dependency>
 

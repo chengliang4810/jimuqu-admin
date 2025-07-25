@@ -18,8 +18,8 @@ import com.jimuqu.system.service.SysMenuService;
 import jodd.util.StringUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.collection.CollUtil;
-import org.dromara.hutool.core.tree.MapTree;
+import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.v7.core.tree.MapTree;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
 
