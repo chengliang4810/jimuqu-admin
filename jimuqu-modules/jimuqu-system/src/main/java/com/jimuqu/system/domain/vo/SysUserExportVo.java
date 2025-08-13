@@ -1,6 +1,6 @@
 package com.jimuqu.system.domain.vo;
 
-import com.alibaba.excel.annotation.ExcelProperty;
+import cn.idev.excel.annotation.ExcelProperty;
 import com.jimuqu.common.excel.annotation.ExcelDictFormat;
 import com.jimuqu.common.excel.convert.ExcelDictConvert;
 import io.github.linpeilie.annotations.AutoMapper;

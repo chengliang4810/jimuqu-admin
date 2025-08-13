@@ -1,7 +1,6 @@
 package com.jimuqu.common.log.aspect;
 
 import cn.dev33.satoken.router.SaHttpMethod;
-import com.alibaba.ttl.TransmittableThreadLocal;
 import com.jimuqu.common.core.constant.HttpStatus;
 import com.jimuqu.common.core.domain.model.LoginUser;
 import com.jimuqu.common.core.utils.JsonUtil;
@@ -45,7 +44,7 @@ public class LogAspect implements RouterInterceptor {
     /**
      * 计算操作消耗时间
      */
-    private static final ThreadLocal<StopWatch> TIME_THREADLOCAL = new TransmittableThreadLocal<>();
+    private static final ThreadLocal<StopWatch> TIME_THREADLOCAL = new ThreadLocal<>();
 
 
     @Override

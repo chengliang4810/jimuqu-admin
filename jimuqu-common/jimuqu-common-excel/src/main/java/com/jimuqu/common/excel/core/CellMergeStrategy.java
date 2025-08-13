@@ -1,8 +1,8 @@
 package com.jimuqu.common.excel.core;
 
-import com.alibaba.excel.annotation.ExcelProperty;
-import com.alibaba.excel.metadata.Head;
-import com.alibaba.excel.write.merge.AbstractMergeStrategy;
+import cn.idev.excel.annotation.ExcelProperty;
+import cn.idev.excel.metadata.Head;
+import cn.idev.excel.write.merge.AbstractMergeStrategy;
 import com.jimuqu.common.core.utils.reflect.ReflectUtil;
 import com.jimuqu.common.excel.annotation.CellMerge;
 import lombok.AllArgsConstructor;

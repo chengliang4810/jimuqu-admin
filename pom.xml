@@ -49,8 +49,7 @@
         <x-file-storage.version>2.3.0</x-file-storage.version>
         <minio.version>8.5.2</minio.version>
         <!-- excel -->
-        <alibaba-ttl.version>2.14.4</alibaba-ttl.version>
-        <easyexcel.version>4.0.2</easyexcel.version>
+        <fastexcel.version>1.2.0</fastexcel.version>
         <!-- 三方认证 -->
         <justauth.version>1.16.6</justauth.version>
         <!-- 离线IP地址定位库 -->
@@ -120,15 +119,9 @@
             </dependency>
 
             <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>easyexcel</artifactId>
-                <version>${easyexcel.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.poi</groupId>
-                        <artifactId>poi-ooxml-schemas</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>cn.idev.excel</groupId>
+                <artifactId>fastexcel</artifactId>
+                <version>${fastexcel.version}</version>
             </dependency>
 
             <!-- 内置数据库支持 -->
@@ -150,12 +143,6 @@
                 <groupId>com.zaxxer</groupId>
                 <artifactId>HikariCP</artifactId>
                 <version>${hikaricp.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>transmittable-thread-local</artifactId>
-                <version>${alibaba-ttl.version}</version>
             </dependency>
 
             <!-- 离线IP地址定位库 ip2region -->

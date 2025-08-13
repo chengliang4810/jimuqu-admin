@@ -52,12 +52,6 @@
             <groupId>cn.hutool.v7</groupId>
             <artifactId>hutool-crypto</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>transmittable-thread-local</artifactId>
-        </dependency>
-
     </dependencies>
 
 

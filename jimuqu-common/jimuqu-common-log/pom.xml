@@ -12,17 +12,10 @@
     <artifactId>jimuqu-common-log</artifactId>
 
     <dependencies>
-
         <dependency>
             <groupId>com.jimuqu</groupId>
             <artifactId>jimuqu-common-satoken</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>transmittable-thread-local</artifactId>
-        </dependency>
-
     </dependencies>
 
 
