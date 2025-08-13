@@ -1,0 +1,5 @@
+-- 用户初始值
+INSERT INTO `sys_user` VALUES (1, 103, 'admin', '勤奋的Jerry', 'pc_user', 'chengliang4810@163.com', '15888888888', '1', NULL, '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', '127.0.0.1', '2025-06-05 14:51:43', '管理员', '000000', 103, 1, '2025-06-05 14:51:43', NULL, NULL);
+INSERT INTO `sys_user` VALUES (3, 108, 'test', '本部门及以下 密码666666', 'pc_user', '', '', '0', NULL, '$2a$10$b8yUzN0C71sbz.PhNOCgJe.Tu1yWC3RNrTyjSQ8p1W0.aaUXUJ.Ne', '0', '0', '127.0.0.1', '2025-06-05 14:51:43', NULL, '000000', 103, 1, '2025-06-05 14:51:43', 3, '2025-06-05 14:51:43');
+INSERT INTO `sys_user` VALUES (4, 102, 'test1', '仅本人 密码666666', 'pc_user', '', '', '0', NULL, '$2a$10$b8yUzN0C71sbz.PhNOCgJe.Tu1yWC3RNrTyjSQ8p1W0.aaUXUJ.Ne', '0', '0', '127.0.0.1', '2025-06-05 14:51:43', NULL, '000000', 103, 1, '2025-06-05 14:51:43', 4, '2025-06-05 14:51:43');
+INSERT INTO `sys_user` VALUES (205394081231167488, 101, 'cd', '123123', 'pc_user', NULL, NULL, '0', NULL, '$2a$10$Ae.VnFXv6mgVLH2jdBIor.mueeyxDc8iXWwpu6zIPwrzZKJJHBWEq', '0', '0', NULL, NULL, NULL, '000000', 103, 1, '2025-06-05 18:42:45', 1, '2025-06-05 18:42:45');

@@ -1,0 +1,3 @@
+-- 客户端初始值
+INSERT INTO `sys_client` VALUES (1, 'e5cd7e4891bf95d1d19206ce24a7b32e', 'pc', 'pc123', 'password,social', 'pc', 1800, 604800, '0', '0', 103, 1, '2011-11-11 11:11:11', 1, '2025-11-11 11:11:11');
+INSERT INTO `sys_client` VALUES (2, '428a8310cd442757ae699df5d894f051', 'app', 'app123', 'password,sms,social', 'android', 1800, 604800, '0', '0', 103, 1, '2011-11-11 11:11:11', 1, '2011-11-11 11:11:11');
