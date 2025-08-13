@@ -1,5 +1,5 @@
 #!/bin/sh
-# ./lay.sh start 启动 stop 停止 restart 重启 status 状态
+# ./admin.sh start 启动 stop 停止 restart 重启 status 状态
 AppName=jimuqu-admin.jar
 
 # JVM参数

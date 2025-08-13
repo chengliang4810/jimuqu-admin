@@ -80,11 +80,14 @@ auto-table:
   auto-build-database: true
   # update(默认)：系统启动时，会自动判断哪些表是新建的，哪些字段要新增修改，哪些索引/约束要新增删除等。
   model: update
+  # 初始化数据配置
   init-data:
     # 是否开启初始化数据功能
     enable: true
+    # 初始化数据文件名，默认是_init_.sql
+    default_init_file_name: _init_.sql
     # 初始化数据文件路径
-    base-path: ./db/init/{dialect}/
+    base-path: classpath:sql/{dialect}/
   # 记录表信息维护过程中执行的SQL
   recordSql:
     enable: true
