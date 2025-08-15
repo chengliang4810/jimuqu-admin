@@ -24,8 +24,8 @@ solon.dataSources.jimuqu!: #数据源（!结尾表示 typed=true）
     password: P@ssw0rd
 
 # 可选的Redis配置， 不加则使用本地缓存
-jimuqu.cache:
-  driverType: "redis" #驱动类型
-  server: "127.0.0.1:6379"
-  db: 0 #默认为 0，可不配置
+#jimuqu.cache:
+#  driverType: "redis" #驱动类型
+#  server: "127.0.0.1:6379"
+#  db: 0 #默认为 0，可不配置
   # password:
