@@ -1,0 +1,5 @@
+-- 角色初始值
+
+INSERT INTO `sys_role` (`id`, `role_name`, `role_key`, `role_sort`, `data_scope`, `menu_check_strictly`, `dept_check_strictly`, `status`, `del_flag`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1, '超级管理员', 'superadmin', 1, '1', b'1', b'1', '0', '0', '超级管理员', 103, 1, '2025-06-05 17:18:06', NULL, NULL);
+INSERT INTO `sys_role` (`id`, `role_name`, `role_key`, `role_sort`, `data_scope`, `menu_check_strictly`, `dept_check_strictly`, `status`, `del_flag`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (3, '本部门及以下', 'test1', 3, '4', b'1', b'1', '0', '0', '', 103, 1, '2025-06-05 17:18:06', NULL, NULL);
+INSERT INTO `sys_role` (`id`, `role_name`, `role_key`, `role_sort`, `data_scope`, `menu_check_strictly`, `dept_check_strictly`, `status`, `del_flag`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (4, '仅本人', 'test2', 4, '5', b'1', b'1', '0', '0', '', 103, 1, '2025-06-05 17:18:06', NULL, NULL);
