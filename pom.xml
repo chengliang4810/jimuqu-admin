@@ -32,6 +32,9 @@
         <!-- 插件版本 -->
         <maven-compiler-plugin.verison>3.11.0</maven-compiler-plugin.verison>
         <flatten-maven-plugin.version>1.3.0</flatten-maven-plugin.version>
+        <!-- 打包默认跳过测试 -->
+        <skipTests>true</skipTests>
+
         <!-- 离线IP地址定位库 -->
         <ip2region.version>2.7.0</ip2region.version>
         <!-- 通用 -->
@@ -46,7 +49,7 @@
         <mysql.version>8.4.0</mysql.version>
         <sqlite.version>3.47.2.0</sqlite.version>
         <!-- 连接池 -->
-        <hikaricp.version>4.0.3</hikaricp.version>
+        <hikaricp.version>7.0.1</hikaricp.version>
         <!-- 获取Java注释 -->
         <therapi-javadoc.version>0.15.0</therapi-javadoc.version>
         <!-- 实体类维护数据库表结构 -->
