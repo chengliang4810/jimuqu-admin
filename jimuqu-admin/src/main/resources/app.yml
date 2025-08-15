@@ -1,4 +1,5 @@
 # common配置，非必要情况下不用修改
+# 多数情况下是将配置的默认值写出来方便修改，所以看起来多
 # server配置
 server.port: 5320
 
@@ -79,7 +80,7 @@ auto-table:
   # 数据库不存在自动创建
   auto-build-database: true
   # update(默认)：系统启动时，会自动判断哪些表是新建的，哪些字段要新增修改，哪些索引/约束要新增删除等。
-  model: update
+  mode: update
   # 初始化数据配置
   init-data:
     # 是否开启初始化数据功能
@@ -87,12 +88,12 @@ auto-table:
     # 初始化数据文件名，默认是_init_.sql
     default_init_file_name: _init_.sql
     # 初始化数据文件路径
-    base-path: classpath:sql/{dialect}/
+    base-path: classpath:sql/{dialect}
   # 记录表信息维护过程中执行的SQL
   recordSql:
     enable: true
-    # 记录方式，默认是数据库，可选文件(file)方式
-    recordType: custom
+    # 记录方式，默认是数据库，可选文件(file)方式 custom方式(已实现flyway规范的SQL记录，类：RecordSqlFlywayHandler)
+    recordType: file
     # 当前SQL的版本，建议指定，会体现在数据库的字段或者文件名上
     version: ${revision}
     # 记录文件的路径
