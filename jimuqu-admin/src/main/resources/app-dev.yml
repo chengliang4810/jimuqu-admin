@@ -5,14 +5,6 @@ auto-table:
   # 自动删除数据库中多余的索引
   auto-drop-index: true
 
-# 记录器级别的配置示例
-solon.logging.logger:
-  # 开启autotable的输出日志，默认是INFO级别
-  "org.dromara.autotable.core.utils.DBHelper":
-    level: INFO
-  "org.dromara.autotable.core":
-    level: INFO
-
 # MySql数据库配置
 solon.dataSources.jimuqu!: #数据源（!结尾表示 typed=true）
   class: "org.noear.solon.data.dynamicds.DynamicDataSource"
