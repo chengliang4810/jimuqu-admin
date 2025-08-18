@@ -5,28 +5,28 @@
       "args": ["mcp-server-fetch"]
     },
     "memory": {
-      "command": "npx",
+      "command": "cmd /c npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-memory"
       ]
     },
     "sequential-thinking": {
-      "command": "npx",
+      "command": "cmd /c npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-sequential-thinking"
       ]
     },
     "everything": {
-      "command": "npx",
+      "command": "cmd /c npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-everything"
       ]
     },
     "filesystem": {
-      "command": "npx",
+      "command": "cmd /c npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
@@ -34,7 +34,7 @@
       ]
     },
     "time-mcp": {
-      "command": "npx",
+      "command": "cmd /c npx",
       "args": ["-y", "time-mcp"]
     }
   }

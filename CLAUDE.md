@@ -2,7 +2,18 @@
 
 本文件为 Claude Code (claude.ai/code) 在此代码仓库中工作时提供指导。
 
-对话过程中全程使用中文与用户进行沟通交流
+# 用户要求
+- 对话过程中全程使用中文与用户进行沟通交流
+- 所有生成的MD文档放在docs目录下保存
+- 工具类优先使用com.jimuqu.common.core.utils包下的工具，其次使用Hutool工具，如果不存在某工具，请添加到com.jimuqu.common.core.utils下
+- 判断是否为空，字段处理（分割，加解密）等情况，优先使用HuTool工具
+- Map，List,Set等集合字段，get时不允许为null，除非指定要求
+
+
+# MCP Interactive Feedback 规则
+
+- 如果mcp服务存在mcp-feedback-enhanced服务则启用这条规则。
+- 注意在任务完成前根据mcp-feedback-enhanced工具的要求进行工具调用
 
 ## 项目概述
 
