@@ -27,25 +27,25 @@
         <!-- Http 启动器 -->
         <dependency>
             <groupId>org.noear</groupId>
-            <artifactId>solon.boot.smarthttp</artifactId>
+            <artifactId>solon-boot-smarthttp</artifactId>
         </dependency>
 
         <!-- Json序列化支持组件 -->
         <dependency>
             <groupId>org.noear</groupId>
-            <artifactId>solon.serialization.snack3</artifactId>
+            <artifactId>solon-serialization-snack3</artifactId>
         </dependency>
 
         <!-- 跨域处理组件 -->
         <dependency>
             <groupId>org.noear</groupId>
-            <artifactId>solon.web.cors</artifactId>
+            <artifactId>solon-web-cors</artifactId>
         </dependency>
 
         <!-- 日志 -->
         <dependency>
             <groupId>org.noear</groupId>
-            <artifactId>solon.logging.logback</artifactId>
+            <artifactId>solon-logging-logback</artifactId>
         </dependency>
 
         <dependency>

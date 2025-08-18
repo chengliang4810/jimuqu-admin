@@ -21,7 +21,7 @@
         <!-- redis缓存 -->
         <dependency>
             <groupId>org.noear</groupId>
-            <artifactId>solon.cache.redisson</artifactId>
+            <artifactId>solon-cache-redisson</artifactId>
         </dependency>
     </dependencies>
 

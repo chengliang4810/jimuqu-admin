@@ -28,7 +28,7 @@
         <!-- 多数据源 -->
         <dependency>
             <groupId>org.noear</groupId>
-            <artifactId>solon.data.dynamicds</artifactId>
+            <artifactId>solon-data-dynamicds</artifactId>
         </dependency>
 
         <!-- 连接池 -->

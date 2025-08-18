@@ -1,25 +1,23 @@
 {
   "mcpServers": {
-    "mcp-fetch": {
-      "type": "stdio",
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "env": {
+        "FETCH_TIMEOUT": "30000",
+        "USER_AGENT": "Claude-Code-MCP/1.0"
+      }
+    },
+    "memory": {
       "command": "npx",
       "args": [
         "-y",
-        "@kazuph/mcp-fetch"
-      ],
-      "env": {}
+        "@modelcontextprotocol/server-memory"
+      ]
     },
     "time-mcp": {
       "command": "npx",
       "args": ["-y", "time-mcp"]
-    },
-    "filesystem": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "D:\\IdeaProjects\\layjava-admin"
-      ]
     }
   }
 }
