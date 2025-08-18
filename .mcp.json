@@ -1,18 +1,36 @@
 {
   "mcpServers": {
     "fetch": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-fetch"],
-      "env": {
-        "FETCH_TIMEOUT": "30000",
-        "USER_AGENT": "Claude-Code-MCP/1.0"
-      }
+      "command": "uvx",
+      "args": ["mcp-server-fetch"]
     },
     "memory": {
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-memory"
+      ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "everything": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-everything"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "D:\\"
       ]
     },
     "time-mcp": {
