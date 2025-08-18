@@ -31,15 +31,4 @@ public interface TenantConstants {
      * 租户管理员角色 roleKey
      */
     String TENANT_ADMIN_ROLE_KEY = "admin";
-
-    /**
-     * 租户管理员角色名称
-     */
-    String TENANT_ADMIN_ROLE_NAME = "管理员";
-
-    /**
-     * 默认租户ID
-     */
-    String DEFAULT_TENANT_ID = "000000";
-
 }

@@ -10,16 +10,12 @@ import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Configuration;
 
 @Configuration
-public class XbatisConfiguration {
+public class XbatisConfig {
 
     @Bean
     public void init() {
-        // 租户ID获取器
-         TenantContext.registerTenantGetter(LoginHelper::getTenantId);
-
         // 单Mapper
         XbatisGlobalConfig.setSingleMapperClass(BaseMapper.class);
-
 
         // 动态值设置 TODO 定义标准接口，实现自动注册
         // 当前登录用户的ID

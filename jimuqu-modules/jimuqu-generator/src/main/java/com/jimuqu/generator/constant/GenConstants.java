@@ -92,7 +92,7 @@ public interface GenConstants {
     /**
      * Entity基类字段
      */
-    String[] BASE_ENTITY = {"createDept", "createBy", "createTime", "updateBy", "updateTime", "tenantId"};
+    String[] BASE_ENTITY = {"createDept", "createBy", "createTime", "updateBy", "updateTime"};
 
     /**
      * 文本框

@@ -32,11 +32,9 @@ import java.util.function.Supplier;
 public class LoginHelper {
 
     public static final String LOGIN_USER_KEY = "loginUser";
-    public static final String TENANT_KEY = "tenantId";
     public static final String USER_KEY = "userId";
     public static final String DEPT_KEY = "deptId";
     public static final String CLIENT_KEY = "clientid";
-    public static final String TENANT_ADMIN_KEY = "isTenantAdmin";
 
     /**
      * 登录系统 基于 设备类型
@@ -105,17 +103,6 @@ public class LoginHelper {
             return null;
         }
         return loginUser.getDeptId();
-    }
-
-    /**
-     * 获取租户id
-     */
-    public static String getTenantId() {
-        LoginUser loginUser = getLoginUser();
-        if (ObjUtil.isNull(loginUser)) {
-            return null;
-        }
-        return loginUser.getTenantId();
     }
 
     /**

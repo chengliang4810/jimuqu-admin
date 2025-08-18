@@ -38,7 +38,6 @@ public class UserActionListener implements SaTokenListener {
         UserAgent userAgent = UserAgentUtil.parse(Context.current().header("User-Agent"));
         String ip = Context.current().realIp();
 
-        System.out.println("用户登录------------------------------");
         // 更新在线用户信息
         SaStorage storage = SaHolder.getStorage();
         LoginUser loginUser = storage.getModel(LOGIN_USER_KEY, LoginUser.class);
