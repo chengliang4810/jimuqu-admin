@@ -35,6 +35,11 @@
             <groupId>cn.dev33</groupId>
             <artifactId>sa-token-snack3</artifactId>
         </dependency>
+        <!-- Sa-Token 整合 API Key -->
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-apikey</artifactId>
+        </dependency>
     </dependencies>
 
 
