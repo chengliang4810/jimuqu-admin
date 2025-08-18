@@ -43,3 +43,4 @@ build/
 logs
 temp
 **flattened-pom.xml
+settings.local.json

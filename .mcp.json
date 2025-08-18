@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "mcp-fetch": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@kazuph/mcp-fetch"
+      ],
+      "env": {}
+    },
+    "time-mcp": {
+      "command": "npx",
+      "args": ["-y", "time-mcp"]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "D:\\IdeaProjects\\layjava-admin"
+      ]
+    }
+  }
+}
