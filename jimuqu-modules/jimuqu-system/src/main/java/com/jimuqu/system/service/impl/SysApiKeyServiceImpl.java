@@ -2,8 +2,11 @@ package com.jimuqu.system.service.impl;
 
 import cn.dev33.satoken.apikey.loader.SaApiKeyDataLoader;
 import cn.dev33.satoken.apikey.model.ApiKeyModel;
-import cn.xbatis.core.sql.executor.chain.QueryChain;
+import cn.dev33.satoken.apikey.template.SaApiKeyUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.v7.core.data.id.IdUtil;
+import cn.hutool.v7.core.text.StrPool;
+import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
@@ -18,9 +21,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * API密钥服务实现
@@ -50,7 +53,8 @@ public class SysApiKeyServiceImpl implements ISysApiKeyService, SaApiKeyDataLoad
      */
     @Override
     public ApiKeyModel getApiKeyModelFromDatabase(String namespace, String apiKey) {
-        SysApiKey sysApiKey = sysApiKeyMapper.getApiKeyModel(namespace, apiKey);
+
+        SysApiKey sysApiKey = sysApiKeyMapper.getApiKeyModel(StrUtil.blankToDefault(namespace, "default"), apiKey);
         if (sysApiKey == null) {
             return null;
         }
@@ -66,7 +70,7 @@ public class SysApiKeyServiceImpl implements ISysApiKeyService, SaApiKeyDataLoad
         }
         
         // 设置过期时间
-        if (sysApiKey.getExpiresTime() != null && sysApiKey.getExpiresTime() != -1L) {
+        if (sysApiKey.getExpiresTime() != null) {
             apiKeyModel.setExpiresTime(sysApiKey.getExpiresTime());
         }
         
@@ -162,9 +166,43 @@ public class SysApiKeyServiceImpl implements ISysApiKeyService, SaApiKeyDataLoad
         if (!LoginHelper.isSuperAdmin()) {
             bo.setUserId(LoginHelper.getUserId());
         }
+        // 生成 API Key
+        String apiKey = this.generateApiKey();
+        bo.setApiKey(apiKey);
+
+        if (StrUtil.isNotBlank(bo.getNamespace())){
+            bo.setNamespace("default");
+        }
+
+        // 入库
         SysApiKey sysApiKey = MapstructUtil.convert(bo, SysApiKey.class);
         boolean flag = sysApiKeyMapper.save(sysApiKey) > 0;
         bo.setId(sysApiKey.getId());
+
+        // 构建SaToken API Key 模型
+        ApiKeyModel akModel = new ApiKeyModel();
+        akModel.setLoginId(sysApiKey.getUserId().toString());  // 设置绑定的用户 id
+        akModel.setApiKey(apiKey);
+        akModel.setTitle(sysApiKey.getName());	  // 设置名称
+        akModel.setIntro(sysApiKey.getRemark());   // 设置描述
+
+        // 设置权限范围
+        if (StrUtil.isNotBlank(sysApiKey.getScope())) {
+            String[] scopes = sysApiKey.getScope().split(StrPool.COMMA);
+            akModel.addScope(scopes);
+        }
+
+        // 设置过期时间
+        akModel.setExpiresTime(sysApiKey.getExpiresTime());
+
+        // 设置扩展信息
+        if (StrUtil.isNotBlank(sysApiKey.getExtraData())) {
+            akModel.setExtraData(sysApiKey.getExtraMap());
+        }
+
+        // 保存
+        SaApiKeyUtil.saveApiKey(akModel);
+
         return flag;
     }
 
@@ -206,6 +244,7 @@ public class SysApiKeyServiceImpl implements ISysApiKeyService, SaApiKeyDataLoad
      */
     @Override
     public Integer deleteByIds(Collection<Long> ids) {
+        List<String> apiKeyList = new ArrayList<>();
         // 非超级管理员只能删除自己的API密钥
         if (!LoginHelper.isSuperAdmin()) {
             Long currentUserId = LoginHelper.getUserId();
@@ -214,8 +253,11 @@ public class SysApiKeyServiceImpl implements ISysApiKeyService, SaApiKeyDataLoad
                 if (!apiKey.getUserId().equals(currentUserId)) {
                     return 0;
                 }
+                apiKeyList.add(apiKey.getApiKey());
             }
         }
+        // 删除API密钥
+        apiKeyList.forEach(SaApiKeyUtil::deleteApiKey);
         return sysApiKeyMapper.deleteByIds(ids);
     }
 
@@ -224,13 +266,16 @@ public class SysApiKeyServiceImpl implements ISysApiKeyService, SaApiKeyDataLoad
      */
     @Override
     public boolean deleteById(Long id) {
+        String apiKey = null;
         // 非超级管理员只能删除自己的API密钥
         if (!LoginHelper.isSuperAdmin()) {
             SysApiKey existingApiKey = sysApiKeyMapper.getById(id);
             if (existingApiKey == null || !existingApiKey.getUserId().equals(LoginHelper.getUserId())) {
                 return false;
             }
+            apiKey = existingApiKey.getApiKey();
         }
+        SaApiKeyUtil.deleteApiKey(apiKey);
         return sysApiKeyMapper.deleteById(id) > 0;
     }
 
@@ -239,6 +284,6 @@ public class SysApiKeyServiceImpl implements ISysApiKeyService, SaApiKeyDataLoad
      */
     @Override
     public String generateApiKey() {
-        return "AK-" + UUID.randomUUID().toString().replace("-", "");
+        return "AK-" + IdUtil.fastSimpleUUID();
     }
 }

@@ -94,7 +94,7 @@ public class SysApiKey extends BaseEntity {
     /**
      * 命名空间
      */
-    @AutoColumn(comment = "命名空间", length = 100)
+    @AutoColumn(comment = "命名空间", length = 100, defaultValue = "default")
     private String namespace;
 
     /**
