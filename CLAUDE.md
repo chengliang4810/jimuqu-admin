@@ -3,13 +3,38 @@
 本文件为 Claude Code (claude.ai/code) 在此代码仓库中工作时提供指导。
 
 # 用户要求
-- 对话过程中全程使用中文与用户进行沟通交流
-- 所有生成的MD文档放在docs目录下保存
-- 当进行新接口开发时，按照 “通用增删改查示例.md” 文件的示例进行开发
-- 当需要操作数据库时，请使用Xbatis进行数据库操作，文档在 xbatis文档.md中
-- 当涉及到文件或图像保存时，则使用 x-file-storage，参考文件上传示例.md文件
-- 工具类优先使用Hutool工具，如 判断是否为空，字段处理（分割，加解密）等类似情况，如果不存在某工具，请添加到com.jimuqu.common.core.utils下
-- Map，List,Set等集合字段，get时不允许为null，除非指定要求
+
+## 通用要求
+- 对话过程中全程使用中文与用户进行沟通交流。
+- 所有生成的MD文档放在`docs`目录下保存。
+- Map、List、Set等集合字段，get时不允许为null，除非特别指定。
+
+## 新接口开发规范
+当进行新接口开发时，必须严格遵循 `docs/通用增删改查示例.md` 中定义的模式。
+- **目录结构**: 严格遵守 `domain`, `mapper`, `service`, `controller` 的分层结构。
+- **领域对象**:
+    - `domain`: 存放数据库实体类 (`@Table`)。
+    - `domain/bo`: 存放业务对象，用于服务层方法参数，并包含校验注解。
+    - `domain/vo`: 存放视图对象，用于控制器返回数据。
+    - `domain/query`: 存放查询条件对象，使用 `@Condition` 注解。
+- **Mapper**: 继承 `BaseMapperPlus`，利用其内置方法和 `QueryChain` 进行数据库操作。禁止编写XML文件。
+- **Service**: 定义业务逻辑接口和实现。查询优先使用 `QueryChain` 构建。
+- **Controller**: 负责API路由和参数校验，调用Service完成业务。
+
+## 数据库操作规范
+- 必须使用 **Xbatis** (`cn.xbatis`) 进行所有数据库操作，参考 `docs/xbatis文档.md`。
+- 复杂查询优先使用 `QueryChain`，它提供了强大的链式调用能力。
+- 实体类必须继承 `BaseEntity`，以确保包含标准的审计字段。
+- 使用 `@AutoColumn` 注解来管理数据库表结构，利用 `AutoTable` 的自动同步功能。
+
+## 文件上传规范
+- 文件或图像的保存操作，必须使用 **x-file-storage** (`org.dromara.x.file.storage.core`)。
+- 具体实现请参考 `docs/文件上传示例.md` 中的代码。
+
+## 工具类使用规范
+- 优先使用项目自定义的工具类，位于 `com.jimuqu.common.core.utils` 包下。
+- 其次，广泛使用 **Hutool** 工具库来处理如非空判断、字段处理（分割、加解密）等常见任务。
+- 如果所需工具不存在，请将其添加到 `com.jimuqu.common.core.utils` 包中。
 
 # MCP Interactive Feedback 规则
 
