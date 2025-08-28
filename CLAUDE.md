@@ -5,10 +5,11 @@
 # 用户要求
 - 对话过程中全程使用中文与用户进行沟通交流
 - 所有生成的MD文档放在docs目录下保存
-- 工具类优先使用com.jimuqu.common.core.utils包下的工具，其次使用Hutool工具，如果不存在某工具，请添加到com.jimuqu.common.core.utils下
-- 判断是否为空，字段处理（分割，加解密）等情况，优先使用HuTool工具
+- 当进行新接口开发时，按照 “通用增删改查示例.md” 文件的示例进行开发
+- 当需要操作数据库时，请使用Xbatis进行数据库操作，文档在 xbatis文档.md中
+- 当涉及到文件或图像保存时，则使用 x-file-storage，参考文件上传示例.md文件
+- 工具类优先使用Hutool工具，如 判断是否为空，字段处理（分割，加解密）等类似情况，如果不存在某工具，请添加到com.jimuqu.common.core.utils下
 - Map，List,Set等集合字段，get时不允许为null，除非指定要求
-
 
 # MCP Interactive Feedback 规则
 
@@ -50,7 +51,7 @@ java -jar jimuqu.jar --spring.profiles.active=prod
 项目使用 **AutoTable** 进行自动数据库架构管理。启动时：
 - 数据库表根据实体类自动创建/更新
 - 初始数据从 `src/main/resources/sql/{dialect}/` 目录加载
-- SQL 迁移文件生成在 `./db/sql/` 目录中
+- SQL 迁移文件生成在 `./db/sql/` 目录中, 项目启动自动维护，无需手动处理
 
 ## 架构和结构
 
@@ -127,20 +128,11 @@ Page<T> page = Page.of(currentPage, pageSize);
 - **数据范围**: 基于部门的数据权限
 - **第三方认证**: JustAuth 集成社交登录
 
-### 代码生成
-系统包含代码生成器，可创建：
-- CRUD 操作 (Controller, Service, Mapper)
-- Vue 前端组件
-- API 文档
-- 数据库查询
-
-支持多种模板 (Vue, Vben, TypeScript) 且可自定义。
-
 ## 开发注意事项
 
 ### 环境配置
 - **dev**: 本地开发环境，使用 MySQL
-- **prod**: 生产环境，使用 MariaDB
+- **prod**: 生产环境，使用 MySQL
 - 配置文件通过 Maven 和 Solon 配置管理
 
 ### 数据库架构
