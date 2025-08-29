@@ -1,11 +1,5 @@
 {
   "mcpServers": {
-    "mcp-feedback-enhanced": {
-      "command": "uvx",
-      "args": ["mcp-feedback-enhanced@latest"],
-      "timeout": 600,
-      "autoApprove": ["interactive_feedback"]
-    },
     "thinking": {
       "type": "stdio",
       "command": "cmd",
