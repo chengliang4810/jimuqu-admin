@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>jimuqu-common-security</artifactId>
+    <description>安全模块</description>
 
     <dependencies>
         <!-- sa-token -->

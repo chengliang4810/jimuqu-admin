@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>jimuqu-common-excel</artifactId>
-
+    <description>excel模块</description>
     <dependencies>
 
         <dependency>

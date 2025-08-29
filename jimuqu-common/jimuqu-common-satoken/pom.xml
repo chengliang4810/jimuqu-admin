@@ -10,7 +10,8 @@
     </parent>
 
     <artifactId>jimuqu-common-satoken</artifactId>
-
+    <description>satoken模块</description>
+    
     <dependencies>
         <dependency>
             <groupId>com.jimuqu</groupId>

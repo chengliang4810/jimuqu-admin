@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>jimuqu-common-social</artifactId>
+    <description>社交登录模块</description>
 
     <dependencies>
 
