@@ -3,12 +3,38 @@
 本文件为 Claude Code (claude.ai/code) 在此代码仓库中工作时提供指导。
 
 # 用户要求
-- 对话过程中全程使用中文与用户进行沟通交流
-- 所有生成的MD文档放在docs目录下保存
-- 工具类优先使用com.jimuqu.common.core.utils包下的工具，其次使用Hutool工具，如果不存在某工具，请添加到com.jimuqu.common.core.utils下
-- 判断是否为空，字段处理（分割，加解密）等情况，优先使用HuTool工具
-- Map，List,Set等集合字段，get时不允许为null，除非指定要求
 
+## 通用要求
+- 对话过程中全程使用中文与用户进行沟通交流。
+- 所有生成的MD文档放在`docs`目录下保存。
+- Map、List、Set等集合字段，get时不允许为null，除非特别指定。
+
+## 新接口开发规范
+当进行新接口开发时，必须严格遵循 `docs/通用增删改查示例.md` 中定义的模式。
+- **目录结构**: 严格遵守 `domain`, `mapper`, `service`, `controller` 的分层结构。
+- **领域对象**:
+    - `domain`: 存放数据库实体类 (`@Table`)。
+    - `domain/bo`: 存放业务对象，用于服务层方法参数，并包含校验注解。
+    - `domain/vo`: 存放视图对象，用于控制器返回数据。
+    - `domain/query`: 存放查询条件对象，使用 `@Condition` 注解。
+- **Mapper**: 继承 `BaseMapperPlus`，利用其内置方法和 `QueryChain` 进行数据库操作。禁止编写XML文件。
+- **Service**: 定义业务逻辑接口和实现。查询优先使用 `QueryChain` 构建。
+- **Controller**: 负责API路由和参数校验，调用Service完成业务。
+
+## 数据库操作规范
+- 必须使用 **Xbatis** (`cn.xbatis`) 进行所有数据库操作，参考 `docs/xbatis文档.md`。
+- 复杂查询优先使用 `QueryChain`，它提供了强大的链式调用能力。
+- 实体类必须继承 `BaseEntity`，以确保包含标准的审计字段。
+- 使用 `@AutoColumn` 注解来管理数据库表结构，利用 `AutoTable` 的自动同步功能。
+
+## 文件上传规范
+- 文件或图像的保存操作，必须使用 **x-file-storage** (`org.dromara.x.file.storage.core`)。
+- 具体实现请参考 `docs/文件上传示例.md` 中的代码。
+
+## 工具类使用规范
+- 优先使用项目自定义的工具类，位于 `com.jimuqu.common.core.utils` 包下。
+- 其次，广泛使用 **Hutool** 工具库来处理如非空判断、字段处理（分割、加解密）等常见任务。
+- 如果所需工具不存在，请将其添加到 `com.jimuqu.common.core.utils` 包中。
 
 # MCP Interactive Feedback 规则
 
@@ -49,7 +75,7 @@ java -jar jimuqu.jar --spring.profiles.active=prod
 项目使用 **AutoTable** 进行自动数据库架构管理。启动时：
 - 数据库表根据实体类自动创建/更新
 - 初始数据从 `src/main/resources/sql/{dialect}/` 目录加载
-- SQL 迁移文件生成在 `./db/sql/` 目录中
+- SQL 迁移文件生成在 `./db/sql/` 目录中, 项目启动自动维护，无需手动处理
 
 ## 架构和结构
 
@@ -126,20 +152,11 @@ Page<T> page = Page.of(currentPage, pageSize);
 - **数据范围**: 基于部门的数据权限
 - **第三方认证**: JustAuth 集成社交登录
 
-### 代码生成
-系统包含代码生成器，可创建：
-- CRUD 操作 (Controller, Service, Mapper)
-- Vue 前端组件
-- API 文档
-- 数据库查询
-
-支持多种模板 (Vue, Vben, TypeScript) 且可自定义。
-
 ## 开发注意事项
 
 ### 环境配置
 - **dev**: 本地开发环境，使用 MySQL
-- **prod**: 生产环境，使用 MariaDB
+- **prod**: 生产环境，使用 MySQL
 - 配置文件通过 Maven 和 Solon 配置管理
 
 ### 数据库架构
