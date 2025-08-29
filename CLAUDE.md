@@ -12,7 +12,6 @@
 
 # MCP Interactive Feedback 规则
 
-- 如果mcp服务存在mcp-feedback-enhanced服务则启用这条规则。
 - 注意在任务完成前根据mcp-feedback-enhanced工具的要求进行工具调用
 
 ## 项目概述

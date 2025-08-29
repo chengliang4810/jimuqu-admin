@@ -1,41 +1,39 @@
 {
   "mcpServers": {
-    "fetch": {
+    "mcp-feedback-enhanced": {
       "command": "uvx",
-      "args": ["mcp-server-fetch"]
+      "args": ["mcp-feedback-enhanced@latest"],
+      "timeout": 600,
+      "autoApprove": ["interactive_feedback"]
     },
-    "memory": {
-      "command": "cmd /c npx",
+    "thinking": {
+      "type": "stdio",
+      "command": "cmd",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ]
-    },
-    "sequential-thinking": {
-      "command": "cmd /c npx",
-      "args": [
+        "/c",
+        "npx",
         "-y",
         "@modelcontextprotocol/server-sequential-thinking"
-      ]
+      ],
+      "env": {}
     },
-    "everything": {
-      "command": "cmd /c npx",
+    "memory": {
+      "type": "stdio",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
-        "@modelcontextprotocol/server-everything"
-      ]
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {}
     },
-    "filesystem": {
-      "command": "cmd /c npx",
+    "time": {
+      "command": "uvx",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "D:\\"
-      ]
-    },
-    "time-mcp": {
-      "command": "cmd /c npx",
-      "args": ["-y", "time-mcp"]
+        "mcp-server-time"
+      ],
+      "env": {}
     }
   }
 }
