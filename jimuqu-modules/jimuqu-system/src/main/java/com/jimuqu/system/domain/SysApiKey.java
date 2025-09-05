@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.v7.core.map.Dict;
 import cn.xbatis.core.incrementer.IdentifierGeneratorType;
 import cn.xbatis.db.IdAutoType;
+import cn.xbatis.db.annotations.Ignore;
 import cn.xbatis.db.annotations.Table;
 import cn.xbatis.db.annotations.TableId;
 import com.jimuqu.common.core.utils.JsonUtil;
@@ -100,11 +101,13 @@ public class SysApiKey extends BaseEntity {
     /**
      * 临时存储权限范围的Set
      */
+    @Ignore
     private transient Set<String> scopeSet = new HashSet<>();
 
     /**
      * 临时存储扩展信息的Map
      */
+    @Ignore
     private transient Map<String, Object> extraMap = new HashMap<>();
 
     /**
