@@ -1,10 +1,5 @@
 package ${packageName}.domain;
 
-#foreach ($column in $columns)
-#if($column.javaField=='tenantId')
-#set($IsTenant=1)
-#end
-#end
 import com.jimuqu.common.mybatis.core.domain.BaseEntity;
 import com.mybatisflex.annotation.Column;
 import cn.xbatis.db.annotations.TableId;

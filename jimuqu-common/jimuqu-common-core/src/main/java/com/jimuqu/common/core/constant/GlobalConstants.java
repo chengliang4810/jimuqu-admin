@@ -8,6 +8,11 @@ package com.jimuqu.common.core.constant;
 public interface GlobalConstants {
 
     /**
+     * 管理员角色权限
+     */
+    String SUPER_ADMIN_ROLE_KEY = "admin";
+
+    /**
      * 全局 redis key (业务无关的key)
      */
     String GLOBAL_REDIS_KEY = "global:";

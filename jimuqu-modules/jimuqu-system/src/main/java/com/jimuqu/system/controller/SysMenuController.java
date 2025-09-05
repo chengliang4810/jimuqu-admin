@@ -2,9 +2,9 @@ package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.annotation.SaCheckRole;
-import cn.dev33.satoken.annotation.SaMode;
+import cn.hutool.v7.core.tree.MapTree;
 import com.jimuqu.common.core.checker.Assert;
-import com.jimuqu.common.core.constant.TenantConstants;
+import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.utils.StringUtil;
@@ -21,7 +21,6 @@ import com.jimuqu.system.domain.vo.RouterVo;
 import com.jimuqu.system.domain.vo.SysMenuVo;
 import com.jimuqu.system.service.SysMenuService;
 import lombok.RequiredArgsConstructor;
-import cn.hutool.v7.core.tree.MapTree;
 import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Mapping;
@@ -65,7 +64,7 @@ public class SysMenuController extends BaseController {
     @Get
     @Mapping("/list")
     @SaCheckPermission("system:menu:list")
-    @SaCheckRole(value = TenantConstants.SUPER_ADMIN_ROLE_KEY)
+    @SaCheckRole(GlobalConstants.SUPER_ADMIN_ROLE_KEY)
     public List<SysMenuVo> list(SysMenuQuery query) {
         return sysMenuService.queryList(query, LoginHelper.getUserId());
     }
@@ -78,10 +77,7 @@ public class SysMenuController extends BaseController {
     @Get
     @Mapping("/{id}")
     @SaCheckPermission("system:menu:query")
-    @SaCheckRole(value = {
-            TenantConstants.SUPER_ADMIN_ROLE_KEY,
-            TenantConstants.TENANT_ADMIN_ROLE_KEY
-    }, mode = SaMode.OR)
+    @SaCheckRole(GlobalConstants.SUPER_ADMIN_ROLE_KEY)
     public SysMenuVo getInfo(@NotNull(message = "菜单权限主键不能为空") Long id) {
         return sysMenuService.queryById(id);
     }
@@ -103,7 +99,7 @@ public class SysMenuController extends BaseController {
     @Mapping("/add")
     @NoRepeatSubmit
     @SaCheckPermission("system:menu:add")
-    @SaCheckRole(TenantConstants.SUPER_ADMIN_ROLE_KEY)
+    @SaCheckRole(GlobalConstants.SUPER_ADMIN_ROLE_KEY)
     @Log(title = "新增菜单权限", businessType = BusinessType.ADD)
     public R<Long> add(@Validated(AddGroup.class) SysMenuBo menu) {
         if (!sysMenuService.checkMenuNameUnique(menu)) {
@@ -122,7 +118,7 @@ public class SysMenuController extends BaseController {
     @NoRepeatSubmit
     @Mapping("/update")
     @SaCheckPermission("system:menu:update")
-    @SaCheckRole(TenantConstants.SUPER_ADMIN_ROLE_KEY)
+    @SaCheckRole(GlobalConstants.SUPER_ADMIN_ROLE_KEY)
     @Log(title = "更新菜单权限", businessType = BusinessType.UPDATE)
     public R<Void> edit(@Validated(UpdateGroup.class) SysMenuBo menu) {
         if (!sysMenuService.checkMenuNameUnique(menu)) {
@@ -142,7 +138,7 @@ public class SysMenuController extends BaseController {
      */
     @Mapping("/delete/{ids}")
     @SaCheckPermission("system:menu:delete")
-    @SaCheckRole(TenantConstants.SUPER_ADMIN_ROLE_KEY)
+    @SaCheckRole(GlobalConstants.SUPER_ADMIN_ROLE_KEY)
     @Log(title = "删除菜单权限", businessType = BusinessType.DELETE)
     public R<Integer> delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
         if (sysMenuService.hasChildByMenuId(ids)) {

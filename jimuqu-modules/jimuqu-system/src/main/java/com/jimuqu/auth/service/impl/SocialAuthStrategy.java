@@ -52,7 +52,7 @@ public class SocialAuthStrategy implements AuthStrategyService {
 //        }
 //        Optional<SysSocialVo> opt = list.stream().findAny();
 //        if (opt.isEmpty()) {
-//            throw new ServiceException("对不起，你没有权限登录当前租户！" );
+//            throw new ServiceException("对不起，你没有权限登录！" );
 //        }
 //        SysSocialVo social = opt.get();
 //        // 查找用户

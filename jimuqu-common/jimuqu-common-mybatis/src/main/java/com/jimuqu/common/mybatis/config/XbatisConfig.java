@@ -1,7 +1,6 @@
 package com.jimuqu.common.mybatis.config;
 
 import cn.xbatis.core.XbatisGlobalConfig;
-import cn.xbatis.core.tenant.TenantContext;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.mybatis.core.mapper.BaseMapper;
 import com.jimuqu.common.satoken.utils.LoginHelper;

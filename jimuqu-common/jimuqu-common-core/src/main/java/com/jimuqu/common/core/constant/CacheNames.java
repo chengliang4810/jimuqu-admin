@@ -30,11 +30,7 @@ public interface CacheNames {
      */
     String SYS_DICT = "sys_dict";
 
-    /**
-     * 租户
-     */
-    String SYS_TENANT = GlobalConstants.GLOBAL_REDIS_KEY + "sys_tenant#30d";
-
+    
     /**
      * 用户账户
      */
