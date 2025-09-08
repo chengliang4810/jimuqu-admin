@@ -2,10 +2,8 @@
   "mcpServers": {
     "thinking": {
       "type": "stdio",
-      "command": "cmd",
+      "command": "npx",
       "args": [
-        "/c",
-        "npx",
         "-y",
         "@modelcontextprotocol/server-sequential-thinking"
       ],
@@ -13,10 +11,8 @@
     },
     "memory": {
       "type": "stdio",
-      "command": "cmd",
+      "command": "npx",
       "args": [
-        "/c",
-        "npx",
         "-y",
         "@modelcontextprotocol/server-memory"
       ],
