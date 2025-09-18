@@ -9,11 +9,13 @@ import com.jimuqu.common.core.utils.StreamUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.common.satoken.utils.LoginHelper;
+import com.jimuqu.system.domain.SysPost;
 import com.jimuqu.system.domain.SysUser;
 import com.jimuqu.system.domain.SysUserPost;
 import com.jimuqu.system.domain.SysUserRole;
 import com.jimuqu.system.domain.bo.SysUserBo;
 import com.jimuqu.system.domain.query.SysUserQuery;
+import com.jimuqu.system.domain.vo.SysPostVo;
 import com.jimuqu.system.domain.vo.SysRoleVo;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.mapper.*;
@@ -46,6 +48,7 @@ public class SysUserServiceImpl implements SysUserService {
     private final SysRoleMapper sysRoleMapper;
     private final SysUserPostMapper sysUserPostMapper;
     private final SysUserRoleMapper sysUserRoleMapper;
+    private final SysPostMapper sysPostMapper;
 
     /**
      * 查询用户信息
@@ -296,8 +299,22 @@ public class SysUserServiceImpl implements SysUserService {
         if (ObjUtil.isNull(user)) {
             return "";
         }
-        // TODO 需要实现岗位相关查询，暂时返回空
-        return "";
+
+        // 查询用户关联的岗位
+        List<SysPostVo> posts = QueryChain.of(sysPostMapper)
+                .select(SysPost.class)
+                .join(SysUserPost::getPostId, SysPost::getPostId)
+                .eq(SysUserPost::getUserId, user.getId())
+                .eq(SysPost::getStatus, "0")
+                .orderBy(SysPost::getPostSort)
+                .returnType(SysPostVo.class)
+                .list();
+
+        // 拼接岗位名称
+        return posts.stream()
+                .map(SysPostVo::getPostName)
+                .reduce((a, b) -> a + "," + b)
+                .orElse("");
     }
 
     /**

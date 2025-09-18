@@ -73,9 +73,9 @@ auto-table:
     # 是否开启初始化数据功能
     enable: true
     # 初始化数据文件名，默认是_init_.sql
-    default_init_file_name: _init_.sql
+    default_init_file_name: init.sql
     # 初始化数据文件路径
-    base-path: classpath:sql/{dialect}
+    base-path: classpath:sql/{dialect}/
   # 记录表信息维护过程中执行的SQL
   recordSql:
     enable: true
