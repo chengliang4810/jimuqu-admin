@@ -146,6 +146,68 @@ Page<T> page = Page.of(currentPage, pageSize);
 - **架构管理**: AutoTable 处理自动架构更新
 - **迁移**: `db/sql/` 目录中的 SQL 文件，使用 Flyway 风格版本控制
 
+### Xbatis QueryChain 方法总结
+
+**常用查询方法：**
+- `get()` - 获取单个结果（适合精确查询，无结果时返回null）
+- `list()` - 获取列表结果（无结果时返回空列表）
+- `paging(PageQuery)` - 获取分页结果
+- `count()` - 获取记录数
+- `exists()` - 检查记录是否存在
+
+**条件构建方法：**
+- `eq()` - 等于条件
+- `ne()` - 不等于条件
+- `like()` - 模糊查询
+- `in()` - IN条件
+- `gt()`, `lt()`, `ge()`, `le()` - 大于、小于、大于等于、小于等于
+- `between()` - BETWEEN条件
+- `isNull()`, `isNotNull()` - NULL判断
+
+**关联查询方法：**
+- `exists(主表字段, 从表字段)` - 单条件EXISTS子查询
+- `exists(主表字段, 从表字段, (query, existsQuery) -> {...})` - 多条件EXISTS子查询
+- `notExists(主表字段, 从表字段)` - 单条件NOT EXISTS子查询
+- `notExists(主表字段, 从表字段, (query, existsQuery) -> {...})` - 多条件NOT EXISTS子查询
+- `join()` - 表连接
+- `leftJoin()` - 左连接
+
+**EXISTS子查询示例：**
+```java
+// 单条件exists子查询
+int count = QueryChain.of(sysUserMapper)
+    .exists(SysUser::getRole_id, SysRole::getId)
+    .count();
+
+// 多条件exists子查询
+int count = QueryChain.of(sysUserMapper)
+    .exists(SysUser::getRole_id, SysRole::getId, (query, existsQuery) -> {
+        existsQuery.eq(SysUser::getId, 1);
+    })
+    .count();
+
+// 单条件not exists子查询
+int count = QueryChain.of(sysUserMapper)
+    .notExists(SysUser::getRole_id, SysRole::getId)
+    .count();
+
+// 多条件not exists子查询
+int count = QueryChain.of(sysUserMapper)
+    .notExists(SysUser::getRole_id, SysRole::getId, (query, existsQuery) -> {
+        existsQuery.eq(SysUser::getId, 1);
+    })
+    .count();
+```
+
+**结果转换：**
+- `returnType(Class<T>)` - 指定返回类型
+- `select(Class<T>)` - 选择字段
+
+**重要提醒：**
+- Xbatis QueryChain 没有 `one()` 方法，查询单个数据时使用 `get()`
+- 逻辑删除字段无需手动添加条件，Xbatis会自动处理
+- 避免在代码中硬编码 `del_flag = '0'` 条件
+
 ### 安全和认证
 - **Sa-Token**: 基于 Token 的认证
 - **权限**: 基于角色的访问控制 (RBAC)
