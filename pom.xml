@@ -41,10 +41,6 @@
         <autotable.version>2.5.7</autotable.version>
         <!-- ORM 框架 -->
         <xbatis.version>1.9.0</xbatis.version>
-        <anyline.version>8.7.2-jdk17-20250520</anyline.version>
-        <!-- 代码生成模板引擎 -->
-        <velocity.version>2.3</velocity.version>
-        <beetl.version>3.19.0.RELEASE</beetl.version>
         <!-- 权限认证框架 -->
         <sa-token.version>1.44.0</sa-token.version>
         <!-- 文件上传 -->
@@ -128,6 +124,7 @@
                 <version>${justauth.version}</version>
             </dependency>
 
+            <!-- Excel导出 -->
             <dependency>
                 <groupId>cn.idev.excel</groupId>
                 <artifactId>fastexcel</artifactId>
@@ -183,6 +180,7 @@
                 <version>${therapi-javadoc.version}</version>
             </dependency>
 
+            <!-- 文件存储 -->
             <dependency>
                 <groupId>org.dromara.x-file-storage</groupId>
                 <artifactId>x-file-storage-solon</artifactId>
@@ -194,34 +192,10 @@
                 <version>${minio.version}</version>
             </dependency>
 
-            <!-- velocity代码生成使用模板 -->
-            <dependency>
-                <groupId>org.apache.velocity</groupId>
-                <artifactId>velocity-engine-core</artifactId>
-                <version>${velocity.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jsr310</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-
+            <!-- 系统的功能模块 -->
             <dependency>
                 <groupId>com.jimuqu</groupId>
                 <artifactId>jimuqu-system</artifactId>
-                <version>${revision}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.jimuqu</groupId>
-                <artifactId>jimuqu-generator</artifactId>
                 <version>${revision}</version>
             </dependency>
         </dependencies>

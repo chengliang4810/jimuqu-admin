@@ -19,12 +19,6 @@
             <artifactId>jimuqu-common-core</artifactId>
         </dependency>
 
-        <!-- 静态文件web访问支持，无需nginx等web服务即可访问文件 -->
-        <dependency>
-            <groupId>org.noear</groupId>
-            <artifactId>solon-web-staticfiles</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.dromara.x-file-storage</groupId>
             <artifactId>x-file-storage-solon</artifactId>
@@ -34,6 +28,12 @@
         <dependency>
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
+        </dependency>
+
+        <!-- 静态文件web访问支持, 线上环境推荐使用nginx等专业web服务器 -->
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-web-staticfiles</artifactId>
         </dependency>
     </dependencies>
 

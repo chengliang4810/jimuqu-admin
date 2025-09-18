@@ -5,7 +5,6 @@ import cn.hutool.core.lang.Dict;
 import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.StrUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
@@ -177,7 +176,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
      *
      * @param info 文件分片信息
      */
-    public SysFilePart toFilePartDetail(FilePartInfo info) throws JsonProcessingException {
+    public SysFilePart toFilePartDetail(FilePartInfo info) {
         SysFilePart detail = new SysFilePart();
         detail.setPlatform(info.getPlatform());
         detail.setUploadId(info.getUploadId());
@@ -191,7 +190,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
     /**
      * 将 FileInfo 转为 SysFileDetail
      */
-    public SysFile toSysFileDetail(FileInfo info) throws JsonProcessingException {
+    public SysFile toSysFileDetail(FileInfo info) {
         SysFile detail = BeanUtil.copyProperties(
                 info, SysFile.class, "metadata", "userMetadata", "thMetadata", "thUserMetadata", "attr", "hashInfo");
 
@@ -210,7 +209,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
     /**
      * 将 SysFileDetail 转为 FileInfo
      */
-    public FileInfo toFileInfo(SysFile detail) throws JsonProcessingException {
+    public FileInfo toFileInfo(SysFile detail) {
         FileInfo info = BeanUtil.copyProperties(
                 detail, FileInfo.class, "metadata", "userMetadata", "thMetadata", "thUserMetadata", "attr", "hashInfo");
 
@@ -229,7 +228,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
     /**
      * 将指定值转换成 json 字符串
      */
-    public String valueToJson(Object value) throws JsonProcessingException {
+    public String valueToJson(Object value) {
         if (value == null) {
             return null;
         }
@@ -239,7 +238,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
     /**
      * 将 json 字符串转换成元数据对象
      */
-    public Map<String, String> jsonToMetadata(String json) throws JsonProcessingException {
+    public Map<String, String> jsonToMetadata(String json) {
         if (StrUtil.isBlank(json)) {
             return null;
         }
@@ -250,7 +249,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
     /**
      * 将 json 字符串转换成字典对象
      */
-    public Dict jsonToDict(String json) throws JsonProcessingException {
+    public Dict jsonToDict(String json) {
         if (StrUtil.isBlank(json)) {
             return null;
         }
@@ -261,7 +260,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
     /**
      * 将 json 字符串转换成哈希信息对象
      */
-    public HashInfo jsonToHashInfo(String json) throws JsonProcessingException {
+    public HashInfo jsonToHashInfo(String json) {
         if (StrUtil.isBlank(json)) {
             return null;
         }
