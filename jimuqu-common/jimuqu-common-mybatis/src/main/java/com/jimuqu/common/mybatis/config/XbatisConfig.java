@@ -1,10 +1,12 @@
 package com.jimuqu.common.mybatis.config;
 
+import cn.hutool.v7.core.text.StrUtil;
 import cn.xbatis.core.XbatisGlobalConfig;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.mybatis.core.mapper.BaseMapper;
+import com.jimuqu.common.mybatis.interceptor.MybatisDataPermissionInterceptor;
+import com.jimuqu.common.mybatis.interceptor.XbatisDataPermissionMethodInterceptor;
 import com.jimuqu.common.satoken.utils.LoginHelper;
-import cn.hutool.v7.core.text.StrUtil;
 import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Configuration;
 
@@ -36,6 +38,19 @@ public class XbatisConfig {
             }
             throw new ServiceException("{CURRENT_DEPT_ID} 不支持的字段类型");
         });
+
+        // 添加XBatis方法拦截器
+        XbatisGlobalConfig.addMapperMethodInterceptor(new XbatisDataPermissionMethodInterceptor());
+    }
+
+    /**
+     * 注册Mybatis数据权限拦截器
+     * 在Solon框架中，Mybatis拦截器需要通过配置文件进行配置
+     * 这里暂时不注册，后续通过配置文件添加
+     */
+    @Bean
+    public MybatisDataPermissionInterceptor mybatisDataPermissionInterceptor() {
+        return new MybatisDataPermissionInterceptor();
     }
 
 }

@@ -106,6 +106,17 @@ public class LoginHelper {
     }
 
     /**
+     * 获取角色ID
+     */
+    public static Long getRoleId() {
+        LoginUser loginUser = getLoginUser();
+        if (ObjUtil.isNull(loginUser)) {
+            return null;
+        }
+        return loginUser.getRoleId();
+    }
+
+    /**
      * 获取用户账户
      */
     public static String getUsername() {

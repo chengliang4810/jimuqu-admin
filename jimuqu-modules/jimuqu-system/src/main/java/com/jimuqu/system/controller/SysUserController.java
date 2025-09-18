@@ -15,6 +15,8 @@ import com.jimuqu.common.log.enums.BusinessType;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.common.satoken.utils.LoginHelper;
+import com.jimuqu.common.mybatis.annotation.DataColumn;
+import com.jimuqu.common.mybatis.annotation.DataPermission;
 import com.jimuqu.common.web.core.BaseController;
 import com.jimuqu.system.domain.bo.SysUserBo;
 import com.jimuqu.system.domain.query.SysPostQuery;
@@ -60,10 +62,15 @@ public class SysUserController extends BaseController {
 
     /**
      * 查询用户信息列表
+     * 应用数据权限：用户只能查看自己权限范围内的用户
      */
     @Get
     @Mapping("/list")
     @SaCheckPermission("system:user:list")
+    @DataPermission({
+        @DataColumn(key = "deptName", value = "d.dept_id"),
+        @DataColumn(key = "userName", value = "u.user_id")
+    })
     public Page<SysUserVo> list(SysUserQuery query, PageQuery pageQuery) {
         return sysUserService.queryPageList(query, pageQuery);
     }

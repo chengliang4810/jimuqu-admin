@@ -10,3 +10,5 @@ mybatis.jimuqu:
     mapperVerifyEnabled: false #如果为 true，则要求所有 mapper 有 @Mapper 主解
     mapUnderscoreToCamelCase: true
     autoMappingBehavior: full #自动映射策略（NONE/PARTIAL/FULL）
+  interceptors: #配置拦截器
+    - "com.jimuqu.common.mybatis.interceptor.MybatisDataPermissionInterceptor"

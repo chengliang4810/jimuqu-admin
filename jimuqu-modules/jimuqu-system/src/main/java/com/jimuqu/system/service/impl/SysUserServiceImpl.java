@@ -49,6 +49,7 @@ public class SysUserServiceImpl implements SysUserService {
     private final SysUserPostMapper sysUserPostMapper;
     private final SysUserRoleMapper sysUserRoleMapper;
     private final SysPostMapper sysPostMapper;
+    private final SysRoleDeptMapper sysRoleDeptMapper;
 
     /**
      * 查询用户信息
@@ -505,9 +506,55 @@ public class SysUserServiceImpl implements SysUserService {
         if (LoginHelper.isSuperAdmin()) {
             return;
         }
-        // TODO 数据权限
-//        if (ObjUtil.isNull(sysUserMapper.selectUserById(userId))) {
-//            throw new ServiceException("没有权限访问用户数据！");
-//        }
+
+        // 获取当前用户的数据权限
+        String dataScope = LoginHelper.getLoginUser().getDataScope();
+        if (dataScope == null || dataScope.isEmpty()) {
+            throw new ServiceException("没有配置数据权限，无法访问用户数据！");
+        }
+
+        // 获取目标用户的部门信息
+        SysUser targetUser = sysUserMapper.getById(userId);
+        if (targetUser == null) {
+            throw new ServiceException("用户不存在！");
+        }
+
+        // 根据数据权限范围检查
+        if (!hasUserDataScope(dataScope, targetUser.getDeptId())) {
+            throw new ServiceException("没有权限访问用户数据！");
+        }
+    }
+
+    /**
+     * 检查用户是否有目标用户的数据权限
+     *
+     * @param dataScope 当前用户的数据权限范围
+     * @param targetDeptId 目标用户的部门ID
+     * @return 是否有权限
+     */
+    private boolean hasUserDataScope(String dataScope, Long targetDeptId) {
+        if (targetDeptId == null) {
+            return false;
+        }
+
+        // 获取当前用户的部门ID
+        Long currentDeptId = LoginHelper.getDeptId();
+
+        return switch (dataScope) {
+            case "1" -> true; // 全部数据权限
+            case "2" -> { // 自定数据权限
+                Long roleId = LoginHelper.getLoginUser().getRoleId();
+                List<Long> customDeptIds = sysRoleDeptMapper.selectDeptIdsByRoleId(roleId);
+                yield customDeptIds.contains(targetDeptId);
+            }
+            case "3" -> targetDeptId.equals(currentDeptId); // 部门数据权限
+            case "4" -> { // 部门及以下数据权限
+                List<Long> childDeptIds = sysDeptMapper.selectListByParentId(currentDeptId);
+                childDeptIds.add(currentDeptId);
+                yield childDeptIds.contains(targetDeptId);
+            }
+            case "5" -> false; // 仅本人数据权限，不能访问其他用户
+            default -> false;
+        };
     }
 }

@@ -109,6 +109,11 @@ public class LoginUser implements Serializable {
     private Long roleId;
 
     /**
+     * 数据权限范围（1全部数据权限 2自定数据权限 3部门数据权限 4部门及以下数据权限 5仅本人数据权限）
+     */
+    private String dataScope;
+
+    /**
      * 客户端
      */
     private String clientKey;
