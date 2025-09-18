@@ -19,9 +19,7 @@
     </description>
 
     <dependencies>
-
-
-        <!-- sql-lite -->
+        <!-- sql-lite 如果使用MySQL数据库, 请移除该依赖（约13MB大小） -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
@@ -39,12 +37,6 @@
         <dependency>
             <groupId>com.jimuqu</groupId>
             <artifactId>jimuqu-system</artifactId>
-        </dependency>
-
-        <!-- 代码生成模块 -->
-        <dependency>
-            <groupId>com.jimuqu</groupId>
-            <artifactId>jimuqu-generator</artifactId>
         </dependency>
 
         <dependency>
