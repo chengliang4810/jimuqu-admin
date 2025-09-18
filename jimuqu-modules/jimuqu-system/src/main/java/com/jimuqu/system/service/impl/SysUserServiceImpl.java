@@ -14,6 +14,7 @@ import com.jimuqu.system.domain.SysUserPost;
 import com.jimuqu.system.domain.SysUserRole;
 import com.jimuqu.system.domain.bo.SysUserBo;
 import com.jimuqu.system.domain.query.SysUserQuery;
+import com.jimuqu.system.domain.vo.SysRoleVo;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.mapper.*;
 import com.jimuqu.system.service.SysUserService;
@@ -140,7 +141,8 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public int updateUserProfile(SysUserBo user) {
-        return 0;
+        SysUser sysUser = MapstructUtil.convert(user, SysUser.class);
+        return sysUserMapper.update(sysUser);
     }
 
     /**
@@ -239,7 +241,12 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public SysUserVo selectUserByUserName(String userName) {
-        return null;
+        return QueryChain.of(sysUserMapper)
+                .select(SysUser.class)
+                .eq(SysUser::getUserName, userName)
+                .eq(SysUser::getDelFlag, "0")
+                .returnType(SysUserVo.class)
+                .get();
     }
 
     /**
@@ -250,7 +257,12 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public SysUserVo selectUserByPhonenumber(String phonenumber) {
-        return null;
+        return QueryChain.of(sysUserMapper)
+                .select(SysUser.class)
+                .eq(SysUser::getPhonenumber, phonenumber)
+                .eq(SysUser::getDelFlag, "0")
+                .returnType(SysUserVo.class)
+                .get();
     }
 
     /**
@@ -261,7 +273,15 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public String selectUserRoleGroup(String userName) {
-        return "";
+        SysUserVo user = selectUserByUserName(userName);
+        if (ObjUtil.isNull(user)) {
+            return "";
+        }
+        List<SysRoleVo> roles = sysRoleMapper.selectRolesByUserId(user.getId());
+        return roles.stream()
+                .map(SysRoleVo::getRoleName)
+                .reduce((a, b) -> a + "," + b)
+                .orElse("");
     }
 
     /**
@@ -272,6 +292,11 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public String selectUserPostGroup(String userName) {
+        SysUserVo user = selectUserByUserName(userName);
+        if (ObjUtil.isNull(user)) {
+            return "";
+        }
+        // TODO 需要实现岗位相关查询，暂时返回空
         return "";
     }
 
@@ -284,7 +309,13 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public Page<SysUserVo> selectAllocatedList(SysUserBo user, PageQuery pageQuery) {
-        return null;
+        SysUserQuery query = MapstructUtil.convert(user, SysUserQuery.class);
+        return QueryChain.of(sysUserMapper)
+                .select(SysUser.class)
+                .where(query)
+                .exists(SysUser::getId, SysUserRole::getUserId)
+                .returnType(SysUserVo.class)
+                .paging(pageQuery.build());
     }
 
     /**
@@ -296,7 +327,13 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public Page<SysUserVo> selectUnallocatedList(SysUserBo user, PageQuery pageQuery) {
-        return null;
+        SysUserQuery query = MapstructUtil.convert(user, SysUserQuery.class);
+        return QueryChain.of(sysUserMapper)
+                .select(SysUser.class)
+                .where(query)
+                .notExists(SysUser::getId, SysUserRole::getUserId)
+                .returnType(SysUserVo.class)
+                .paging(pageQuery.build());
     }
 
     /**
@@ -322,7 +359,7 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public boolean registerUser(SysUserBo bo) {
-        return false;
+        return insertByBo(bo);
     }
 
     /**
@@ -333,7 +370,19 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public void insertUserAuth(Long userId, Long[] roleIds) {
+        if (ObjUtil.isNull(userId) || roleIds == null || roleIds.length == 0) {
+            return;
+        }
+        // 清除原有角色关联
+        sysUserRoleMapper.delete(where -> where.eq(SysUserRole::getUserId, userId));
 
+        // 新增角色关联
+        List<Long> roleList = new ArrayList<>();
+        for (Long roleId : roleIds) {
+            roleList.add(roleId);
+        }
+
+        insertUserRole(userId, roleList, false);
     }
 
     /**
