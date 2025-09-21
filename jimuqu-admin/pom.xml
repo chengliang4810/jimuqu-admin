@@ -49,7 +49,7 @@
 
     <build>
         <!-- 打包后jar的名称 -->
-        <finalName>${project.parent.artifactId}</finalName>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
             <!-- 配置打包插件（并打包成胖包） -->
             <plugin>
