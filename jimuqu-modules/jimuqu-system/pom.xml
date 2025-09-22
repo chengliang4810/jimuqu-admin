@@ -79,6 +79,11 @@
             <artifactId>jimuqu-common-oss</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-translation</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

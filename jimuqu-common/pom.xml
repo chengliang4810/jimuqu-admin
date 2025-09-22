@@ -28,6 +28,7 @@
         <module>jimuqu-common-excel</module>
         <module>jimuqu-common-cache</module>
         <module>jimuqu-common-oss</module>
+        <module>jimuqu-common-translation</module>
     </modules>
 
 </project>

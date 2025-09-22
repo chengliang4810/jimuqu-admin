@@ -1,6 +1,7 @@
 package com.jimuqu.system.service.impl;
 
 import cn.xbatis.core.sql.executor.chain.QueryChain;
+import com.jimuqu.common.core.service.DictService;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
@@ -16,6 +17,7 @@ import org.noear.solon.annotation.Component;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -27,7 +29,7 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SysDictTypeServiceImpl implements SysDictTypeService {
+public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
 
     private final SysDictTypeMapper sysDictTypeMapper;
 
@@ -95,5 +97,20 @@ public class SysDictTypeServiceImpl implements SysDictTypeService {
     @Override
     public Integer deleteByIds(Collection<Long> ids) {
         return sysDictTypeMapper.deleteByIds(ids);
+    }
+
+    @Override
+    public String getDictLabel(String dictType, String dictValue, String separator) {
+        return "";
+    }
+
+    @Override
+    public String getDictValue(String dictType, String dictLabel, String separator) {
+        return "";
+    }
+
+    @Override
+    public Map<String, String> getAllDictByDictType(String dictType) {
+        return Map.of();
     }
 }
