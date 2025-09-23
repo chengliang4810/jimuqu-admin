@@ -4,9 +4,15 @@ import com.jimuqu.common.translation.core.TranslatableEnum;
 import com.jimuqu.common.translation.enums.TransType;
 import com.jimuqu.common.translation.enums.VoidEnum;
 
+import java.lang.annotation.*;
+
 /**
  * 翻译注解
  */
+
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
 public @interface Trans {
     /**
      * 值, 不同的翻译类型值不同

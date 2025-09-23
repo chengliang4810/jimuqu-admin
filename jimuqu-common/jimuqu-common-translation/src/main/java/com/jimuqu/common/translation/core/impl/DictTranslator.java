@@ -18,33 +18,22 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component(value = "dictTranslator", typed = true)
 public class DictTranslator implements TranslationInterface {
 
-    /**
-     * 字典缓存
-     */
-    private final Map<String, String> dictCache = new ConcurrentHashMap<>();
-
     @Inject
     private DictService dictService;
 
     @Override
     public String translate(Object value, Trans trans) {
+        System.out.println("字典翻译::::" + value);
         if (ObjUtil.isNull(value) || ObjUtil.isNull(dictService)) {
             return trans.defaultValue();
         }
         String dictType = trans.value();
         String dictValue = value.toString();
 
-        // 优先从缓存获取
-        String cacheKey = dictType + ":" + dictValue;
-        if (dictCache.containsKey(cacheKey)) {
-            return dictCache.get(cacheKey);
-        }
-
-        // 缓存未命中，调用服务查询
         try {
             String dictLabel = dictService.getDictLabel(dictType, dictValue);
+            System.out.println("字典翻译::::" + dictLabel);
             if (ObjUtil.isNotEmpty(dictLabel)) {
-                dictCache.put(cacheKey, dictLabel);
                 return dictLabel;
             }
         } catch (Exception e) {

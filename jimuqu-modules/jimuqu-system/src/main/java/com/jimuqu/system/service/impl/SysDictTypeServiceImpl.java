@@ -6,10 +6,12 @@ import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.system.domain.SysDictType;
+import com.jimuqu.system.domain.SysDictData;
 import com.jimuqu.system.domain.bo.SysDictTypeBo;
 import com.jimuqu.system.domain.vo.SysDictTypeVo;
 import com.jimuqu.system.domain.query.SysDictTypeQuery;
 import com.jimuqu.system.mapper.SysDictTypeMapper;
+import com.jimuqu.system.mapper.SysDictDataMapper;
 import com.jimuqu.system.service.SysDictTypeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,8 @@ import org.noear.solon.annotation.Component;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 
 /**
@@ -32,6 +36,7 @@ import java.util.Map;
 public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
 
     private final SysDictTypeMapper sysDictTypeMapper;
+    private final SysDictDataMapper sysDictDataMapper;
 
     /**
      * 查询字典类型
@@ -101,16 +106,87 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
 
     @Override
     public String getDictLabel(String dictType, String dictValue, String separator) {
-        return "";
+        if (dictType == null || dictValue == null) {
+            return "";
+        }
+
+        // 处理多个字典值的情况
+        if (dictValue.contains(separator)) {
+            String[] values = dictValue.split(separator);
+            StringBuilder result = new StringBuilder();
+            for (String value : values) {
+                String label = getSingleDictLabel(dictType, value.trim());
+                if (result.length() > 0) {
+                    result.append(separator);
+                }
+                result.append(label);
+            }
+            return result.toString();
+        }
+
+        return getSingleDictLabel(dictType, dictValue);
     }
 
     @Override
     public String getDictValue(String dictType, String dictLabel, String separator) {
-        return "";
+        if (dictType == null || dictLabel == null) {
+            return "";
+        }
+
+        // 处理多个字典标签的情况
+        if (dictLabel.contains(separator)) {
+            String[] labels = dictLabel.split(separator);
+            StringBuilder result = new StringBuilder();
+            for (String label : labels) {
+                String value = getSingleDictValue(dictType, label.trim());
+                if (result.length() > 0) {
+                    result.append(separator);
+                }
+                result.append(value);
+            }
+            return result.toString();
+        }
+
+        return getSingleDictValue(dictType, dictLabel);
     }
 
     @Override
     public Map<String, String> getAllDictByDictType(String dictType) {
-        return Map.of();
+        if (dictType == null) {
+            return Map.of();
+        }
+
+        List<SysDictData> dictDataList = QueryChain.of(sysDictDataMapper)
+                .eq(SysDictData::getDictTypeKey, dictType)
+                .list();
+
+        return dictDataList.stream()
+                .collect(Collectors.toMap(
+                        SysDictData::getDictValue,
+                        SysDictData::getDictLabel,
+                        (existing, replacement) -> existing
+                ));
+    }
+
+    /**
+     * 根据字典类型和字典值获取单个字典标签
+     */
+    private String getSingleDictLabel(String dictType, String dictValue) {
+        SysDictData dictData = QueryChain.of(sysDictDataMapper)
+                .eq(SysDictData::getDictTypeKey, dictType)
+                .eq(SysDictData::getDictValue, dictValue)
+                .get();
+        return dictData != null ? dictData.getDictLabel() : "";
+    }
+
+    /**
+     * 根据字典类型和字典标签获取单个字典值
+     */
+    private String getSingleDictValue(String dictType, String dictLabel) {
+        SysDictData dictData = QueryChain.of(sysDictDataMapper)
+                .eq(SysDictData::getDictTypeKey, dictType)
+                .eq(SysDictData::getDictLabel, dictLabel)
+                .get();
+        return dictData != null ? dictData.getDictValue() : "";
     }
 }

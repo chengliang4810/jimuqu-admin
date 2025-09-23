@@ -54,15 +54,19 @@ public class TranslationService {
             if (field.isAnnotationPresent(Trans.class)) {
                 try {
                     field.setAccessible(true);
-                    Object value = field.get(object);
-                    if (ObjUtil.isNotNull(value)) {
-                        Trans trans = field.getAnnotation(Trans.class);
-                        String translatedValue = doTranslate(value, trans);
-                        // 如果翻译后的值不为空，则设置
+                    Trans trans = field.getAnnotation(Trans.class);
+
+                    // 获取源字段的值进行翻译
+                    String sourceField = ObjUtil.isEmpty(trans.field()) ? field.getName() : trans.field();
+                    Object sourceValue = BeanUtil.getProperty(object, sourceField);
+
+                    if (ObjUtil.isNotNull(sourceValue)) {
+                        String translatedValue = doTranslate(sourceValue, trans);
+                        // 将翻译结果设置到当前字段
                         if (ObjUtil.isNotEmpty(translatedValue)) {
-                            // 获取要设置翻译值的字段名
-                            String targetField = ObjUtil.isEmpty(trans.field()) ? field.getName() + "Name" : trans.field();
-                            BeanUtil.setProperty(object, targetField, translatedValue);
+                            field.set(object, translatedValue);
+                        } else if (ObjUtil.isNotEmpty(trans.defaultValue())) {
+                            field.set(object, trans.defaultValue());
                         }
                     }
                 } catch (Exception e) {
@@ -71,17 +75,59 @@ public class TranslationService {
                 }
             }
 
-            // 2. 递归处理对象类型的字段，无论是否有注解
-            if (!field.getType().isPrimitive() && !field.getType().getName().startsWith("java")) {
+            // 2. 递归处理自定义对象类型的字段，跳过Java核心类、数组、枚举等
+            if (shouldProcessFieldType(field.getType())) {
                  try {
                     field.setAccessible(true);
                     Object value = field.get(object);
                     translate(value);
                 } catch (IllegalAccessException e) {
+                    // 实际项目中建议添加日志记录
                     e.printStackTrace();
                 }
             }
         }
+    }
+
+    /**
+     * 判断字段类型是否需要递归处理
+     * 跳过：基本类型、Java核心类、数组、枚举、注解、代理类等
+     */
+    private boolean shouldProcessFieldType(Class<?> fieldType) {
+        // 跳过基本类型及其包装类
+        if (fieldType.isPrimitive() || fieldType.getName().startsWith("java.lang.")) {
+            return false;
+        }
+
+        // 跳过其他Java核心包
+        String packageName = fieldType.getPackage() != null ? fieldType.getPackage().getName() : "";
+        if (packageName.startsWith("java.") ||
+            packageName.startsWith("javax.") ||
+            packageName.startsWith("jakarta.")) {
+            return false;
+        }
+
+        // 跳过数组类型
+        if (fieldType.isArray()) {
+            return false;
+        }
+
+        // 跳过枚举类型
+        if (fieldType.isEnum()) {
+            return false;
+        }
+
+        // 跳过注解类型
+        if (fieldType.isAnnotation()) {
+            return false;
+        }
+
+        // 跳过代理类
+        if (java.lang.reflect.Proxy.isProxyClass(fieldType)) {
+            return false;
+        }
+
+        return true;
     }
 
     private String doTranslate(Object value, Trans trans) {
