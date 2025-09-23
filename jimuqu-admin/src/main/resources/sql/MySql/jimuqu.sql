@@ -94,7 +94,6 @@ INSERT INTO `sys_dict_data` (`id`, `parent_id`, `dict_sort`, `dict_label`, `dict
 
 INSERT INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1, 0, '系统管理', 1, 'system', NULL, '', '1', '0', 'M', '0', '0', '', 'eos-icons:system-group', '系统管理目录', 103, 1, '2025-05-27 13:19:44', NULL, NULL);
 INSERT INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (2, 0, '系统监控', 3, 'monitor', '', '', '1', '0', 'M', '0', '0', '', 'solar:monitor-camera-outline', '系统监控目录', 103, 1, '2025-05-27 13:19:44', 1, '2025-06-13 06:07:39');
-INSERT INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (3, 0, '系统工具', 4, 'tool', NULL, '', '1', '0', 'M', '0', '0', '', 'ant-design:tool-outlined', '系统工具目录', 103, 1, '2025-05-27 13:19:44', NULL, NULL);
 INSERT INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (4, 0, '官网', 5, 'https://doc.jimuqu.com', NULL, '', '0', '0', 'M', '0', '0', '', 'flat-color-icons:plus', '官网地址', 103, 1, '2025-05-27 13:19:44', NULL, NULL);
 INSERT INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (100, 1, '用户管理', 1, 'user', 'system/user/index', '', '1', '0', 'C', '0', '0', 'system:user:list', 'ant-design:user-outlined', '用户管理菜单', 103, 1, '2025-05-27 13:19:44', NULL, NULL);
 INSERT INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (101, 1, '角色管理', 2, 'role', 'system/role/index', '', '1', '0', 'C', '0', '0', 'system:role:list', 'eos-icons:role-binding-outlined', '角色管理菜单', 103, 1, '2025-05-27 13:19:44', NULL, NULL);
@@ -161,7 +160,6 @@ INSERT INTO `sys_role_dept` (`role_id`, `dept_id`) VALUES (2, 105);
 
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 1);
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 2);
-INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 3);
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 4);
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 100);
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 101);
