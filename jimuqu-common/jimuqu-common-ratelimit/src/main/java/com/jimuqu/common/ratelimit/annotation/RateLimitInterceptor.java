@@ -83,7 +83,7 @@ public class RateLimitInterceptor implements RouterInterceptor {
         } catch (Exception e) {
             log.error("限流拦截器异常 - Path: {}, 异常: {}", ctx.path(), e.getMessage(), e);
             // 限流器异常时，默认放行
-            chain.doIntercept(ctx, mainHandler);
+            throw e;
         }
     }
 
