@@ -95,6 +95,12 @@
                 <artifactId>jimuqu-common-translation</artifactId>
                 <version>${revision}</version>
             </dependency>
+            <!-- 限流模块 -->
+            <dependency>
+                <groupId>com.jimuqu</groupId>
+                <artifactId>jimuqu-common-ratelimit</artifactId>
+                <version>${revision}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

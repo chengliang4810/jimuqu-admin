@@ -54,6 +54,27 @@ jimuqu.cache:
   driverType: "local" #缓存类型
   keyHeader: "jimuqu"
 
+# 限流配置
+jimuqu:
+  ratelimit:
+    # 是否启用限流
+    enabled: true
+    # 以下为默认限流配置，注解未指定则使用默认配置
+    # 限流类型：IP-IP限流，USER-用户限流，GLOBAL-全局限流
+    type: IP
+    # 每秒生成令牌数
+    permitsPerSecond: 10.0
+    # 最大突发请求数
+    maxBurst: 100
+    # 限流时间窗口（秒）
+    window: 60
+    # 限流算法：TOKEN_BUCKET, SLIDING_WINDOW, FIXED_WINDOW
+    algorithm: TOKEN_BUCKET
+    # 限流键前缀
+    keyPrefix: "rate_limit:"
+    # 限流失败时的错误消息
+    errorMessage: "请求过于频繁，请稍后再试"
+
 # 表自动配置
 auto-table:
   enable: true

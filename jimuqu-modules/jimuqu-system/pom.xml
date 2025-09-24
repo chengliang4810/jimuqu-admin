@@ -84,6 +84,11 @@
             <artifactId>jimuqu-common-translation</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-ratelimit</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>
