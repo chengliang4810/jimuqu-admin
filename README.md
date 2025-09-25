@@ -25,6 +25,13 @@
 - [ ] 前端H5/Uniapp开发、
 - [ ] AI大模型接入
 - [ ] 提供项目Mcp接口
+- [ ] idempotent 幂等功能
+- [ ] encrypt API接口数据加解密模块
+- [ ] mail 邮件模块
+- [ ] sensitive 脱敏模块
+- [ ] sms 短信模块
+- [ ] websocket模块
+- [ ] sse模块
 
 ---
 
