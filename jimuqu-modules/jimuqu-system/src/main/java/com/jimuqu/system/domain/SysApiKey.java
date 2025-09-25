@@ -166,7 +166,7 @@ public class SysApiKey extends BaseEntity {
         if (extraMap.isEmpty()) {
             this.extraData = null;
         } else {
-            this.extraData = JsonUtil.toJsonString(extraMap);
+            this.extraData = JsonUtil.toString(extraMap);
         }
     }
 
@@ -200,7 +200,7 @@ public class SysApiKey extends BaseEntity {
     private void parseExtraString() {
         if (StrUtil.isNotBlank(extraData)) {
             try {
-                Dict dict = JsonUtil.parseMap(extraData);
+                Dict dict = JsonUtil.toMap(extraData);
                 extraMap.clear();
                 for (String key : dict.keySet()) {
                     extraMap.put(key, dict.get(key));

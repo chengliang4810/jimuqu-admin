@@ -43,7 +43,7 @@ public class SmsAuthStrategy implements AuthStrategyService {
 
     @Override
     public LoginVo login(String body, SysClient client) {
-        SmsLoginBody loginBody = JsonUtil.parseObject(body, SmsLoginBody.class);
+        SmsLoginBody loginBody = JsonUtil.toObject(body, SmsLoginBody.class);
         ValidUtils.validateEntity(loginBody);
         String phonenumber = loginBody.getPhonenumber();
         String smsCode = loginBody.getSmsCode();

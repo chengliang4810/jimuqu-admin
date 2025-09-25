@@ -76,7 +76,7 @@ public class DefaultExcelListener<T> extends AnalysisEventListener<T> implements
     @Override
     public void invokeHeadMap(Map<Integer, String> headMap, AnalysisContext context) {
         this.headMap = headMap;
-        log.debug("解析到一条表头数据: {}", JsonUtil.toJsonString(headMap));
+        log.debug("解析到一条表头数据: {}", JsonUtil.toString(headMap));
     }
 
     @Override

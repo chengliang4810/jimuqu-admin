@@ -13,16 +13,9 @@
     <description>web模块</description>
 
     <dependencies>
-
         <dependency>
             <groupId>com.jimuqu</groupId>
             <artifactId>jimuqu-common-core</artifactId>
-        </dependency>
-
-        <!-- solon -->
-        <dependency>
-            <groupId>org.noear</groupId>
-            <artifactId>solon</artifactId>
         </dependency>
 
         <!-- Http 启动器（包大小:0.8Mb，aio, http, ws） -->

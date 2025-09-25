@@ -32,7 +32,7 @@ public class AuthMaxKeyRequest extends AuthDefaultRequest {
     @Override
     public AuthToken getAccessToken(AuthCallback authCallback) {
         String body = doPostAuthorizationCode(authCallback.getCode());
-        Dict object = JsonUtil.parseMap(body);
+        Dict object = JsonUtil.toMap(body);
         // oauth/token 验证异常
         if (object.containsKey("error" )) {
             throw new AuthException(object.getStr("error_description" ));
@@ -53,7 +53,7 @@ public class AuthMaxKeyRequest extends AuthDefaultRequest {
     @Override
     public AuthUser getUserInfo(AuthToken authToken) {
         String body = doGetUserInfo(authToken);
-        Dict object = JsonUtil.parseMap(body);
+        Dict object = JsonUtil.toMap(body);
         // oauth/token 验证异常
         if (object.containsKey("error" )) {
             throw new AuthException(object.getStr("error_description" ));

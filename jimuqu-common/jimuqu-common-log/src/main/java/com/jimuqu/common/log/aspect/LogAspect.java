@@ -144,7 +144,7 @@ public class LogAspect implements RouterInterceptor {
         }
         // 是否需要保存response，参数和值
         if (!(jsonResult instanceof DownloadedFile) && log.isSaveResponseData() && ObjUtil.isNotNull(jsonResult)) {
-            operLog.setJsonResult(StringUtil.substring(JsonUtil.toJsonString(jsonResult), 0, 2000));
+            operLog.setJsonResult(StringUtil.substring(JsonUtil.toString(jsonResult), 0, 2000));
         }
     }
 
@@ -164,7 +164,7 @@ public class LogAspect implements RouterInterceptor {
         } else {
             MapUtil.removeAny(paramsMap, EXCLUDE_PROPERTIES);
             MapUtil.removeAny(paramsMap, excludeParamNames);
-            operLog.setOperParam(StringUtil.substring(JsonUtil.toJsonString(paramsMap), 0, 2000));
+            operLog.setOperParam(StringUtil.substring(JsonUtil.toString(paramsMap), 0, 2000));
         }
     }
 
@@ -178,12 +178,12 @@ public class LogAspect implements RouterInterceptor {
         }
         for (Object o : paramsArray) {
             if (ObjUtil.isNotNull(o) && !isFilterObject(o)) {
-                String str = JsonUtil.toJsonString(o);
-                Dict dict = JsonUtil.parseMap(str);
+                String str = JsonUtil.toString(o);
+                Dict dict = JsonUtil.toMap(str);
                 if (MapUtil.isNotEmpty(dict)) {
                     MapUtil.removeAny(dict, EXCLUDE_PROPERTIES);
                     MapUtil.removeAny(dict, excludeParamNames);
-                    str = JsonUtil.toJsonString(dict);
+                    str = JsonUtil.toString(dict);
                 }
                 params.add(str);
             }

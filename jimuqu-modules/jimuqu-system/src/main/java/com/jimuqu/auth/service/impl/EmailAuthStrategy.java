@@ -48,7 +48,7 @@ public class EmailAuthStrategy implements AuthStrategyService {
 
     @Override
     public LoginVo login(String body, SysClient client) {
-        EmailLoginBody loginBody = JsonUtil.parseObject(body, EmailLoginBody.class);
+        EmailLoginBody loginBody = JsonUtil.toObject(body, EmailLoginBody.class);
         ValidUtils.validateEntity(loginBody);
         String email = loginBody.getEmail();
         String emailCode = loginBody.getEmailCode();

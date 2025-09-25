@@ -53,7 +53,7 @@ public class AuthController {
     @Post
     @Mapping("/login" )
     public R<LoginVo> login(@Body String body) {
-        LoginBody loginBody = JsonUtil.parseObject(body, LoginBody.class);
+        LoginBody loginBody = JsonUtil.toObject(body, LoginBody.class);
         ValidUtils.validateEntity(loginBody);
         // 授权类型和客户端id
         String clientId = loginBody.getClientId();
