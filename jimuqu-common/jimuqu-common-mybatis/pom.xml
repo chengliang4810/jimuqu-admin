@@ -17,11 +17,6 @@
 
         <dependency>
             <groupId>com.jimuqu</groupId>
-            <artifactId>jimuqu-common-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.jimuqu</groupId>
             <artifactId>jimuqu-common-satoken</artifactId>
         </dependency>
 

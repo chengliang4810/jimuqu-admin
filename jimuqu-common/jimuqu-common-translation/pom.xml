@@ -18,11 +18,6 @@
             <groupId>com.jimuqu</groupId>
             <artifactId>jimuqu-common-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>cn.xbatis</groupId>
-            <artifactId>xbatis-annotation</artifactId>
-            <version>1.9.0</version>
-        </dependency>
     </dependencies>
 
 </project>

@@ -15,14 +15,6 @@
     <dependencies>
         <dependency>
             <groupId>com.jimuqu</groupId>
-            <artifactId>jimuqu-common-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>cn.hutool.v7</groupId>
-            <artifactId>hutool-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.jimuqu</groupId>
             <artifactId>jimuqu-common-cache</artifactId>
         </dependency>
         <dependency>
