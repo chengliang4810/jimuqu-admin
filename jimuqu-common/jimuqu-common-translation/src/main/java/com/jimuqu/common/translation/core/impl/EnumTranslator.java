@@ -46,7 +46,7 @@ public class EnumTranslator implements TranslationInterface {
         if (trans.enumClass() != EmptyEnum.class) {
             return trans.enumClass();
         }
-        // 兼容旧的通过类名字符串方式
+        // 兼容通过类名字符串方式
         Class<?> loadedClass = ClassLoaderUtil.loadClass(trans.value());
         if (TranslatableEnum.class.isAssignableFrom(loadedClass)) {
             return (Class<? extends TranslatableEnum>) loadedClass;
