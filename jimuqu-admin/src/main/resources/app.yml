@@ -140,3 +140,14 @@ dromara:
 #        #        domain: ?? # 访问域名，注意“/”结尾，例如：http://minio.abc.com/abc/
 #        base-path: dept/ # 基础路径
 
+gen:
+  # 作者
+  author: chengliang4810
+  # 默认生成包路径 system 需改成自己的模块名称 如 system monitor tool
+  packageName: com.jimuqu.system
+  # 自动去除表前缀，默认是false
+  autoRemovePre: false
+  # 表前缀（生成类名不会包含表前缀，多个用逗号分隔）
+  tablePrefix: sys_
+  # 使用的模版 vue
+  platform: vue

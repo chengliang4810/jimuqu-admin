@@ -93,14 +93,14 @@ public class VelocityUtils {
 
     public static void setMenuVelocityContext(VelocityContext context, GenTableVo genTable) {
         String options = genTable.getOptions();
-        Dict paramsObj = JsonUtil.parseMap(options);
+        Dict paramsObj = JsonUtil.toMap(options);
         String parentMenuId = getParentMenuId(paramsObj);
         context.put("parentMenuId", parentMenuId);
     }
 
     public static void setTreeVelocityContext(VelocityContext context, GenTableVo genTable) {
         String options = genTable.getOptions();
-        Dict paramsObj = JsonUtil.parseMap(options);
+        Dict paramsObj = JsonUtil.toMap(options);
         String treeCode = getTreecode(paramsObj);
         String treeParentCode = getTreeParentCode(paramsObj);
         String treeName = getTreeName(paramsObj);
@@ -333,7 +333,7 @@ public class VelocityUtils {
      */
     public static int getExpandColumn(GenTableVo genTable) {
         String options = genTable.getOptions();
-        Dict paramsObj = JsonUtil.parseMap(options);
+        Dict paramsObj = JsonUtil.toMap(options);
         String treeName = paramsObj.getStr(GenConstants.TREE_NAME);
         int num = 0;
         for (GenTableColumn column : genTable.getColumns()) {

@@ -241,7 +241,7 @@ public class GenTableServiceImpl implements IGenTableService {
     @Override
     @Transaction
     public void updateGenTable(GenTable genTable) {
-        String options = JsonUtil.toJsonString(genTable.getParams());
+        String options = JsonUtil.toString(genTable.getParams());
         genTable.setOptions(options);
         int row = baseMapper.update(genTable);
         if (row > 0) {
@@ -524,7 +524,7 @@ public class GenTableServiceImpl implements IGenTableService {
      * @param genTable 设置后的生成对象
      */
     public void setTableFromOptions(GenTableVo genTable) {
-        Dict paramsObj = JsonUtil.parseMap(genTable.getOptions());
+        Dict paramsObj = JsonUtil.toMap(genTable.getOptions());
         if (ObjUtil.isNotNull(paramsObj)) {
             String treeCode = paramsObj.getStr(GenConstants.TREE_CODE);
             String treeParentCode = paramsObj.getStr(GenConstants.TREE_PARENT_CODE);

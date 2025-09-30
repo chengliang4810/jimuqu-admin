@@ -19,8 +19,6 @@
     </description>
 
     <dependencies>
-
-
         <!-- sql-lite -->
         <dependency>
             <groupId>org.xerial</groupId>
