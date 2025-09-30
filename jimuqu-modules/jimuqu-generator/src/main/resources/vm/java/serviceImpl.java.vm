@@ -1,0 +1,140 @@
+package ${packageName}.service.impl;
+
+import com.jimuqu.common.core.utils.MapstructUtil;
+    #if($table.crud || $table.sub)
+import com.jimuqu.common.mybatis.core.page.PageQuery;
+    import com.mybatisflex.core.paginate.Page;
+#end
+import com.mybatisflex.core.query.QueryWrapper;
+import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import org.noear.solon.annotation.Component;
+import ${packageName}.domain.bo.${ClassName}Bo;
+import ${packageName}.domain.vo.${ClassName}Vo;
+import ${packageName}.domain.${ClassName};
+import ${packageName}.mapper.${ClassName}Mapper;
+import ${packageName}.service.I${ClassName}Service;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Collection;
+
+    #set($TABLE_NAME = ${tableName.toUpperCase()})
+import static ${packageName}.domain.table.${ClassName}TableDef.$TABLE_NAME;
+
+
+/**
+ * ${functionName}Service业务层处理
+ *
+ * @author ${author}
+ * @date ${datetime}
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class ${ClassName}ServiceImpl implements I${ClassName}Service {
+
+    private final ${ClassName}Mapper baseMapper;
+
+    /**
+     * 查询${functionName}
+     */
+    @Override
+    public ${ClassName}Vo queryById(${pkColumn.javaType} ${pkColumn.javaField}) {
+        return baseMapper.selectOneWithRelationsByIdAs(${pkColumn.javaField}, ${ClassName}Vo.class);
+    }
+
+#if($table.crud || $table.sub)
+    /**
+     * 查询${functionName}列表
+     */
+    @Override
+    public TableDataInfo<${ClassName}Vo> queryPageList(${ClassName}Bo bo, PageQuery pageQuery) {
+        QueryWrapper qw = buildQueryWrapper(bo);
+        Page<${ClassName}Vo> result = baseMapper.paginateAs(pageQuery, qw, ${ClassName}Vo.class);
+        return TableDataInfo.build(result);
+    }
+#end
+
+    /**
+     * 查询${functionName}列表
+     */
+    @Override
+    public List<${ClassName}Vo> queryList(${ClassName}Bo bo) {
+        QueryWrapper qw = buildQueryWrapper(bo);
+        return baseMapper.selectListByQueryAs(qw, ${ClassName}Vo.class);
+    }
+
+    private QueryWrapper buildQueryWrapper(${ClassName}Bo bo) {
+        Map<String, Object> params = bo.getParams();
+        return QueryWrapper.create()
+            .from($TABLE_NAME)
+#set($count = 1)
+#set($endCount = 0)
+#foreach($column in $columns)
+#if($column.query)
+    #set($endCount = $endCount + 1)
+#end
+#end
+#foreach($column in $columns)
+    #if($column.query)
+        #set($queryType=$column.queryType)
+        #set($javaField=$column.javaField)
+        #set($javaType=$column.javaType)
+        #set($columnName=${column.columnName.toUpperCase()})
+        #set($AttrName=$column.javaField.substring(0,1).toUpperCase() + ${column.javaField.substring(1)})
+        #if($count == 1)
+            #set($mfQuery='where')
+        #else
+            #set($mfQuery='and')
+        #end
+        #if($count == $endCount)
+            #set($end=';')
+        #else
+            #set($end='')
+        #end
+        #set($mfMethod=$column.queryType.toLowerCase())
+        #if($queryType != 'BETWEEN')
+            .$mfQuery($TABLE_NAME.$columnName.$mfMethod(bo.get$AttrName()))$end
+        #else
+            .$mfQuery($TABLE_NAME.${columnName}.between(params.get("begin$AttrName"), params.get("end$AttrName"), params.get("begin$AttrName") != null && params.get("end$AttrName") != null))$end
+        #end
+        #set($count = $count + 1)
+    #end
+#end
+    }
+
+    /**
+     * 新增${functionName}
+     */
+    @Override
+    public Boolean insertByBo(${ClassName}Bo bo) {
+        ${ClassName} add = MapstructUtil.convert(bo, ${ClassName}.class);
+        boolean flag = baseMapper.insert(add, true) > 0;
+        #set($pk=$pkColumn.javaField.substring(0,1).toUpperCase() + ${pkColumn.javaField.substring(1)})
+        if (flag) {
+            bo.set$pk(add.get$pk());
+        }
+        return flag;
+    }
+
+    /**
+     * 修改${functionName}
+     */
+    @Override
+    public Boolean updateByBo(${ClassName}Bo bo) {
+        ${ClassName} update = MapstructUtil.convert(bo, ${ClassName}.class);
+        return baseMapper.update(update) > 0;
+    }
+
+    /**
+     * 批量删除${functionName}
+     */
+    @Override
+    public Boolean deleteWithValidByIds(Collection<${pkColumn.javaType}> ids, Boolean isValid) {
+        if (isValid) {
+            /// 做一些业务上的校验,判断是否需要校验
+        }
+        return baseMapper.deleteBatchByIds(ids) > 0;
+    }
+}

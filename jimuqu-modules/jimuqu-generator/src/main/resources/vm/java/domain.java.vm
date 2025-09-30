@@ -1,0 +1,50 @@
+package ${packageName}.domain;
+
+import com.jimuqu.common.mybatis.core.domain.BaseEntity;
+import com.mybatisflex.annotation.Column;
+import cn.xbatis.db.annotations.TableId;
+import cn.xbatis.db.annotations.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+#foreach ($import in $importList)
+import ${import};
+#end
+
+import java.io.Serial;
+
+/**
+ * ${functionName}对象 ${tableName}
+ *
+ * @author ${author}
+ * @date ${datetime}
+ */
+#set($Entity="BaseEntity")
+@Data
+@Table("${tableName}")
+@Accessors(chain = true)
+@EqualsAndHashCode(callSuper = true)
+public class ${ClassName} extends ${Entity} {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+#foreach ($column in $columns)
+#if(!$table.isSuperColumn($column.javaField))
+    /**
+     * $column.columnComment
+     */
+#if($column.javaField=='delFlag')
+#end
+#if($column.javaField=='version')
+    @Column(version = true)
+#end
+#if($column.isPk==1)
+    @TableId
+#end
+    private $column.javaType $column.javaField;
+
+#end
+#end
+
+}

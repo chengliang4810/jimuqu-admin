@@ -1,0 +1,115 @@
+package ${packageName}.controller;
+
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.jimuqu.common.idempotent.annotation.RepeatSubmit;
+import com.jimuqu.common.log.annotation.Log;
+import com.jimuqu.common.web.core.BaseController;
+import com.jimuqu.common.mybatis.core.page.PageQuery;
+import com.jimuqu.common.core.validate.AddGroup;
+import com.jimuqu.common.core.validate.EditGroup;
+import com.jimuqu.common.log.enums.BusinessType;
+import com.jimuqu.common.excel.utils.ExcelUtil;
+import ${packageName}.domain.vo.${ClassName}Vo;
+import ${packageName}.domain.bo.${ClassName}Bo;
+import ${packageName}.service.I${ClassName}Service;
+import org.noear.solon.annotation.*;
+import org.noear.solon.validation.annotation.Validated;
+
+#if($table.crud || $table.sub)
+import com.jimuqu.common.mybatis.core.page.TableDataInfo;
+#elseif($table.tree)
+#end
+
+/**
+ * ${functionName}
+ *
+ * @author ${author}
+ * @date ${datetime}
+ */
+@Controller
+@RequiredArgsConstructor
+@Mapping("/${moduleName}/${businessName}")
+public class ${ClassName}Controller extends BaseController {
+
+    private final I${ClassName}Service ${className}Service;
+
+    /**
+     * 查询${functionName}列表
+     */
+    @Get
+    @Mapping("/list")
+    @SaCheckPermission("${permissionPrefix}:list")
+#if($table.crud || $table.sub)
+    public Page<${ClassName}Vo> list(${ClassName}Bo bo, PageQuery pageQuery) {
+        return ${className}Service.queryPageList(bo, pageQuery);
+    }
+#elseif($table.tree)
+    public List<${ClassName}Vo> list(${ClassName}Bo bo) {
+        return ${className}Service.queryList(bo);
+    }
+#end
+
+    /**
+     * 导出${functionName}列表
+     */
+    @Post
+    @Mapping("/export")
+    @SaCheckPermission("${permissionPrefix}:export")
+    @Log(title = "${functionName}", businessType = BusinessType.EXPORT)
+    public void export(${ClassName}Bo bo, HttpServletResponse response) {
+        List<${ClassName}Vo> list = ${className}Service.queryList(bo);
+        ExcelUtil.exportExcel(list, "${functionName}", ${ClassName}Vo.class, response);
+    }
+
+    /**
+     * 获取${functionName}详细信息
+     *
+     * @param ${pkColumn.javaField} 主键
+     */
+    @Get
+    @Mapping("/{${pkColumn.javaField}}")
+    @SaCheckPermission("${permissionPrefix}:query")
+    public ${ClassName}Vo getInfo(@NotNull(message = "主键不能为空") ${pkColumn.javaType} ${pkColumn.javaField}) {
+        return ${className}Service.queryById(${pkColumn.javaField});
+    }
+
+    /**
+     * 新增${functionName}
+     */
+    @Post
+    @Mapping
+    @NoRepeatSubmit
+    @SaCheckPermission("${permissionPrefix}:add")
+    @Log(title = "${functionName}", businessType = BusinessType.ADD)
+    public void add(@Validated(AddGroup.class) ${ClassName}Bo bo) {
+        toAjax(${className}Service.insertByBo(bo));
+    }
+
+    /**
+     * 修改${functionName}
+     */
+    @Put
+    @Mapping
+    @NoRepeatSubmit
+    @SaCheckPermission("${permissionPrefix}:edit")
+    @Log(title = "${functionName}", businessType = BusinessType.UPDATE)
+    public void edit(@Validated(EditGroup.class) ${ClassName}Bo bo) {
+        toAjax(${className}Service.updateByBo(bo));
+    }
+
+    /**
+     * 删除${functionName}
+     *
+     * @param ${pkColumn.javaField}s 主键串
+     */
+    @Delete
+    @Mapping("/{${pkColumn.javaField}s}")
+    @SaCheckPermission("${permissionPrefix}:remove")
+    @Log(title = "${functionName}", businessType = BusinessType.DELETE)
+    public void remove(@NotEmpty(message = "主键不能为空") ${pkColumn.javaType}[] ${pkColumn.javaField}s) {
+        toAjax(${className}Service.deleteWithValidByIds(List.of(${pkColumn.javaField}s), true));
+    }
+}
