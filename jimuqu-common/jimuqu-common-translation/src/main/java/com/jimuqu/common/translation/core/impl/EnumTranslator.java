@@ -7,7 +7,7 @@ import cn.hutool.v7.core.util.ObjUtil;
 import com.jimuqu.common.translation.annotation.Trans;
 import com.jimuqu.common.translation.core.TranslatableEnum;
 import com.jimuqu.common.translation.core.TranslationInterface;
-import com.jimuqu.common.translation.enums.VoidEnum;
+import com.jimuqu.common.translation.enums.EmptyEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
 
@@ -43,7 +43,7 @@ public class EnumTranslator implements TranslationInterface {
     }
 
     private Class<? extends TranslatableEnum> getEnumClass(Trans trans) throws ClassNotFoundException {
-        if (trans.enumClass() != VoidEnum.class) {
+        if (trans.enumClass() != EmptyEnum.class) {
             return trans.enumClass();
         }
         // 兼容旧的通过类名字符串方式
