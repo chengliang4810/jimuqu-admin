@@ -2,7 +2,7 @@ package com.jimuqu.common.translation.annotation;
 
 import com.jimuqu.common.translation.core.TranslatableEnum;
 import com.jimuqu.common.translation.enums.TransType;
-import com.jimuqu.common.translation.enums.VoidEnum;
+import com.jimuqu.common.translation.enums.EmptyEnum;
 
 import java.lang.annotation.*;
 
@@ -29,7 +29,7 @@ public @interface Trans {
     /**
      * 当 type = ENUM 时, 指定枚举类
      */
-    Class<? extends TranslatableEnum> enumClass() default VoidEnum.class;
+    Class<? extends TranslatableEnum> enumClass() default EmptyEnum.class;
 
     /**
      * 翻译的字段，默认为自身
