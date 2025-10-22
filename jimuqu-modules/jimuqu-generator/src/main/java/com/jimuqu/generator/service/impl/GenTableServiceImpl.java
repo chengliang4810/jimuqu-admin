@@ -206,7 +206,7 @@ public class GenTableServiceImpl implements IGenTableService {
         }
 
         List<Table<?>> tableList = tablesMap.values().stream()
-                .filter(x -> !cn.hutool.core.util.StrUtil.containsAnyIgnoreCase(x.getName(), TABLE_IGNORE))
+                .filter(x -> !StrUtil.containsAnyIgnoreCase(x.getName(), TABLE_IGNORE))
                 .filter(x -> tableNameSet.contains(x.getName())).toList();
 
         if (CollUtil.isEmpty(tableList)) {
