@@ -36,6 +36,7 @@
         <!-- 数据源 -->
         <mysql.version>8.4.0</mysql.version>
         <sqlite.version>3.50.3.0</sqlite.version>
+        <p6spy.version>3.9.1</p6spy.version>
         <!-- 连接池 -->
         <hikaricp.version>7.0.2</hikaricp.version>
         <!-- 实体类维护数据库表结构 -->

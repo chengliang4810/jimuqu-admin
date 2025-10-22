@@ -17,6 +17,11 @@
 
         <dependency>
             <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jimuqu</groupId>
             <artifactId>jimuqu-common-satoken</artifactId>
         </dependency>
 
@@ -30,6 +35,12 @@
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>p6spy</groupId>
+            <artifactId>p6spy</artifactId>
+            <version>${p6spy.version}</version>
         </dependency>
 
         <dependency>
