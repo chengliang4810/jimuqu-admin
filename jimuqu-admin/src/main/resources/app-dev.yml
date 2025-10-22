@@ -1,10 +1,3 @@
-# 表自动配置
-auto-table:
-  # 自动删除数据库中多余的列
-  auto-drop-column: true
-  # 自动删除数据库中多余的索引
-  auto-drop-index: true
-
 # MySql数据库配置
 solon.dataSources.jimuqu!: #数据源（!结尾表示 typed=true）
   class: "org.noear.solon.data.dynamicds.DynamicDataSource"
@@ -12,16 +5,16 @@ solon.dataSources.jimuqu!: #数据源（!结尾表示 typed=true）
   default: "master" #指定默认数据源
   master:
     dataSourceClassName: "com.zaxxer.hikari.HikariDataSource"
-    driverClassName: com.mysql.cj.jdbc.Driver
-    jdbcUrl: jdbc:mysql://localhost:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
+    driverClassName: com.p6spy.engine.spy.P6SpyDriver
+    jdbcUrl: jdbc:p6spy:mysql://localhost:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
     username: root
     password: P@ssw0rd
-  slave:
-    dataSourceClassName: "com.zaxxer.hikari.HikariDataSource"
-    driverClassName: com.mysql.cj.jdbc.Driver
-    jdbcUrl:  jdbc:mysql://localhost:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
-    username: root
-    password: P@ssw0rd
+#  slave:
+#    dataSourceClassName: "com.zaxxer.hikari.HikariDataSource"
+#    driverClassName: com.p6spy.engine.spy.P6SpyDriver
+#    jdbcUrl: jdbc:p6spy:mysql://localhost:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
+#    username: root
+#    password: P@ssw0rd
 
 # 可选的Redis配置， 不加则使用本地缓存
 #jimuqu.cache:
@@ -29,3 +22,18 @@ solon.dataSources.jimuqu!: #数据源（!结尾表示 typed=true）
 #  server: "127.0.0.1:6379"
 #  db: 0 #默认为 0，可不配置
   # password:
+
+# 表自动配置 注意删除列会导致列数据一起删除，如果比较敏感请自行关闭配置
+auto-table:
+  # 自动删除数据库中多余的列
+  auto-drop-column: true
+  # 自动删除数据库中多余的索引
+  auto-drop-index: true
+
+# 记录器级别的配置示例
+solon.logging.logger:
+  # 关闭autotable的输出日志，默认是INFO级别
+  "org.dromara.autotable.core.utils.DBHelper":
+    level: WARN
+  "org.dromara.autotable.core":
+    level: WARN
