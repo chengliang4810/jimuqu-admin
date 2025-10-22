@@ -113,7 +113,7 @@ public class ExcelDownHandler implements SheetWriteHandler {
             } else if (field.isAnnotationPresent(ExcelEnumFormat.class)) {
                 // 否则如果指定了@ExcelEnumFormat，则使用枚举的逻辑
                 ExcelEnumFormat format = field.getDeclaredAnnotation(ExcelEnumFormat.class);
-                List<Object> values = EnumUtil.getFieldValues(format.enumClass(), format.textField());
+                List<Object> values = EnumUtil.getFieldValues((Class) format.enumClass(), format.textField());
                 options = StreamUtil.toList(values, String::valueOf);
             }
             if (ObjUtil.isNotEmpty(options)) {
