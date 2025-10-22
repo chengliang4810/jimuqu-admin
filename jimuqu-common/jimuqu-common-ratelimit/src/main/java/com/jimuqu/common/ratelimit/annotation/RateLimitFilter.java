@@ -11,9 +11,8 @@ import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.core.handle.Action;
 import org.noear.solon.core.handle.Context;
-import org.noear.solon.core.handle.Handler;
-import org.noear.solon.core.route.RouterInterceptor;
-import org.noear.solon.core.route.RouterInterceptorChain;
+import org.noear.solon.core.handle.Filter;
+import org.noear.solon.core.handle.FilterChain;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Component(index = -999)
-public class RateLimitInterceptor implements RouterInterceptor {
+public class RateLimitFilter implements Filter {
 
     @Inject
     private RateLimiter rateLimiter;
@@ -33,26 +32,25 @@ public class RateLimitInterceptor implements RouterInterceptor {
 
     private final ConcurrentHashMap<String, RateLimitConfig> configCache = new ConcurrentHashMap<>();
 
-
     @Override
-    public void doIntercept(Context ctx, Handler mainHandler, RouterInterceptorChain chain) throws Throwable {
+    public void doFilter(Context ctx, FilterChain chain) throws Throwable {
         try {
             // 获取当前请求的控制器方法
             Method method = getHandlerMethod(ctx);
             if (method == null) {
-                chain.doIntercept(ctx, mainHandler);
+                chain.doFilter(ctx);
                 return;
             }
 
             // 获取限流注解
             RateLimit rateLimit = method.getAnnotation(RateLimit.class);
             if (rateLimit == null) {
-                chain.doIntercept(ctx, mainHandler);
+                chain.doFilter(ctx);
                 return;
             }
 
             if (!rateLimit.enabled()) {
-                chain.doIntercept(ctx, mainHandler);
+                chain.doFilter(ctx);
                 return;
             }
 
@@ -75,7 +73,7 @@ public class RateLimitInterceptor implements RouterInterceptor {
                 throw new RateLimitException(message);
             }
 
-            chain.doIntercept(ctx, mainHandler);
+            chain.doFilter(ctx);
 
         } catch (RateLimitException e) {
             log.warn("限流异常: {}", e.getMessage());
@@ -143,6 +141,7 @@ public class RateLimitInterceptor implements RouterInterceptor {
             return config;
         });
     }
+
 
 
 }

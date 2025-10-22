@@ -2,6 +2,7 @@ package com.jimuqu.common.web.filter;
 
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.exception.auth.AuthException;
+import com.jimuqu.common.core.utils.ip.AddressUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.Solon;
 import org.noear.solon.annotation.Component;
@@ -35,6 +36,8 @@ public class GlobalExceptionFilter implements Filter {
         }
         // 权限异常
         catch (AuthException e) {
+            // 权限认证异常
+            log.warn("权限异常: {}, 请求路径: {}, 请求IP: {} ", e.getMessage(), ctx.path(), AddressUtil.getRealAddressByIP(ctx.realIp()));
             // 设置响应状态码为 401， 如果全部返回200 则不需要下面这行
             ctx.status(e.getCode());
             ctx.render(R.fail(e.getCode(), e.getMessage()));
