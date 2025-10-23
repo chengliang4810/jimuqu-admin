@@ -4,7 +4,6 @@ import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.exception.auth.AuthException;
 import com.jimuqu.common.core.utils.ip.AddressUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.noear.solon.Solon;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.core.handle.Context;
 import org.noear.solon.core.handle.Filter;
@@ -36,18 +35,18 @@ public class GlobalExceptionFilter implements Filter {
         }
         // 权限异常
         catch (AuthException e) {
+            String realIp = ctx.realIp();
             // 权限认证异常
-            log.warn("权限异常: {}, 请求路径: {}, 请求IP: {} ", e.getMessage(), ctx.path(), AddressUtil.getRealAddressByIP(ctx.realIp()));
+            log.warn("权限异常: {}, 请求路径: {}, 请求地址: {}, 请求IP: {}", e.getMessage(), ctx.path(), AddressUtil.getRealAddressByIP(realIp), realIp);
             // 设置响应状态码为 401， 如果全部返回200 则不需要下面这行
             ctx.status(e.getCode());
             ctx.render(R.fail(e.getCode(), e.getMessage()));
         }
         // 其他异常
         catch (Throwable e) {
-            log.error(e.getMessage());
-            if ("dev".equals(Solon.cfg().getProperty("solon.env"))) {
-                e.printStackTrace();
-            }
+            String realIp = ctx.realIp();
+            log.error("系统异常: {}, 请求路径: {}, 请求地址: {}, 请求IP: {}", e.getMessage(), ctx.path(), AddressUtil.getRealAddressByIP(realIp), realIp, e);
+            e.printStackTrace();
             ctx.render(R.fail(500, e.getMessage()));
         }
     }
