@@ -17,6 +17,7 @@ import com.jimuqu.common.web.core.BaseController;
 import com.jimuqu.system.domain.SysMenu;
 import com.jimuqu.system.domain.bo.SysMenuBo;
 import com.jimuqu.system.domain.query.SysMenuQuery;
+import com.jimuqu.system.domain.vo.MenuTreeSelectVo;
 import com.jimuqu.system.domain.vo.RouterVo;
 import com.jimuqu.system.domain.vo.SysMenuVo;
 import com.jimuqu.system.service.SysMenuService;
@@ -91,6 +92,23 @@ public class SysMenuController extends BaseController {
     public R<List<MapTree<Long>>> treeselect(SysMenuQuery menuQuery) {
         List<SysMenuVo> menus = sysMenuService.queryList(menuQuery, LoginHelper.getUserId());
         return R.ok(sysMenuService.buildMenuTreeSelect(menus));
+    }
+
+    /**
+     * 加载对应角色菜单列表树
+     *
+     * @param roleId 角色ID
+     */
+
+    @Get
+    @SaCheckPermission("system:menu:query" )
+    @Mapping("/roleMenuTreeSelect/{roleId}" )
+    public R<MenuTreeSelectVo> roleMenuTreeselect(Long roleId) {
+        List<SysMenuVo> menus = sysMenuService.queryList(LoginHelper.getUserId());
+        MenuTreeSelectVo selectVo = new MenuTreeSelectVo();
+        selectVo.setCheckedKeys(sysMenuService.queryMenuListByRoleId(roleId));
+        selectVo.setMenus(sysMenuService.buildMenuTreeSelect(menus));
+        return R.ok(selectVo);
     }
 
     /**

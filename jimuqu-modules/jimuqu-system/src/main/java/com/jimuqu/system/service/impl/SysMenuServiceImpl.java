@@ -1,11 +1,17 @@
 package com.jimuqu.system.service.impl;
 
+import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.v7.core.collection.ListUtil;
+import cn.hutool.v7.core.tree.MapTree;
+import cn.hutool.v7.core.util.ObjUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.core.utils.StreamUtil;
+import com.jimuqu.common.core.utils.TreeBuildUtil;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.SysMenu;
+import com.jimuqu.system.domain.SysRole;
 import com.jimuqu.system.domain.SysRoleMenu;
 import com.jimuqu.system.domain.bo.SysMenuBo;
 import com.jimuqu.system.domain.query.SysMenuQuery;
@@ -13,13 +19,12 @@ import com.jimuqu.system.domain.vo.MetaVo;
 import com.jimuqu.system.domain.vo.RouterVo;
 import com.jimuqu.system.domain.vo.SysMenuVo;
 import com.jimuqu.system.mapper.SysMenuMapper;
+import com.jimuqu.system.mapper.SysRoleMapper;
 import com.jimuqu.system.mapper.SysRoleMenuMapper;
 import com.jimuqu.system.service.SysMenuService;
 import jodd.util.StringUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.tree.MapTree;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
 
@@ -40,6 +45,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class SysMenuServiceImpl implements SysMenuService {
 
+    private final SysRoleMapper roleMapper;
     private final SysMenuMapper sysMenuMapper;
     private final SysRoleMenuMapper sysRoleMenuMapper;
 
@@ -176,7 +182,8 @@ public class SysMenuServiceImpl implements SysMenuService {
      */
     @Override
     public List<Long> queryMenuListByRoleId(Long roleId) {
-        return List.of();
+        SysRole role = roleMapper.getById(roleId);
+        return sysMenuMapper.selectMenuListByRoleId(roleId, role.getMenuCheckStrictly());
     }
 
     /**
@@ -238,7 +245,28 @@ public class SysMenuServiceImpl implements SysMenuService {
      */
     @Override
     public List<MapTree<Long>> buildMenuTreeSelect(List<SysMenuVo> menus) {
-        return List.of();
+        if (CollUtil.isEmpty(menus)) {
+            return ListUtil.zero();
+        }
+        // 获取当前列表中每一个节点的parentId，然后在列表中查找是否有id与其parentId对应，若无对应，则表明此时节点列表中，该节点在当前列表中属于顶级节点
+        List<MapTree<Long>> treeList = new ArrayList<>();
+        for (SysMenuVo menu : menus) {
+            Long parentId = menu.getParentId();
+            SysMenuVo parentMenu = StreamUtil.findFirst(menus, it -> it.getId().longValue() == parentId);
+            if (ObjUtil.isNull(parentMenu)) {
+                List<MapTree<Long>> trees = TreeBuildUtil.build(menus, parentId, (m, tree) -> {
+                    tree.setId(m.getId())
+                            .setParentId(m.getParentId())
+                            .setName(m.getMenuName())
+                            .setWeight(m.getOrderNum());
+                    tree.putExtra("menuType", m.getMenuType());
+                    tree.putExtra("perms", m.getPerms());
+                });
+                MapTree<Long> tree = StreamUtil.findFirst(trees, it -> it.getId().longValue() == menu.getId());
+                treeList.add(tree);
+            }
+        }
+        return treeList;
     }
 
     /**
