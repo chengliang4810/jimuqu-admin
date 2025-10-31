@@ -13,23 +13,22 @@
     <description>web模块</description>
 
     <dependencies>
-
         <dependency>
             <groupId>com.jimuqu</groupId>
             <artifactId>jimuqu-common-core</artifactId>
         </dependency>
 
-        <!-- solon -->
+        <!-- Http 启动器（包大小:0.8Mb，aio, http, ws） -->
         <dependency>
             <groupId>org.noear</groupId>
-            <artifactId>solon</artifactId>
+            <artifactId>solon-server-jdkhttp</artifactId>
         </dependency>
 
-        <!-- Http 启动器 -->
-        <dependency>
-            <groupId>org.noear</groupId>
-            <artifactId>solon-boot-smarthttp</artifactId>
-        </dependency>
+        <!-- 更强的Http 启动器（包大小:4.8Mb，nio, http, ws, http2） -->
+<!--        <dependency>-->
+<!--            <groupId>org.noear</groupId>-->
+<!--            <artifactId>solon-server-undertow</artifactId>-->
+<!--        </dependency>-->
 
         <!-- Json序列化支持组件 -->
         <dependency>

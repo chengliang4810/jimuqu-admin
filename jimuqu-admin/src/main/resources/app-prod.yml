@@ -9,24 +9,18 @@ solon.dataSources.jimuqu!: #数据源（!结尾表示 typed=true）
     jdbcUrl: jdbc:mysql://mariadb:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
     username: jimuqu
     password: P@ssw0rd
-  slave:
-    dataSourceClassName: "com.zaxxer.hikari.HikariDataSource"
-    driverClassName: com.mysql.cj.jdbc.Driver
-    jdbcUrl: jdbc:mysql://mariadb:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
-    username: jimuqu
-    password: P@ssw0rd
+#  slave:
+#    dataSourceClassName: "com.zaxxer.hikari.HikariDataSource"
+#    driverClassName: com.mysql.cj.jdbc.Driver
+#    jdbcUrl: jdbc:mysql://mariadb:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
+#    username: jimuqu
+#    password: P@ssw0rd
 
-#
+# 自动维护表结构
 auto-table:
   # none | validate ｜ create ｜ update) https://autotable.tangzc.com/%E9%85%8D%E7%BD%AE.html
   # 系统启动时，会检查数据库中的表与 java 实体类是否匹配。如果不匹配，则启动失败。
-  # mode: validate
-  # 表自动配置
-  auto-table:
-    # 自动删除数据库中多余的列
-    auto-drop-column: true
-    # 自动删除数据库中多余的索引
-    auto-drop-index: true
+  mode: validate
 
 #开启redis缓存配置, 自动覆盖 app.yml的配置
 #jimuqu.cache:

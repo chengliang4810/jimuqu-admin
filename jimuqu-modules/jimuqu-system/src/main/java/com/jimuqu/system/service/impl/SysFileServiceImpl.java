@@ -232,7 +232,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
         if (value == null) {
             return null;
         }
-        return JsonUtil.toJsonString(value);
+        return JsonUtil.toString(value);
     }
 
     /**
@@ -242,7 +242,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
         if (StrUtil.isBlank(json)) {
             return null;
         }
-        return JsonUtil.parseObject(json, new TypeReference<Map<String, String>>() {
+        return JsonUtil.toObject(json, new TypeReference<Map<String, String>>() {
         });
     }
 
@@ -254,7 +254,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
             return null;
         }
         ;
-        return JsonUtil.parseObject(json, cn.hutool.core.lang.Dict.class);
+        return JsonUtil.toObject(json, cn.hutool.core.lang.Dict.class);
     }
 
     /**
@@ -264,6 +264,6 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
         if (StrUtil.isBlank(json)) {
             return null;
         }
-        return JsonUtil.parseObject(json, HashInfo.class);
+        return JsonUtil.toObject(json, HashInfo.class);
     }
 }

@@ -40,7 +40,7 @@
         <dependency>
             <groupId>p6spy</groupId>
             <artifactId>p6spy</artifactId>
-            <version>3.9.1</version>
+            <version>${p6spy.version}</version>
         </dependency>
 
         <dependency>

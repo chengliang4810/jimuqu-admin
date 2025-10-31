@@ -29,11 +29,6 @@ solon.config.load:
 
 # 记录器级别的配置示例
 solon.logging.logger:
-  # 关闭autotable的输出日志，默认是INFO级别
-  "org.dromara.autotable.core.utils.DBHelper":
-    level: WARN
-  "org.dromara.autotable.core":
-    level: WARN
   # redis连接时的日志
   "org.redisson.connection":
     level: WARN
@@ -54,9 +49,32 @@ jimuqu.cache:
   driverType: "local" #缓存类型
   keyHeader: "jimuqu"
 
+# 限流配置
+jimuqu:
+  ratelimit:
+    # 是否启用限流
+    enabled: true
+    # 以下为默认限流配置，注解未指定则使用默认配置
+    # 限流类型：IP-IP限流，USER-用户限流，GLOBAL-全局限流
+    type: IP
+    # 每秒生成令牌数
+    permitsPerSecond: 10.0
+    # 最大突发请求数
+    maxBurst: 100
+    # 限流时间窗口（秒）
+    window: 60
+    # 限流算法：TOKEN_BUCKET, SLIDING_WINDOW, FIXED_WINDOW
+    algorithm: TOKEN_BUCKET
+    # 限流键前缀
+    keyPrefix: "rate_limit:"
+    # 限流失败时的错误消息
+    errorMessage: "请求过于频繁，请稍后再试"
+
 # 表自动配置
 auto-table:
+  # 是否启用自动表结构维护
   enable: true
+  # 是否显示banner
   show-banner: false
   # 自定义的索引前缀
   index-prefix: idx_
@@ -73,13 +91,14 @@ auto-table:
     # 是否开启初始化数据功能
     enable: true
     # 初始化数据文件名，默认是_init_.sql
-    default_init_file_name: init.sql
+    default-init-file-name: jimuqu.sql
     # 初始化数据文件路径
-    base-path: classpath:sql/{dialect}/
+    base-path: classpath:sql/{dialect}
   # 记录表信息维护过程中执行的SQL
   recordSql:
     enable: true
     # 记录方式，默认是数据库，可选文件(file)方式 custom方式(已实现flyway规范的SQL记录，类：RecordSqlFlywayHandler)
+    # 文件方式管理可通过git进行版本管理记录
     recordType: file
     # 当前SQL的版本，建议指定，会体现在数据库的字段或者文件名上
     version: ${revision}
@@ -97,7 +116,7 @@ dromara:
       - platform: default # 存储平台标识，用户自定义的标识
         enable-storage: true  #启用存储
         enable-access: true #启用访问（线上请使用 Nginx 配置，效率更高）
-        domain: http://127.0.0.1:8080/file/ # 访问域名，例如：“http://127.0.0.1:8030/file/”，注意后面要和 path-patterns 保持一致，“/”结尾，本地存储建议使用相对路径，方便后期更换域名
+        domain: http://127.0.0.1:5320/file/ # 访问域名，例如：“http://127.0.0.1:8030/file/”，注意后面要和 path-patterns 保持一致，“/”结尾，本地存储建议使用相对路径，方便后期更换域名
         base-path: local-plus/ # 基础路径
         path-patterns: /file/ # 访问路径
         storage-path: D:/temp/ # 存储路径
@@ -119,3 +138,14 @@ dromara:
 #        #        domain: ?? # 访问域名，注意“/”结尾，例如：http://minio.abc.com/abc/
 #        base-path: dept/ # 基础路径
 
+gen:
+  # 作者
+  author: chengliang4810
+  # 默认生成包路径 system 需改成自己的模块名称 如 system monitor tool
+  packageName: com.jimuqu.system
+  # 自动去除表前缀，默认是false
+  autoRemovePre: false
+  # 表前缀（生成类名不会包含表前缀，多个用逗号分隔）
+  tablePrefix: sys_
+  # 使用的模版 vue
+  platform: vue

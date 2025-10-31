@@ -33,7 +33,7 @@ public class XcxAuthStrategy implements AuthStrategyService {
 
     @Override
     public LoginVo login(String body, SysClient client) {
-        XcxLoginBody loginBody = JsonUtil.parseObject(body, XcxLoginBody.class);
+        XcxLoginBody loginBody = JsonUtil.toObject(body, XcxLoginBody.class);
         ValidUtils.validateEntity(loginBody);
         // xcxCode 为 小程序调用 wx.login 授权后获取
         String xcxCode = loginBody.getXcxCode();

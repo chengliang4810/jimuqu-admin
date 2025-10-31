@@ -1,7 +1,7 @@
 package com.jimuqu.common.mybatis.p6spy;
 
-import com.p6spy.engine.spy.appender.MessageFormattingStrategy;
 import cn.hutool.v7.core.text.StrUtil;
+import com.p6spy.engine.spy.appender.MessageFormattingStrategy;
 
 /**
  * 自定义SQL输出格式

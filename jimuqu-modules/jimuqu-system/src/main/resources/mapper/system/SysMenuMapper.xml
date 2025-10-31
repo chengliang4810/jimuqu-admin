@@ -9,7 +9,7 @@
 
 
     <select id="selectMenuTreeByUserId" parameterType="Long" resultMap="SysMenuResult">
-        select distinct m.menu_id,
+        select distinct m.id,
                         m.parent_id,
                         m.menu_name,
                         m.path,
@@ -25,7 +25,7 @@
                         m.order_num,
                         m.create_time
         from sys_menu m
-                 left join sys_role_menu rm on m.menu_id = rm.menu_id
+                 left join sys_role_menu rm on m.id = rm.menu_id
                  left join sys_user_role sur on rm.role_id = sur.role_id
                  left join sys_role ro on sur.role_id = ro.role_id
                  left join sys_user u on sur.user_id = u.user_id
@@ -37,12 +37,12 @@
     </select>
 
     <select id="selectMenuListByRoleId" resultType="Long">
-        select m.menu_id
+        select m.id
         from sys_menu m
-        left join sys_role_menu rm on m.menu_id = rm.menu_id
+        left join sys_role_menu rm on m.id = rm.menu_id
         where rm.role_id = #{roleId}
         <if test="menuCheckStrictly">
-            and m.menu_id not in (select m.parent_id from sys_menu m inner join sys_role_menu rm on m.menu_id =
+            and m.id not in (select m.parent_id from sys_menu m inner join sys_role_menu rm on m.id =
             rm.menu_id and rm.role_id = #{roleId})
         </if>
         order by m.parent_id, m.order_num
@@ -51,14 +51,14 @@
     <select id="selectMenuPerms" resultType="String">
         select distinct m.perms
         from sys_menu m
-                 left join sys_role_menu rm on m.menu_id = rm.menu_id
+                 left join sys_role_menu rm on m.id = rm.menu_id
                  left join sys_user_role sur on rm.role_id = sur.role_id
     </select>
 
     <select id="selectMenuPermsByUserId" parameterType="Long" resultType="String">
         select distinct m.perms
         from sys_menu m
-                 left join sys_role_menu rm on m.menu_id = rm.menu_id
+                 left join sys_role_menu rm on m.id = rm.menu_id
                  left join sys_user_role sur on rm.role_id = sur.role_id
                  left join sys_role r on r.role_id = sur.role_id
         where m.status = '0'
@@ -69,7 +69,7 @@
     <select id="selectMenuPermsByRoleId" parameterType="Long" resultType="String">
         select distinct m.perms
         from sys_menu m
-                 left join sys_role_menu rm on m.menu_id = rm.menu_id
+                 left join sys_role_menu rm on m.id = rm.menu_id
         where m.status = '0' and rm.role_id = #{roleId}
     </select>
 

@@ -60,7 +60,7 @@ public class SysDictData extends BaseEntity {
     /**
      * 字典类型
      */
-    @AutoColumn(comment = "字典类型", length = 100)
+    @AutoColumn(comment = "字典类型", length = 100, defaultValue = "L")
     private String dictTypeKey;
     /**
      * 样式属性（其他样式扩展）
