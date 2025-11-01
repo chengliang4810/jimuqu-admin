@@ -67,6 +67,19 @@ public class SysMenuServiceImpl implements SysMenuService {
     }
 
     /**
+     * 查询菜单权限列表（包含所有类型，用于 treeselect）
+     */
+    @Override
+    public List<SysMenuVo> queryListForTreeSelect(SysMenuQuery query, Long userId) {
+        QueryChain<SysMenu> queryChain = QueryChain.of(sysMenuMapper)
+                .forSearch(true)
+                .where(query)
+                .eq(SysMenu::getStatus, UserConstants.MENU_NORMAL)
+                .orderBy(SysMenu::getParentId, SysMenu::getOrderNum);
+        return queryChain.returnType(SysMenuVo.class).list();
+    }
+
+    /**
      * 构建查询条件
      * @param query 查询对象
      * @return 查询条件对象

@@ -90,7 +90,7 @@ public class SysMenuController extends BaseController {
     @SaCheckPermission("system:menu:query" )
     @Mapping("/treeselect" )
     public R<List<MapTree<Long>>> treeselect(SysMenuQuery menuQuery) {
-        List<SysMenuVo> menus = sysMenuService.queryList(menuQuery, LoginHelper.getUserId());
+        List<SysMenuVo> menus = sysMenuService.queryListForTreeSelect(menuQuery, LoginHelper.getUserId());
         return R.ok(sysMenuService.buildMenuTreeSelect(menus));
     }
 

@@ -36,6 +36,15 @@ public interface SysMenuService {
     List<SysMenuVo> queryList(SysMenuQuery query, Long userId);
 
     /**
+     * 查询菜单权限列表（包含所有类型，用于 treeselect）
+     *
+     * @param query 查询条件对象
+     * @param userId 用户ID
+     * @return {@link List }<{@link SysMenuVo }> 菜单权限列表
+     */
+    List<SysMenuVo> queryListForTreeSelect(SysMenuQuery query, Long userId);
+
+    /**
      * 根据用户ID查询权限
      *
      * @param userId 用户ID
