@@ -274,6 +274,7 @@ public class SysMenuServiceImpl implements SysMenuService {
                             .setWeight(m.getOrderNum());
                     tree.putExtra("menuType", m.getMenuType());
                     tree.putExtra("perms", m.getPerms());
+                    tree.putExtra("icon", m.getIcon());
                 });
                 MapTree<Long> tree = StreamUtil.findFirst(trees, it -> it.getId().longValue() == menu.getId());
                 treeList.add(tree);
