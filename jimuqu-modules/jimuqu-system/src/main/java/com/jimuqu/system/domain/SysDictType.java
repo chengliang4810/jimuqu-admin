@@ -53,6 +53,11 @@ public class SysDictType extends BaseEntity {
     @AutoColumn(comment = "字典类型 L 列表 T 树", length = 100, defaultValue = "L")
     private String dictType;
     /**
+     * 系统内置（Y是 N否）
+     */
+    @AutoColumn(comment = "系统内置（Y是 N否）", length = 1, defaultValue = "N")
+    private String isBuiltIn;
+    /**
      * 备注
      */
     @AutoColumn(comment = "备注", length = 500)

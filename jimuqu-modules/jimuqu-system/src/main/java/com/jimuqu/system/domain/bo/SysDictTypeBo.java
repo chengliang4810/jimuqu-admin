@@ -40,12 +40,14 @@ public class SysDictTypeBo extends BoBaseEntity {
     /**
      * 字典类型 L 列表 T 树
      */
-    @NotBlank(message = "字典类型 L 列表 T 树不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String dictType;
+    /**
+     * 系统内置（Y是 N否）
+     */
+    private String isBuiltIn;
     /**
      * 备注
      */
-    @NotBlank(message = "备注不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String remark;
 
 }

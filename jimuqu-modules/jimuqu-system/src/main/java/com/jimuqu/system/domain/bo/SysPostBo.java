@@ -40,7 +40,6 @@ public class SysPostBo extends BoBaseEntity {
     /**
      * 岗位类别编码
      */
-    @NotBlank(message = "岗位类别编码不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String postCategory;
     /**
      * 岗位名称
@@ -50,17 +49,14 @@ public class SysPostBo extends BoBaseEntity {
     /**
      * 显示顺序
      */
-    @NotNull(message = "显示顺序不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private Long postSort;
     /**
      * 状态（0正常 1停用）
      */
-    @NotBlank(message = "状态（0正常 1停用）不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String status;
     /**
      * 备注
      */
-    @NotBlank(message = "备注不能为空", groups = { UpdateGroup.class })
     private String remark;
 
 }
