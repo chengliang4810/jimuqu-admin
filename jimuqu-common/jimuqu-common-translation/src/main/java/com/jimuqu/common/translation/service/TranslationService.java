@@ -2,6 +2,8 @@ package com.jimuqu.common.translation.service;
 
 import cn.hutool.v7.core.bean.BeanUtil;
 import cn.hutool.v7.core.util.ObjUtil;
+import cn.xbatis.page.IPager;
+import cn.xbatis.page.PagerField;
 import com.jimuqu.common.translation.annotation.Trans;
 import com.jimuqu.common.translation.core.TranslationInterface;
 import com.jimuqu.common.translation.enums.TransType;
@@ -42,6 +44,13 @@ public class TranslationService {
 
         if (object instanceof Map<?, ?> map) {
             for (Object value : map.values()) {
+                translate(value);
+            }
+            return;
+        }
+
+        if (object instanceof IPager<?> iPager) {
+            for (Object value : iPager.get(PagerField.RESULTS)) {
                 translate(value);
             }
             return;

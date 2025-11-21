@@ -110,6 +110,10 @@ public class Page<T> implements IPager<T> {
             //返回每页条数 ,getSize改成你自己的方法或字段
             return (V) this.getPageSize();
         }
+        if (PagerField.RESULTS == field) {
+            //返回每页条数 ,getSize改成你自己的方法或字段
+            return (V) this.getItems();
+        }
         throw new RuntimeException("not support field: " + field);
     }
 
