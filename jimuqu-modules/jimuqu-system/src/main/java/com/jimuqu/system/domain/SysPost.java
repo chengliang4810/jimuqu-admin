@@ -60,12 +60,12 @@ public class SysPost extends BaseEntity {
     /**
      * 显示顺序
      */
-    @AutoColumn(comment = "显示顺序")
+    @AutoColumn(comment = "显示顺序", defaultValue = "0")
     private Long postSort;
     /**
      * 状态（0正常 1停用）
      */
-    @AutoColumn(comment = "状态（0正常 1停用）", length = 1)
+    @AutoColumn(comment = "状态（0正常 1停用）", length = 1, defaultValue = "0")
     private String status;
     /**
      * 备注

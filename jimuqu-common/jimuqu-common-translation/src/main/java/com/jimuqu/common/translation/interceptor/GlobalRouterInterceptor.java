@@ -31,6 +31,8 @@ public class GlobalRouterInterceptor implements RouterInterceptor {
                     // 得到数据，进行翻译
                     translationService.translate(resultR.getData());
                 }
+            } else {
+                translationService.translate(result);
             }
         }
 

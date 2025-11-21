@@ -45,12 +45,10 @@ public class SysConfigBo extends BoBaseEntity {
     /**
      * 系统内置（Y是 N否）
      */
-    @NotBlank(message = "系统内置（Y是 N否）不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String configType;
     /**
      * 备注
      */
-    @NotBlank(message = "备注不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String remark;
 
 }

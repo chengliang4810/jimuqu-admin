@@ -42,6 +42,10 @@ public class SysDictTypeVo implements Serializable {
      */
     private String dictType;
     /**
+     * 系统内置（Y是 N否）
+     */
+    private String isBuiltIn;
+    /**
      * 备注
      */
     private String remark;

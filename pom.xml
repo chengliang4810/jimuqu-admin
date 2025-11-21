@@ -171,6 +171,11 @@
                 <artifactId>xbatis-solon-plugin</artifactId>
                 <version>${xbatis.version}</version>
             </dependency>
+            <dependency>
+                <groupId>cn.xbatis</groupId>
+                <artifactId>xbatis-annotation</artifactId>
+                <version>${xbatis.version}</version>
+            </dependency>
 
             <!-- JavaBean维护表结构 -->
             <dependency>

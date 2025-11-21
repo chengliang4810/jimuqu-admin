@@ -35,7 +35,6 @@ public class SysDictDataBo extends BoBaseEntity {
     /**
      * 字典排序
      */
-    @NotNull(message = "字典排序不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private Long dictSort;
     /**
      * 字典标签
@@ -54,22 +53,18 @@ public class SysDictDataBo extends BoBaseEntity {
     /**
      * 样式属性（其他样式扩展）
      */
-    @NotBlank(message = "样式属性（其他样式扩展）不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String cssClass;
     /**
      * 表格回显样式
      */
-    @NotBlank(message = "表格回显样式不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String listClass;
     /**
      * 是否默认（Y是 N否）
      */
-    @NotBlank(message = "是否默认（Y是 N否）不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String isDefault;
     /**
      * 备注
      */
-    @NotBlank(message = "备注不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String remark;
 
 }
