@@ -30,6 +30,7 @@
         <module>jimuqu-common-oss</module>
         <module>jimuqu-common-translation</module>
         <module>jimuqu-common-ratelimit</module>
+        <module>jimuqu-common-redis</module>
     </modules>
 
 </project>

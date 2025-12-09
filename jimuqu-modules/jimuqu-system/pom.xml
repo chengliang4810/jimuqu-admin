@@ -22,6 +22,10 @@
             <groupId>com.jimuqu</groupId>
             <artifactId>jimuqu-common-cache</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-redis</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.jimuqu</groupId>

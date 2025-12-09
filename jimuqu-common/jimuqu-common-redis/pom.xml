@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.jimuqu</groupId>
+        <artifactId>jimuqu-common</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>jimuqu-common-redis</artifactId>
+
+    <description>Redis模块</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-core</artifactId>
+        </dependency>
+        <!-- redis缓存 -->
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-cache-redisson</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

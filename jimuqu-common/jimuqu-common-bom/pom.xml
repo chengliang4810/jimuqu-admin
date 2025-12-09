@@ -31,6 +31,11 @@
                 <artifactId>jimuqu-common-cache</artifactId>
                 <version>${revision}</version>
             </dependency>
+            <dependency>
+                <groupId>com.jimuqu</groupId>
+                <artifactId>jimuqu-common-redis</artifactId>
+                <version>${revision}</version>
+            </dependency>
             <!-- 接口文档模块 -->
             <dependency>
                 <groupId>com.jimuqu</groupId>
