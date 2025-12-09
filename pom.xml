@@ -29,21 +29,21 @@
         <!-- 通用 -->
         <lombok.version>1.18.42</lombok.version>
         <!-- 工具类 -->
-        <hutool.version>7.0.0-M2</hutool.version>
+        <hutool.version>7.0.0-M3</hutool.version>
         <!-- 实体类转换工具 -->
         <mapstruct-plus.version>1.5.0</mapstruct-plus.version>
         <mapstruct-plus.lombok.version>0.2.0</mapstruct-plus.lombok.version>
         <!-- 数据源 -->
         <mysql.version>8.4.0</mysql.version>
-        <sqlite.version>3.50.3.0</sqlite.version>
+        <sqlite.version>3.51.1.0</sqlite.version>
         <p6spy.version>3.9.1</p6spy.version>
         <!-- 连接池 -->
         <hikaricp.version>7.0.2</hikaricp.version>
         <!-- 实体类维护数据库表结构 -->
-        <autotable.version>2.5.10</autotable.version>
+        <autotable.version>2.5.11</autotable.version>
         <!-- ORM 框架 -->
-        <xbatis.version>1.9.2</xbatis.version>
-        <anyline.version>8.7.2-20250918</anyline.version>
+        <xbatis.version>1.9.3</xbatis.version>
+        <anyline.version>8.7.3-20251206</anyline.version>
         <!-- 代码生成模板引擎 -->
         <velocity.version>2.3</velocity.version>
         <beetl.version>3.19.0.RELEASE</beetl.version>
