@@ -33,7 +33,7 @@
         <!-- Json序列化支持组件 -->
         <dependency>
             <groupId>org.noear</groupId>
-            <artifactId>solon-serialization-snack3</artifactId>
+            <artifactId>solon-serialization-snack4</artifactId>
         </dependency>
 
         <!-- 跨域处理组件 -->

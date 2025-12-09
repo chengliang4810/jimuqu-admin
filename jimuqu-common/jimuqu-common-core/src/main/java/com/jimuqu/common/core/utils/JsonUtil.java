@@ -7,9 +7,9 @@ import cn.hutool.v7.core.text.StrPool;
 import cn.hutool.v7.core.util.ObjUtil;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.noear.snack.ONode;
-import org.noear.snack.core.Feature;
-import org.noear.snack.core.TypeRef;
+import org.noear.snack4.Feature;
+import org.noear.snack4.ONode;
+import org.noear.snack4.codec.TypeRef;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -34,7 +34,7 @@ public class JsonUtil {
         if (ObjUtil.isNull(object)) {
             return null;
         }
-        return ONode.stringify(object);
+        return ONode.serialize(object);
     }
 
     /**
@@ -47,7 +47,7 @@ public class JsonUtil {
         if (ObjUtil.isNull(object)) {
             return StrPool.EMPTY_JSON;
         }
-        return ONode.load(object, Feature.PrettyFormat).toJson();
+        return ONode.serialize(object, Feature.Write_PrettyFormat);
     }
 
     /**
