@@ -29,7 +29,7 @@
         <!-- 通用 -->
         <lombok.version>1.18.42</lombok.version>
         <!-- 工具类 -->
-        <hutool.version>7.0.0-M2</hutool.version>
+        <hutool.version>7.0.0-M3</hutool.version>
         <!-- 实体类转换工具 -->
         <mapstruct-plus.version>1.5.0</mapstruct-plus.version>
         <mapstruct-plus.lombok.version>0.2.0</mapstruct-plus.lombok.version>
