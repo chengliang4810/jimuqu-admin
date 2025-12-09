@@ -1,0 +1,5 @@
+# 用于消除警告 - Mybatis: Missing mappers configuration. name='anyline.datasource.default'
+# xbatis将anyline注册的数据源进行了初始化造成的警告，不影响程序运行
+mybatis.anyline.datasource.default:
+  mappers:       #支持包名 或 类名（大写开头 或 *）或 xml（.xml结尾）；支持目录 ** 或 * 占位符
+    - "com.jimuqu.generator.mapper.*Mapper"
