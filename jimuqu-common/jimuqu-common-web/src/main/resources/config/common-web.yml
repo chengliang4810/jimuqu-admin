@@ -9,6 +9,10 @@ server.request.maxHeaderSize: 8kb #kb,mb
 server.request.encoding: "utf-8"
 #设定响应体编码
 server.response.encoding: "utf-8"
+#服务 http 最小线程数（默认：0表示自动，支持固定值 2 或 内核倍数 x2）
+server.http.coreThreads: 0
+#服务 http 最大线程数（默认：0表示自动，支持固定值 32 或 内核倍数 x32）
+server.http.maxThreads: 0
 
 --- ## Web序列化配置
 solon.serialization.json:

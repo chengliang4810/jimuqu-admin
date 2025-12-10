@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 
 /**
  * redis 工具类
- *
+ * 在使用redis该工具才可用，本地缓存无法正常使用
  * @author Lion Li
  * @version 3.1.0 新增
  */
