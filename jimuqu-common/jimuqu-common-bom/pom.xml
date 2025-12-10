@@ -106,6 +106,12 @@
                 <artifactId>jimuqu-common-ratelimit</artifactId>
                 <version>${revision}</version>
             </dependency>
+            <!-- SSE模块 -->
+            <dependency>
+                <groupId>com.jimuqu</groupId>
+                <artifactId>jimuqu-common-sse</artifactId>
+                <version>${revision}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

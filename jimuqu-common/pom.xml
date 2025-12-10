@@ -31,6 +31,7 @@
         <module>jimuqu-common-translation</module>
         <module>jimuqu-common-ratelimit</module>
         <module>jimuqu-common-redis</module>
+        <module>jimuqu-common-sse</module>
     </modules>
 
 </project>
