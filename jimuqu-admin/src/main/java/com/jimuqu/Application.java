@@ -1,10 +1,8 @@
 package com.jimuqu;
 
-import cn.hutool.v7.core.thread.ThreadUtil;
 import com.jimuqu.common.ratelimit.annotation.RateLimit;
 import com.jimuqu.common.ratelimit.enums.RateLimitAlgorithm;
 import com.jimuqu.common.ratelimit.enums.RateLimitType;
-import com.jimuqu.common.sse.utils.SseMessageUtil;
 import com.jimuqu.domain.SystemVersion;
 import org.dromara.autotable.solon.annotation.EnableAutoTable;
 import org.noear.solon.Solon;
@@ -26,12 +24,6 @@ public class Application {
 
     public static void main(String[] args) {
         Solon.start(Application.class, args);
-        ThreadUtil.execAsync(() -> {
-            while (true){
-                ThreadUtil.sleep(1000);
-                SseMessageUtil.sendMessage("测试消息");
-            }
-        });
     }
 
     /**
