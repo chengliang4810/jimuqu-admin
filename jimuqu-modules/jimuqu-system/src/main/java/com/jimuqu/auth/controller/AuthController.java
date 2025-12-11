@@ -1,6 +1,8 @@
 package com.jimuqu.auth.controller;
 
 import cn.dev33.satoken.annotation.SaIgnore;
+import cn.hutool.v7.core.thread.ThreadUtil;
+import cn.hutool.v7.core.util.ObjUtil;
 import com.jimuqu.auth.domain.vo.LoginVo;
 import com.jimuqu.auth.service.AuthStrategy;
 import com.jimuqu.auth.service.SysLoginService;
@@ -12,9 +14,11 @@ import com.jimuqu.common.core.domain.model.RegisterBody;
 import com.jimuqu.common.core.domain.model.SocialLoginBody;
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.core.utils.StringUtil;
+import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.common.social.config.properties.SocialLoginConfigProperties;
 import com.jimuqu.common.social.config.properties.SocialProperties;
 import com.jimuqu.common.social.utils.SocialUtils;
+import com.jimuqu.common.sse.utils.SseMessageUtil;
 import com.jimuqu.system.domain.SysClient;
 import com.jimuqu.system.service.SysClientService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +27,6 @@ import me.zhyd.oauth.model.AuthResponse;
 import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.request.AuthRequest;
 import me.zhyd.oauth.utils.AuthStateUtils;
-import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.*;
 import org.noear.solon.validation.ValidUtils;
 
@@ -69,10 +72,9 @@ public class AuthController {
         // 登录
         LoginVo loginVo = AuthStrategy.login(body, client, grantType);
 
-//        Long userId = LoginHelper.getUserId();
-//        scheduledExecutorService.schedule(() -> {
-//            WebSocketUtils.sendMessage(userId, "欢迎登录RuoYi-Vue-Plus后台管理系统");
-//        }, 3, TimeUnit.SECONDS);
+        Long userId = LoginHelper.getUserId();
+        ThreadUtil.execAsync(() -> SseMessageUtil.sendMessage(userId, "欢迎登录积木区后台管理系统"));
+
         return R.ok(loginVo);
     }
 
