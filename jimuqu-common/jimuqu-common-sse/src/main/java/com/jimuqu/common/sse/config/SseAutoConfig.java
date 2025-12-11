@@ -1,29 +1,39 @@
 package com.jimuqu.common.sse.config;
 
+import com.jimuqu.common.sse.controller.SseController;
+import com.jimuqu.common.sse.core.SseEmitterManager;
+import org.noear.solon.Solon;
+import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Condition;
 import org.noear.solon.annotation.Configuration;
+import org.noear.solon.annotation.Inject;
 
 /**
  * SSE 自动装配
  *
+ * @author chengliang
+ * @date 2025/12/11
  */
 @Configuration
-@Condition(onExpression="${sse.enabled:false} == true")
+@Condition(onExpression = "${sse.enabled:false} == true")
 public class SseAutoConfig {
 
-//    @Bean
-//    public SseEmitterManager sseEmitterManager() {
-//        return new SseEmitterManager();
-//    }
-//
-//    @Bean
-//    public SseTopicListener sseTopicListener() {
-//        return new SseTopicListener();
-//    }
-//
-//    @Bean
-//    public SseController sseController(SseEmitterManager sseEmitterManager) {
-//        return new SseController(sseEmitterManager);
-//    }
+    /**
+     * 创建 SSE emitters 管理器
+     * @return SSE emitters 管理器
+     */
+    @Bean
+    public SseEmitterManager sseEmitterManager() {
+        return new SseEmitterManager();
+    }
+
+    /**
+     * 注册 SSE 控制器
+     * @param sseProperties SSE 配置项
+     */
+    @Bean
+    public void registerSseController(@Inject SseProperties sseProperties) {
+        Solon.app().router().add(sseProperties.getPath(), SseController.class);
+    }
 
 }

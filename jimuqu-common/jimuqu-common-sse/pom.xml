@@ -19,6 +19,10 @@
             <artifactId>jimuqu-common-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-satoken</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.noear</groupId>
             <artifactId>solon-web-sse</artifactId>
         </dependency>
