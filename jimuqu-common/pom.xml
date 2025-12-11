@@ -32,6 +32,7 @@
         <module>jimuqu-common-ratelimit</module>
         <module>jimuqu-common-redis</module>
         <module>jimuqu-common-sse</module>
+        <module>jimuqu-common-websocket</module>
     </modules>
 
 </project>

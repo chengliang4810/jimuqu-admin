@@ -21,7 +21,7 @@
         <!-- Http 启动器（包大小:0.8Mb，aio, http, ws） -->
         <dependency>
             <groupId>org.noear</groupId>
-            <artifactId>solon-server-jdkhttp</artifactId>
+            <artifactId>solon-server-smarthttp</artifactId>
         </dependency>
 
         <!-- 更强的Http 启动器（包大小:4.8Mb，nio, http, ws, http2） -->

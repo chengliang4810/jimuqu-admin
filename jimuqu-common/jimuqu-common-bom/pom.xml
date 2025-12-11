@@ -112,6 +112,12 @@
                 <artifactId>jimuqu-common-sse</artifactId>
                 <version>${revision}</version>
             </dependency>
+            <!-- websocket模块 -->
+            <dependency>
+                <groupId>com.jimuqu</groupId>
+                <artifactId>jimuqu-common-websocket</artifactId>
+                <version>${revision}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
