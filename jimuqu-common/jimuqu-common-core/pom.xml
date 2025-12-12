@@ -33,12 +33,12 @@
             <groupId>org.noear</groupId>
             <artifactId>solon-proxy</artifactId>
         </dependency>
-
+        <!-- 参数校验 -->
         <dependency>
             <groupId>org.noear</groupId>
             <artifactId>solon-security-validation</artifactId>
         </dependency>
-
+        <!--常用工具类 -->
         <dependency>
             <groupId>cn.hutool.v7</groupId>
             <artifactId>hutool-core</artifactId>
