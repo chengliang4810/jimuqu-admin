@@ -63,7 +63,7 @@ public class SseEmitterManager {
 
         try {
             // 向客户端发送一条连接成功的事件
-            emitter.send(new SseEvent().comment("connected"));
+            emitter.send(new SseEvent().name("connected"));
         } catch (IOException e) {
             // 如果发送消息失败，则从映射表中移除 emitter
             emitters.remove(token);
@@ -85,7 +85,7 @@ public class SseEmitterManager {
         if (MapUtil.isNotEmpty(emitters)) {
             try {
                 SseEmitter sseEmitter = emitters.get(token);
-                sseEmitter.send(new SseEvent().comment("disconnected"));
+                sseEmitter.send(new SseEvent().name("disconnected"));
                 sseEmitter.complete();
             } catch (Exception ignore) {
             }
