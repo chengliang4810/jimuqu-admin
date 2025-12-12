@@ -2,6 +2,8 @@
 # 多数情况下是将配置的默认值写出来方便修改，所以看起来多
 # server配置
 server.port: 5320
+# Java21 虚拟线程
+solon.threads.virtual.enabled: true
 
 solon:
   # 应用环境配置
