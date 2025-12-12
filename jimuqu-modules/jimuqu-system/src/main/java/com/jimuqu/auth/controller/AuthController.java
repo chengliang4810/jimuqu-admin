@@ -1,7 +1,6 @@
 package com.jimuqu.auth.controller;
 
 import cn.dev33.satoken.annotation.SaIgnore;
-import cn.hutool.v7.core.thread.ThreadUtil;
 import cn.hutool.v7.core.util.ObjUtil;
 import com.jimuqu.auth.domain.vo.LoginVo;
 import com.jimuqu.auth.service.AuthStrategy;
@@ -28,6 +27,7 @@ import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.request.AuthRequest;
 import me.zhyd.oauth.utils.AuthStateUtils;
 import org.noear.solon.annotation.*;
+import org.noear.solon.core.util.RunUtil;
 import org.noear.solon.validation.ValidUtils;
 
 /**
@@ -73,8 +73,7 @@ public class AuthController {
         LoginVo loginVo = AuthStrategy.login(body, client, grantType);
 
         Long userId = LoginHelper.getUserId();
-        ThreadUtil.execAsync(() -> SseMessageUtil.sendMessage(userId, "欢迎登录积木区后台管理系统"));
-
+        RunUtil.delay(() -> SseMessageUtil.sendMessage(userId, "欢迎登录积木区后台管理系统"), 3000);
         return R.ok(loginVo);
     }
 
