@@ -7,6 +7,8 @@ import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Condition;
 import org.noear.solon.annotation.Configuration;
 import org.noear.solon.annotation.Inject;
+import org.noear.solon.core.util.RunUtil;
+import org.noear.solon.web.sse.SseEvent;
 
 /**
  * SSE 自动装配
@@ -34,6 +36,13 @@ public class SseAutoConfig {
     @Bean
     public void registerSseController(@Inject SseProperties sseProperties) {
         Solon.app().router().add(sseProperties.getPath(), SseController.class);
+    }
+
+    @Bean
+    public void registerSseHeader(@Inject SseEmitterManager sseEmitterManager){
+        RunUtil.scheduleWithFixedDelay(() -> {
+            sseEmitterManager.sendEvent(new SseEvent().name("ping"));
+        }, 3000, 10000);
     }
 
 }

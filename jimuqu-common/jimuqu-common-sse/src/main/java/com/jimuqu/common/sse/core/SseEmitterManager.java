@@ -102,13 +102,32 @@ public class SseEmitterManager {
      * @param message 要发送的消息内容
      */
     public void sendMessage(Long userId, String message) {
+        this.sendEvent(userId, new SseEvent().name("message").data(message));
+    }
+
+    /**
+     * 本机全用户会话发送消息
+     *
+     * @param message 要发送的消息内容
+     */
+    public void sendMessage(String message) {
+        for (Long userId : USER_TOKEN_EMITTERS.keySet()) {
+            sendMessage(userId, message);
+        }
+    }
+
+    /**
+     * 向指定的用户会话发送消息
+     *
+     * @param userId  要发送消息的用户id
+     * @param sseEvent 要发送的消息内容
+     */
+    public void sendEvent(Long userId, SseEvent sseEvent) {
         Map<String, SseEmitter> emitters = USER_TOKEN_EMITTERS.get(userId);
         if (MapUtil.isNotEmpty(emitters)) {
             for (Map.Entry<String, SseEmitter> entry : emitters.entrySet()) {
                 try {
-                    entry.getValue().send(new SseEvent()
-                        .name("message")
-                        .data(message));
+                    entry.getValue().send(sseEvent);
                 } catch (Exception e) {
                     SseEmitter remove = emitters.remove(entry.getKey());
                     if (remove != null) {
@@ -122,15 +141,15 @@ public class SseEmitterManager {
     }
 
     /**
-     * 本机全用户会话发送消息
-     *
-     * @param message 要发送的消息内容
+     * 本机全用户会话发送 SseEvent
+     * @param sseEvent SseEvent
      */
-    public void sendMessage(String message) {
+    public void sendEvent(SseEvent sseEvent) {
         for (Long userId : USER_TOKEN_EMITTERS.keySet()) {
-            sendMessage(userId, message);
+            sendEvent(userId, sseEvent);
         }
     }
+
 // TODO 发布订阅消息
 //    /**
 //     * 发布SSE订阅消息
