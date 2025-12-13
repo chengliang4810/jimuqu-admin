@@ -156,6 +156,10 @@ gen:
 sse:
   enabled: true
   path: /resource/sse
+  # 是否开启心跳，使用CDN情况下后端无消息会自动断开连接
+  heartbeat: false
+  # 心跳间隔 10S
+  heartbeatInterval: 10000
 
 --- # websocket
 websocket:

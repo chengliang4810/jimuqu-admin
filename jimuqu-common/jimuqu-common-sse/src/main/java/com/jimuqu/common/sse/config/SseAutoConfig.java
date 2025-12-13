@@ -38,11 +38,17 @@ public class SseAutoConfig {
         Solon.app().router().add(sseProperties.getPath(), SseController.class);
     }
 
+    /**
+     * 注册 sse 心跳
+     * @param sseEmitterManager SSE emitters 管理器
+     */
     @Bean
-    public void registerSseHeader(@Inject SseEmitterManager sseEmitterManager){
+    @Condition(onExpression = "${sse.heartbeat:false} == true")
+    public void registerSseHeartbeat(@Inject SseEmitterManager sseEmitterManager){
+        long heartbeatInterval = Solon.cfg().getLong("sse.heartbeatInterval", 10000L);
         RunUtil.scheduleWithFixedDelay(() -> {
             sseEmitterManager.sendEvent(new SseEvent().name("ping"));
-        }, 3000, 10000);
+        }, 3000, heartbeatInterval);
     }
 
 }

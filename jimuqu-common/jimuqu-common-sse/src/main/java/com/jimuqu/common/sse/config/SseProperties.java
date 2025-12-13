@@ -12,11 +12,21 @@ import org.noear.solon.annotation.Inject;
 @Configuration
 public class SseProperties {
 
+    /**
+     * 是否启用
+     */
     private Boolean enabled;
-
     /**
      * 路径
      */
     private String path;
+    /**
+     * 心跳开启
+     */
+    private Boolean heartbeat;
+    /**
+     * 心跳间隔
+     */
+    private Long heartbeatInterval;
 
 }
