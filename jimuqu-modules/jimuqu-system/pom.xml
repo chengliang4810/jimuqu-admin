@@ -98,6 +98,11 @@
             <artifactId>jimuqu-common-sse</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-idempotent</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

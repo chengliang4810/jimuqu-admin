@@ -118,6 +118,12 @@
                 <artifactId>jimuqu-common-websocket</artifactId>
                 <version>${revision}</version>
             </dependency>
+            <!-- 幂等模块 -->
+            <dependency>
+                <groupId>com.jimuqu</groupId>
+                <artifactId>jimuqu-common-idempotent</artifactId>
+                <version>${revision}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
