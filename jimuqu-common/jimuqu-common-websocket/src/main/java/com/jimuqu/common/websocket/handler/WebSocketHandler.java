@@ -36,18 +36,26 @@ public class WebSocketHandler implements WebSocketListener {
             return;
         }
 
+        socket.attr(LOGIN_USER_KEY, loginUser);
         WebSocketSessionHolder.addSession(loginUser.getUserId(), socket);
         log.info("[connect] sessionId: {},userId:{},userType:{}", socket.id(), loginUser.getUserId(), loginUser.getUserType());
     }
 
     @Override
     public void onMessage(WebSocket socket, String text) throws IOException {
+        // 心跳
+        if ("ping".equals( text)){
+            socket.send("pong");
+            return;
+        }
+
+        // 客户端的消息
         socket.send("我收到了：" + text);
     }
 
     @Override
     public void onMessage(WebSocket socket, ByteBuffer binary) throws IOException {
-        log.info("二进制 websocket消息");
+        log.info("二进制 websocket消息 根据业务自行实现");
     }
 
     @Override
