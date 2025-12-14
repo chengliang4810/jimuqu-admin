@@ -2,15 +2,14 @@ package com.jimuqu.common.websocket.handler;
 
 import cn.hutool.v7.core.util.ObjUtil;
 import com.jimuqu.common.core.domain.model.LoginUser;
+import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.common.websocket.holder.WebSocketSessionHolder;
 import lombok.extern.slf4j.Slf4j;
-import org.noear.solon.core.util.MultiMap;
 import org.noear.solon.net.websocket.WebSocket;
 import org.noear.solon.net.websocket.WebSocketListener;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Map;
 
 import static com.jimuqu.common.satoken.utils.LoginHelper.LOGIN_USER_KEY;
 
@@ -19,18 +18,24 @@ public class WebSocketHandler implements WebSocketListener {
 
     @Override
     public void onOpen(WebSocket socket) {
-        Map<String, Object> attrMap = socket.attrMap();
-        System.out.println("attrMap:" + attrMap);
 
-        MultiMap<String> paramMap = socket.paramMap();
-        System.out.println("paramMap:" + paramMap);
+        String token = socket.paramOrDefault("Authorization", "").replace("Bearer ", "");
+        // 获取登录用户信息
+        LoginUser loginUser;
+        try {
+            loginUser = LoginHelper.getLoginUser(token);
+        } catch (Exception e) {
+            socket.close();
+            log.error("WebSocket 认证失败'{}',无法访问系统资源", e.getMessage());
+            return;
+        }
 
-        LoginUser loginUser = socket.attr(LOGIN_USER_KEY);
         if (ObjUtil.isNull(loginUser)) {
             socket.close();
             log.info("[connect] invalid token received. sessionId: {}", socket.id());
             return;
         }
+
         WebSocketSessionHolder.addSession(loginUser.getUserId(), socket);
         log.info("[connect] sessionId: {},userId:{},userType:{}", socket.id(), loginUser.getUserId(), loginUser.getUserType());
     }

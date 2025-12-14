@@ -103,6 +103,11 @@
             <artifactId>jimuqu-common-idempotent</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-websocket</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>
