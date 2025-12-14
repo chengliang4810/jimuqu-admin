@@ -9,6 +9,12 @@ import org.noear.solon.core.handle.Handler;
 import org.noear.solon.core.route.RouterInterceptor;
 import org.noear.solon.core.route.RouterInterceptorChain;
 
+/**
+ * 耗时拦截器
+ *
+ * @author chengliang
+ * @date 2025/12/14
+ */
 @Slf4j
 @Component(index = -99)
 public class TimeConsumingInterceptor implements RouterInterceptor {

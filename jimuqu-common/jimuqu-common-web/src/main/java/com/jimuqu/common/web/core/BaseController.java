@@ -1,12 +1,10 @@
 package com.jimuqu.common.web.core;
 
+import cn.hutool.v7.core.text.StrUtil;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.exception.ServiceException;
-import cn.hutool.v7.core.text.StrUtil;
-import org.noear.solon.core.handle.Context;
-import org.noear.solon.core.handle.DownloadedFile;
-import org.noear.solon.core.handle.ModelAndView;
-import org.noear.solon.core.handle.Render;
+import org.noear.solon.core.handle.*;
+import org.noear.solon.validation.ValidatorException;
 import org.noear.solon.validation.annotation.NotBlacklist;
 import org.noear.solon.validation.annotation.Valid;
 
@@ -80,6 +78,8 @@ public class BaseController implements Render {
                 err.printStackTrace();
                 if (obj instanceof ServiceException exception) {
                     obj = R.fail(exception.getCode(), exception.getMessage());
+                } else if (obj instanceof ValidatorException validatorException) {
+                    obj = R.fail(R.FAIL, "验证异常: " + validatorException.getMessage());
                 } else {
                     // 非手动校验或抛出的ServiceException
                     obj = R.fail(StrUtil.format("服务端异常, 请联系管理员, 异常信息: [{}]", err.getMessage()));

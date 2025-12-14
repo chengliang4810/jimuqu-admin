@@ -6,6 +6,7 @@ import cn.hutool.v7.core.text.StrUtil;
 import cn.hutool.v7.core.util.ObjUtil;
 import cn.hutool.v7.crypto.SecureUtil;
 import com.jimuqu.common.core.constant.GlobalConstants;
+import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.idempotent.annotation.RepeatSubmit;
@@ -31,7 +32,7 @@ import java.util.StringJoiner;
  * @date 2025/12/14
  */
 @Slf4j
-@Managed
+@Managed(index = 800)
 public class RepeatSubmitInterceptor implements RouterInterceptor {
 
     @Inject
@@ -90,12 +91,29 @@ public class RepeatSubmitInterceptor implements RouterInterceptor {
         // 继续执行
         chain.doIntercept(ctx, mainHandler);
 
-        // 出现异常则删除缓存
-        if (ctx.result instanceof Exception) {
+        if (needClearCache(ctx)) {
             cacheService.remove(cacheRepeatKey);
             KEY_CACHE.remove();
         }
 
+    }
+
+    /**
+     * 需要清除缓存
+     *
+     * @param ctx ctx
+     * @return boolean
+     */
+    private boolean needClearCache(Context ctx) {
+        // 代码异常
+        if (ctx.result instanceof Exception){
+            return true;
+        }
+        // 业务异常
+        else if (ctx.result instanceof R<?> r && r.getCode() != R.SUCCESS) {
+            return true;
+        }
+        return false;
     }
 
     /**
