@@ -236,6 +236,12 @@
                 <artifactId>jimuqu-generator</artifactId>
                 <version>${revision}</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.jimuqu</groupId>
+                <artifactId>jimuqu-ai</artifactId>
+                <version>${revision}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
