@@ -15,6 +15,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-cache</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.dromara.sms4j</groupId>
             <artifactId>sms4j-solon-plugin</artifactId>
             <version>${sms4j.version}</version>
