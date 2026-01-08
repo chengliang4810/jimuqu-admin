@@ -1,11 +1,11 @@
 package com.jimuqu.common.core.utils.ip;
 
-import com.jimuqu.common.core.utils.StringUtil;
+import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.v7.http.html.HtmlUtil;
+import com.jimuqu.common.core.utils.NetUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.net.NetUtil;
-
 
 /**
  * 获取地址类
@@ -16,18 +16,27 @@ import cn.hutool.v7.core.net.NetUtil;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AddressUtil {
 
-    // 未知地址
-    public static final String UNKNOWN = "XX XX";
+    // 未知IP
+    public static final String UNKNOWN_IP = "XX XX";
+    // 内网地址
+    public static final String LOCAL_ADDRESS = "内网IP";
 
     public static String getRealAddressByIP(String ip) {
-        if (StringUtil.isBlank(ip)) {
-            return UNKNOWN;
+        // 处理空串并过滤HTML标签
+        ip = HtmlUtil.cleanHtmlTag(StrUtil.defaultIfBlank(ip,""));
+        // 判断是否为IPv4
+        boolean isIPv4 = NetUtils.isIPv4(ip);
+        // 判断是否为IPv6
+        boolean isIPv6 = NetUtils.isIPv6(ip);
+        // 如果不是IPv4或IPv6，则返回未知IP
+        if (!isIPv4 && !isIPv6) {
+            return UNKNOWN_IP;
         }
         // 内网不查询
-        ip = StringUtil.contains(ip, "0:0:0:0:0:0:0:1" ) ? "127.0.0.1" : StringUtil.cleanHtmlTag(ip);
-        if (NetUtil.isInnerIP(ip)) {
-            return "内网IP";
+        if ((isIPv4 && NetUtils.isInnerIP(ip)) || (isIPv6 && NetUtils.isInnerIPv6(ip))) {
+            return LOCAL_ADDRESS;
         }
-        return RegionUtil.getCityInfo(ip);
+        // Tips：Ip2Region 提供了精简的IPv6地址库，精简的IPv6地址库并不能完全支持IPv6地址的查询，且准确度上可能会存在问题，如需要准确的IPv6地址查询，建议自行实现
+        return RegionUtil.getRegion(ip);
     }
 }

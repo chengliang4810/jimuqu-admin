@@ -12,7 +12,7 @@
     <parent>
         <groupId>org.noear</groupId>
         <artifactId>solon-parent</artifactId>
-        <version>3.8.0</version>
+        <version>3.8.1-M4</version>
         <relativePath/>
     </parent>
 
@@ -66,14 +66,14 @@
         <!-- 打包默认跳过测试 -->
         <skipTests>true</skipTests>
         <!-- 离线IP地址定位库 -->
-        <ip2region.version>2.7.0</ip2region.version>
+        <ip2region.version>3.3.1</ip2region.version>
         <!-- 获取Java注释 -->
         <therapi-javadoc.version>0.15.0</therapi-javadoc.version>
         <!-- 编码 -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!-- 插件版本 -->
-        <maven-compiler-plugin.verison>3.14.0</maven-compiler-plugin.verison>
+        <maven-compiler-plugin.verison>3.14.1</maven-compiler-plugin.verison>
         <flatten-maven-plugin.version>1.7.3</flatten-maven-plugin.version>
     </properties>
 

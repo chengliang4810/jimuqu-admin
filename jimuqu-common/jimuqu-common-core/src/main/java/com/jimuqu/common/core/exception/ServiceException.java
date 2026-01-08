@@ -1,5 +1,6 @@
 package com.jimuqu.common.core.exception;
 
+import cn.hutool.v7.core.text.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,6 +45,11 @@ public final class ServiceException extends RuntimeException {
     public ServiceException(String message, Integer code) {
         this.message = message;
         this.code = code;
+    }
+
+    public ServiceException(String message, Object... args) {
+        this.code = 500;
+        this.message = StrUtil.format(message, args);
     }
 
     public String getDetailMessage() {
