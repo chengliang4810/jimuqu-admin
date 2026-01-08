@@ -179,6 +179,10 @@ sms:
   minute-max: 1
   # 短信拦截限制单手机号每日最大发送量，只对开启了拦截的配置有效
   account-max: 30
+  # 是否打印http log
+  http-log: false
+  # 是否打印banner
+  is-print: false
   # 以下配置来自于 org.dromara.sms4j.provider.config.BaseConfig类中
   blends:
     # 唯一ID 用于发送短信寻找具体配置 随便定义别用中文即可
