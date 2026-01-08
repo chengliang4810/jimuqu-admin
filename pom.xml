@@ -42,7 +42,7 @@
         <!-- 实体类维护数据库表结构 -->
         <autotable.version>2.5.11</autotable.version>
         <!-- ORM 框架 -->
-        <xbatis.version>1.9.3</xbatis.version>
+        <xbatis.version>1.9.6</xbatis.version>
         <anyline.version>8.7.3-20251206</anyline.version>
         <!-- 代码生成模板引擎 -->
         <velocity.version>2.3</velocity.version>
