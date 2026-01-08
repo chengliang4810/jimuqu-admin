@@ -35,6 +35,7 @@
         <module>jimuqu-common-websocket</module>
         <module>jimuqu-common-idempotent</module>
         <module>jimuqu-common-sms</module>
+        <module>jimuqu-common-mail</module>
     </modules>
 
 </project>

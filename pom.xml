@@ -29,7 +29,7 @@
         <!-- 通用 -->
         <lombok.version>1.18.42</lombok.version>
         <!-- 工具类 -->
-        <hutool.version>7.0.0-M3</hutool.version>
+        <hutool.version>7.0.0-M4</hutool.version>
         <!-- 实体类转换工具 -->
         <mapstruct-plus.version>1.5.0</mapstruct-plus.version>
         <mapstruct-plus.lombok.version>0.2.0</mapstruct-plus.lombok.version>
@@ -58,6 +58,9 @@
         <justauth.version>1.16.7</justauth.version>
         <!-- 短信 -->
         <sms4j.version>3.3.4</sms4j.version>
+        <!-- 邮件 -->
+        <jakarta.mail.version>2.0.5</jakarta.mail.version>
+        <jakarta.mail.api.version>2.1.5</jakarta.mail.api.version>
 
         <!-- 以下基本固定不变 -->
         <!-- 打包默认跳过测试 -->
