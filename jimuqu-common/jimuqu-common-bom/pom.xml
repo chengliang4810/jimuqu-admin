@@ -124,6 +124,12 @@
                 <artifactId>jimuqu-common-idempotent</artifactId>
                 <version>${revision}</version>
             </dependency>
+            <!-- 短信模块 -->
+            <dependency>
+                <groupId>com.jimuqu</groupId>
+                <artifactId>jimuqu-common-sms</artifactId>
+                <version>${revision}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

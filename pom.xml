@@ -56,6 +56,8 @@
         <fastexcel.version>1.3.0</fastexcel.version>
         <!-- 三方认证 -->
         <justauth.version>1.16.7</justauth.version>
+        <!-- 短信 -->
+        <sms4j.version>3.3.4</sms4j.version>
 
         <!-- 以下基本固定不变 -->
         <!-- 打包默认跳过测试 -->
