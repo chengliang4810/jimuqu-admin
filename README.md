@@ -12,26 +12,26 @@
 🚀 演示系统：[https://admin.jimuqu.com](https://admin.jimuqu.com)
 
 ## 计划列表
-- [ ] 集成 FastExcel 导入导出功能
 - [X] Hutool V7升级, 支持最新版Hutool
 - [X] 字段翻译功能：支持枚举、字符串、数据库字典
 - [X] 基于IP/用户/全局接口限流功能
 - [X] Reids模块基于redisson的缓存工具
+- [X] sms 短信模块
+- [X] websocket模块
+- [X] sse模块
+- [X] mail 邮件模块
+- [X] ip2region进行升级支持ipv6
+- [X] idempotent 幂等功能
+- [ ] 集成fesod(FastExcel)导入导出功能
 - [ ] 在线定时任务管理功能
 - [ ] 定时任务结合FastExcel定时导出报表
+- [ ] encrypt API接口数据加解密模块
+- [ ] sensitive 脱敏模块
 - [ ] 在线插件管理功能，支持插件开发
-- [ ] ip2region进行升级支持ipv6
 - [ ] 无侵入式基于注释内容生成接口文档
-- [ ] 前端H5/Uniapp开发、
+- [ ] 前端H5/Uniapp开发
 - [ ] AI大模型接入
 - [ ] 提供项目Mcp接口
-- [ ] idempotent 幂等功能
-- [ ] encrypt API接口数据加解密模块
-- [ ] mail 邮件模块
-- [ ] sensitive 脱敏模块
-- [ ] sms 短信模块
-- [ ] websocket模块
-- [ ] sse模块
 
 ---
 
@@ -75,8 +75,6 @@
 | **👀 在线用户管理** | 监控在线用户并支持强制踢出                                               |
 | **⏱️ 定时任务**   | 任务管理（增删改）、日志管理、执行器监控                                 |
 | **🔌 系统接口**   | 自动生成API文档                                                          |
-
-> 在线代码生成模块已删除，推荐使用AI工具进行代码生成和功能开发
 
 ---
 
