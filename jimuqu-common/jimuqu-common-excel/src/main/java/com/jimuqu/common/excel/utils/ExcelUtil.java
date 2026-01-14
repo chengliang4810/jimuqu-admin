@@ -1,5 +1,8 @@
 package com.jimuqu.common.excel.utils;
 
+import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.v7.core.data.id.IdUtil;
+import cn.hutool.v7.core.io.resource.ClassPathResource;
 import cn.idev.excel.EasyExcel;
 import cn.idev.excel.ExcelWriter;
 import cn.idev.excel.write.builder.ExcelWriterSheetBuilder;
@@ -12,17 +15,15 @@ import com.jimuqu.common.excel.convert.ExcelBigNumberConvert;
 import com.jimuqu.common.excel.core.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.data.id.IdUtil;
-import cn.hutool.v7.core.io.resource.ClassPathResource;
+import org.noear.solon.core.handle.DownloadedFile;
 
-import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Excel相关处理
@@ -77,14 +78,8 @@ public class ExcelUtil {
      * @param sheetName 工作表的名称
      * @param clazz     实体类
      */
-    public static <T> void exportExcel(List<T> list, String sheetName, Class<T> clazz) {
-        try {
-            resetResponse(sheetName);
-            // ServletOutputStream os = response.getOutputStream();
-            // exportExcel(list, sheetName, clazz, false, os, null);
-        } catch (IOException e) {
-            throw new RuntimeException("导出Excel异常" );
-        }
+    public static <T> DownloadedFile exportExcel(List<T> list, String sheetName, Class<T> clazz) {
+        return exportToDownloadedFile(sheetName, os -> exportExcel(list, sheetName, clazz, false, os, null));
     }
 
     /**
@@ -95,14 +90,8 @@ public class ExcelUtil {
      * @param clazz     实体类
      * @param options   级联下拉选
      */
-    public static <T> void exportExcel(List<T> list, String sheetName, Class<T> clazz, List<DropDownOptions> options) {
-        try {
-            resetResponse(sheetName);
-            // ServletOutputStream os = response.getOutputStream();
-            // exportExcel(list, sheetName, clazz, false, os, options);
-        } catch (IOException e) {
-            throw new RuntimeException("导出Excel异常" );
-        }
+    public static <T> DownloadedFile exportExcel(List<T> list, String sheetName, Class<T> clazz, List<DropDownOptions> options) {
+        return exportToDownloadedFile(sheetName, os -> exportExcel(list, sheetName, clazz, false, os, options));
     }
 
     /**
@@ -113,14 +102,8 @@ public class ExcelUtil {
      * @param clazz     实体类
      * @param merge     是否合并单元格
      */
-    public static <T> void exportExcel(List<T> list, String sheetName, Class<T> clazz, boolean merge) {
-        try {
-            resetResponse(sheetName);
-            // ServletOutputStream os = response.getOutputStream();
-            // exportExcel(list, sheetName, clazz, merge, os, null);
-        } catch (IOException e) {
-            throw new RuntimeException("导出Excel异常" );
-        }
+    public static <T> DownloadedFile exportExcel(List<T> list, String sheetName, Class<T> clazz, boolean merge) {
+        return exportToDownloadedFile(sheetName, os -> exportExcel(list, sheetName, clazz, merge, os, null));
     }
 
     /**
@@ -132,14 +115,8 @@ public class ExcelUtil {
      * @param merge     是否合并单元格
      * @param options   级联下拉选
      */
-    public static <T> void exportExcel(List<T> list, String sheetName, Class<T> clazz, boolean merge, List<DropDownOptions> options) {
-        try {
-            resetResponse(sheetName);
-            // ServletOutputStream os = response.getOutputStream();
-            // exportExcel(list, sheetName, clazz, merge, os, options);
-        } catch (IOException e) {
-            throw new RuntimeException("导出Excel异常" );
-        }
+    public static <T> DownloadedFile exportExcel(List<T> list, String sheetName, Class<T> clazz, boolean merge, List<DropDownOptions> options) {
+        return exportToDownloadedFile(sheetName, os -> exportExcel(list, sheetName, clazz, merge, os, options));
     }
 
     /**
@@ -203,14 +180,8 @@ public class ExcelUtil {
      *                     重点: 模板文件必须放置到启动类对应的 resource 目录下
      * @param data         模板需要的数据
      */
-    public static void exportTemplate(List<Object> data, String filename, String templatePath) {
-        try {
-            resetResponse(filename);
-            // ServletOutputStream os = response.getOutputStream();
-            exportTemplate(data, templatePath, "" );
-        } catch (IOException e) {
-            throw new RuntimeException("导出Excel异常" );
-        }
+    public static DownloadedFile exportTemplate(List<Object> data, String filename, String templatePath) {
+        return exportToDownloadedFile(filename, os -> exportTemplate(data, templatePath, os));
     }
 
     /**
@@ -232,7 +203,7 @@ public class ExcelUtil {
                 .build();
         WriteSheet writeSheet = EasyExcel.writerSheet().build();
         if (CollUtil.isEmpty(data)) {
-            throw new IllegalArgumentException("数据为空" );
+            throw new IllegalArgumentException("数据为空");
         }
         // 单表多数据导出 模板格式为 {.属性}
         for (Object d : data) {
@@ -250,14 +221,8 @@ public class ExcelUtil {
      *                     重点: 模板文件必须放置到启动类对应的 resource 目录下
      * @param data         模板需要的数据
      */
-    public static void exportTemplateMultiList(Map<String, Object> data, String filename, String templatePath) {
-        try {
-            resetResponse(filename);
-            // ServletOutputStream os = response.getOutputStream();
-            exportTemplateMultiList(data, templatePath, "" );
-        } catch (IOException e) {
-            throw new RuntimeException("导出Excel异常" );
-        }
+    public static DownloadedFile exportTemplateMultiList(Map<String, Object> data, String filename, String templatePath) {
+        return exportToDownloadedFile(filename, os -> exportTemplateMultiList(data, templatePath, os));
     }
 
     /**
@@ -269,14 +234,8 @@ public class ExcelUtil {
      *                     重点: 模板文件必须放置到启动类对应的 resource 目录下
      * @param data         模板需要的数据
      */
-    public static void exportTemplateMultiSheet(List<Map<String, Object>> data, String filename, String templatePath) {
-        try {
-            resetResponse(filename);
-            // ServletOutputStream os = response.getOutputStream();
-            exportTemplateMultiSheet(data, templatePath, "" );
-        } catch (IOException e) {
-            throw new RuntimeException("导出Excel异常" );
-        }
+    public static DownloadedFile exportTemplateMultiSheet(List<Map<String, Object>> data, String filename, String templatePath) {
+        return exportToDownloadedFile(filename, os -> exportTemplateMultiSheet(data, templatePath, os));
     }
 
     /**
@@ -298,7 +257,7 @@ public class ExcelUtil {
                 .build();
         WriteSheet writeSheet = EasyExcel.writerSheet().build();
         if (CollUtil.isEmpty(data)) {
-            throw new IllegalArgumentException("数据为空" );
+            throw new IllegalArgumentException("数据为空");
         }
         for (Map.Entry<String, Object> map : data.entrySet()) {
             // 设置列表后续还有数据
@@ -331,7 +290,7 @@ public class ExcelUtil {
                 .registerConverter(new ExcelBigNumberConvert())
                 .build();
         if (CollUtil.isEmpty(data)) {
-            throw new IllegalArgumentException("数据为空" );
+            throw new IllegalArgumentException("数据为空");
         }
         for (int i = 0; i < data.size(); i++) {
             WriteSheet writeSheet = EasyExcel.writerSheet(i).build();
@@ -350,15 +309,6 @@ public class ExcelUtil {
     }
 
     /**
-     * 重置响应体
-     */
-    private static void resetResponse(String sheetName) throws UnsupportedEncodingException {
-        String filename = encodingFilename(sheetName);
-        // FileUtils.setAttachmentResponseHeader(response, filename);
-        // response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8");
-    }
-
-    /**
      * 解析导出值 0=男,1=女,2=未知
      *
      * @param propertyValue 参数值
@@ -370,7 +320,7 @@ public class ExcelUtil {
         StringBuilder propertyString = new StringBuilder();
         String[] convertSource = converterExp.split(StringUtil.SEPARATOR);
         for (String item : convertSource) {
-            String[] itemArray = item.split("=" );
+            String[] itemArray = item.split("=");
             if (StringUtil.containsAny(propertyValue, separator)) {
                 for (String value : propertyValue.split(separator)) {
                     if (itemArray[0].equals(value)) {
@@ -399,7 +349,7 @@ public class ExcelUtil {
         StringBuilder propertyString = new StringBuilder();
         String[] convertSource = converterExp.split(StringUtil.SEPARATOR);
         for (String item : convertSource) {
-            String[] itemArray = item.split("=" );
+            String[] itemArray = item.split("=");
             if (StringUtil.containsAny(propertyValue, separator)) {
                 for (String value : propertyValue.split(separator)) {
                     if (itemArray[1].equals(value)) {
@@ -421,6 +371,20 @@ public class ExcelUtil {
      */
     public static String encodingFilename(String filename) {
         return IdUtil.fastSimpleUUID() + "_" + filename + ".xlsx";
+    }
+
+    /**
+     * 通用导出方法：将Excel内容输出到DownloadedFile
+     *
+     * @param fileName     文件名（不含扩展名）
+     * @param exportAction 导出动作，接收OutputStream参数
+     * @return DownloadedFile对象
+     */
+    private static DownloadedFile exportToDownloadedFile(String fileName, Consumer<OutputStream> exportAction) {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        exportAction.accept(os);
+        String encodedFileName = encodingFilename(fileName);
+        return new DownloadedFile("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8", os.toByteArray(), encodedFileName);
     }
 
 }
