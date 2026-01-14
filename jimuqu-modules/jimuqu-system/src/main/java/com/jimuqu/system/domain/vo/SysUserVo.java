@@ -97,13 +97,11 @@ public class SysUserVo implements Serializable {
      * 部门对象
      */
     @NestedResultEntity(target = SysDept.class)
-    //@RelationOneToOne(selfField = "deptId", joinSelfColumn = "dept_id", targetField = "deptId", joinTargetColumn = "dept_id", targetTable = "sys_dept")
     private SysDeptVo dept;
 
     /**
      * 角色对象
      */
-    //@RelationManyToMany(selfField = "userId", joinSelfColumn = "user_id", targetTable = "sys_role", targetField = "roleId", joinTargetColumn = "role_id", joinTable = "sys_user_role")
      @NestedResultEntity(target = SysRole.class)
     private List<SysRoleVo> roles;
 

@@ -9,10 +9,7 @@ import com.jimuqu.common.core.utils.StreamUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.common.satoken.utils.LoginHelper;
-import com.jimuqu.system.domain.SysPost;
-import com.jimuqu.system.domain.SysUser;
-import com.jimuqu.system.domain.SysUserPost;
-import com.jimuqu.system.domain.SysUserRole;
+import com.jimuqu.system.domain.*;
 import com.jimuqu.system.domain.bo.SysUserBo;
 import com.jimuqu.system.domain.query.SysUserQuery;
 import com.jimuqu.system.domain.vo.SysPostVo;
@@ -70,7 +67,8 @@ public class SysUserServiceImpl implements SysUserService {
     @Override
     public Page<SysUserVo> queryPageList(SysUserQuery query, PageQuery pageQuery) {
         return buildQueryChain(query)
-                .select(SysUser.class)
+                .select(SysUser.class, SysDept.class)
+                .leftJoin(SysUser::getDeptId, SysDept::getId)
                 .returnType(SysUserVo.class)
                 .paging(pageQuery.build());
     }
@@ -80,8 +78,11 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public List<SysUserVo> queryList(SysUserQuery query) {
-        QueryChain<SysUser> queryChain = buildQueryChain(query);
-        return queryChain.returnType(SysUserVo.class).list();
+        return buildQueryChain(query)
+                .select(SysUser.class, SysDept.class)
+                .leftJoin(SysUser::getDeptId, SysDept::getId)
+                .returnType(SysUserVo.class)
+                .list();
     }
 
     /**
