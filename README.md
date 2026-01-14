@@ -22,7 +22,7 @@
 - [X] mail 邮件模块
 - [X] ip2region进行升级支持ipv6
 - [X] idempotent 幂等功能
-- [ ] 集成fesod(FastExcel)导入导出功能
+- [X] 集成fesod(FastExcel)导入导出功能
 - [ ] 在线定时任务管理功能
 - [ ] 定时任务结合FastExcel定时导出报表
 - [ ] encrypt API接口数据加解密模块
