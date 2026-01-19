@@ -12,7 +12,7 @@
     <parent>
         <groupId>org.noear</groupId>
         <artifactId>solon-parent</artifactId>
-        <version>3.7.3</version>
+        <version>3.8.3</version>
         <relativePath/>
     </parent>
 
@@ -29,7 +29,7 @@
         <!-- 通用 -->
         <lombok.version>1.18.42</lombok.version>
         <!-- 工具类 -->
-        <hutool.version>7.0.0-M3</hutool.version>
+        <hutool.version>7.0.0-M4</hutool.version>
         <!-- 实体类转换工具 -->
         <mapstruct-plus.version>1.5.0</mapstruct-plus.version>
         <mapstruct-plus.lombok.version>0.2.0</mapstruct-plus.lombok.version>
@@ -42,7 +42,7 @@
         <!-- 实体类维护数据库表结构 -->
         <autotable.version>2.5.11</autotable.version>
         <!-- ORM 框架 -->
-        <xbatis.version>1.9.3</xbatis.version>
+        <xbatis.version>1.9.6</xbatis.version>
         <anyline.version>8.7.3-20251206</anyline.version>
         <!-- 代码生成模板引擎 -->
         <velocity.version>2.3</velocity.version>
@@ -51,24 +51,29 @@
         <sa-token.version>1.44.0</sa-token.version>
         <!-- 文件上传 -->
         <x-file-storage.version>2.3.0</x-file-storage.version>
-        <minio.version>8.5.17</minio.version>
+        <minio.version>8.6.0</minio.version>
         <!-- excel -->
         <fastexcel.version>1.3.0</fastexcel.version>
         <!-- 三方认证 -->
         <justauth.version>1.16.7</justauth.version>
+        <!-- 短信 -->
+        <sms4j.version>3.3.4</sms4j.version>
+        <!-- 邮件 -->
+        <jakarta.mail.version>2.0.5</jakarta.mail.version>
+        <jakarta.mail.api.version>2.1.5</jakarta.mail.api.version>
 
         <!-- 以下基本固定不变 -->
         <!-- 打包默认跳过测试 -->
         <skipTests>true</skipTests>
         <!-- 离线IP地址定位库 -->
-        <ip2region.version>2.7.0</ip2region.version>
+        <ip2region.version>3.3.1</ip2region.version>
         <!-- 获取Java注释 -->
         <therapi-javadoc.version>0.15.0</therapi-javadoc.version>
         <!-- 编码 -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!-- 插件版本 -->
-        <maven-compiler-plugin.verison>3.14.0</maven-compiler-plugin.verison>
+        <maven-compiler-plugin.verison>3.14.1</maven-compiler-plugin.verison>
         <flatten-maven-plugin.version>1.7.3</flatten-maven-plugin.version>
     </properties>
 
@@ -197,18 +202,6 @@
                 <groupId>org.apache.velocity</groupId>
                 <artifactId>velocity-engine-core</artifactId>
                 <version>${velocity.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jsr310</artifactId>
-                <version>${jackson.version}</version>
             </dependency>
 
             <!-- 文件存储 -->

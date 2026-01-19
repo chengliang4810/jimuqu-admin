@@ -108,6 +108,19 @@
             <artifactId>jimuqu-common-websocket</artifactId>
         </dependency>
 
+        <!-- 短信模块 -->
+        <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-sms</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <!-- 邮件模块 -->
+        <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-common-mail</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
     </dependencies>
 
 </project>

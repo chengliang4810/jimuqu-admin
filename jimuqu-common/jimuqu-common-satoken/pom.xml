@@ -28,10 +28,17 @@
             <artifactId>sa-token-redisson</artifactId>
         </dependency>
         <!-- sa-token snack3 序列化框架 -->
+<!--        <dependency>-->
+<!--            <groupId>cn.dev33</groupId>-->
+<!--            <artifactId>sa-token-snack3</artifactId>-->
+<!--        </dependency>-->
+
+        <!-- sa-token snack4 序列化框架： sa-token 需要春节左右发新，所以Solon临时发了个包 -->
         <dependency>
-            <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-snack3</artifactId>
+            <groupId>org.noear</groupId>
+            <artifactId>sa-token-snack4</artifactId>
         </dependency>
+
         <!-- Sa-Token 整合 API Key -->
         <dependency>
             <groupId>cn.dev33</groupId>

@@ -2,40 +2,40 @@ package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.secure.BCrypt;
+import cn.hutool.v7.core.util.ObjUtil;
 import com.jimuqu.common.core.checker.Assert;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.domain.model.LoginUser;
+import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.core.utils.StreamUtil;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
+import com.jimuqu.common.excel.utils.ExcelUtil;
 import com.jimuqu.common.log.annotation.Log;
 import com.jimuqu.common.log.enums.BusinessType;
+import com.jimuqu.common.mybatis.annotation.DataColumn;
+import com.jimuqu.common.mybatis.annotation.DataPermission;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.common.satoken.utils.LoginHelper;
-import com.jimuqu.common.mybatis.annotation.DataColumn;
-import com.jimuqu.common.mybatis.annotation.DataPermission;
 import com.jimuqu.common.web.core.BaseController;
 import com.jimuqu.system.domain.bo.SysUserBo;
 import com.jimuqu.system.domain.query.SysPostQuery;
 import com.jimuqu.system.domain.query.SysRoleQuery;
 import com.jimuqu.system.domain.query.SysUserQuery;
-import com.jimuqu.system.domain.vo.SysRoleVo;
-import com.jimuqu.system.domain.vo.SysUserInfoVo;
-import com.jimuqu.system.domain.vo.SysUserVo;
-import com.jimuqu.system.domain.vo.UserInfoVo;
+import com.jimuqu.system.domain.vo.*;
 import com.jimuqu.system.service.SysDeptService;
 import com.jimuqu.system.service.SysPostService;
 import com.jimuqu.system.service.SysRoleService;
 import com.jimuqu.system.service.SysUserService;
 import lombok.RequiredArgsConstructor;
-import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Mapping;
 import org.noear.solon.annotation.Post;
+import org.noear.solon.core.handle.DownloadedFile;
 import org.noear.solon.validation.annotation.NoRepeatSubmit;
 import org.noear.solon.validation.annotation.NotEmpty;
 import org.noear.solon.validation.annotation.NotNull;
@@ -245,6 +245,18 @@ public class SysUserController extends BaseController {
         Integer num = sysUserService.deleteByIds(ids);
         Assert.gtZero(num, "删除用户信息失败");
         return num;
+    }
+
+    /**
+     * 导出用户列表
+     */
+    @Log(title = "用户管理", businessType = BusinessType.EXPORT)
+    @SaCheckPermission("system:user:export")
+    @Mapping("/export")
+    public DownloadedFile export(SysUserQuery query) {
+        List<SysUserVo> list = sysUserService.queryList(query);
+        List<SysUserExportVo> listVo = MapstructUtil.convert(list, SysUserExportVo.class);
+        return ExcelUtil.exportExcel(listVo, "用户数据", SysUserExportVo.class);
     }
 
 }
