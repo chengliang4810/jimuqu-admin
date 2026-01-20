@@ -21,7 +21,7 @@ solon.dataSources.jimuqu!: #数据源（!结尾表示 typed=true）
 #  driverType: "redis" #驱动类型
 #  server: "127.0.0.1:6379"
 #  db: 0 #默认为 0，可不配置
-  # password:
+#  #password:
 
 # 表自动配置 注意删除列会导致列数据一起删除，如果比较敏感请自行关闭配置
 auto-table:

@@ -19,12 +19,42 @@ import java.io.Serializable;
 public class ChatResponseVo implements Serializable {
 
     /**
-     * 是否完成
+     * 状态码 常见错误码：
+     *
+     * 错误码	说明
+     * 0	成功
+     * 1	参数错误
+     * 2	认证失败
+     * 3	服务限流
+     * 4	服务异常
+     * 5	上下文过长
+     * 错误响应示例：
+     *
+     * {
+     *   "code": 1,
+     *   "message": "参数错误",
+     *   "error": "query参数不能为空"
+     * }
+     * {
+     *   "code": 4,
+     *   "message": "服务异常",
+     *   "error": "AI服务暂时不可用，请稍后重试"
+     * }
      */
-    private boolean isFinished;
+    private Integer code = 0;
 
     /**
-     * 内容
+     * 响应id
+     */
+    private String responseId;
+
+    /**
+     * 是否完成
+     */
+    private boolean isEnd;
+
+    /**
+     * 内容（思考或回答内容）
      */
     private String content;
 
@@ -34,17 +64,17 @@ public class ChatResponseVo implements Serializable {
     private String role;
 
     /**
-     * 思考
+     * 是否思考中
      */
-    private Boolean isThinking;
+    private boolean isThinking;
 
 
     public ChatResponseVo(ChatResponse chatResponse) {
         AssistantMessage message = chatResponse.getMessage();
-        this.isFinished = chatResponse.isFinished();
+        this.isEnd = chatResponse.isFinished();
         this.role = message.getRole().name();
-        this.content = message.getContent();
         this.isThinking = message.isThinking();
+        this.content = message.getContent();
     }
 
     @Override
