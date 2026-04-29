@@ -46,6 +46,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.jimuqu</groupId>
+            <artifactId>jimuqu-ai</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.noear</groupId>
             <artifactId>solon-test</artifactId>
             <scope>test</scope>

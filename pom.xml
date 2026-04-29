@@ -12,7 +12,7 @@
     <parent>
         <groupId>org.noear</groupId>
         <artifactId>solon-parent</artifactId>
-        <version>3.8.3</version>
+        <version>3.9.5</version>
         <relativePath/>
     </parent>
 
@@ -42,13 +42,13 @@
         <!-- 实体类维护数据库表结构 -->
         <autotable.version>2.5.11</autotable.version>
         <!-- ORM 框架 -->
-        <xbatis.version>1.9.6</xbatis.version>
+        <xbatis.version>1.9.8</xbatis.version>
         <anyline.version>8.7.3-20251206</anyline.version>
         <!-- 代码生成模板引擎 -->
         <velocity.version>2.3</velocity.version>
         <beetl.version>3.19.0.RELEASE</beetl.version>
         <!-- 权限认证框架 -->
-        <sa-token.version>1.44.0</sa-token.version>
+        <sa-token.version>1.45.0</sa-token.version>
         <!-- 文件上传 -->
         <x-file-storage.version>2.3.0</x-file-storage.version>
         <minio.version>8.6.0</minio.version>
@@ -126,6 +126,12 @@
                 <version>${sa-token.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-snack4</artifactId>
+                <version>${sa-token.version}</version>
             </dependency>
 
             <!-- JustAuth 的依赖配置-->
@@ -227,6 +233,12 @@
             <dependency>
                 <groupId>com.jimuqu</groupId>
                 <artifactId>jimuqu-generator</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.jimuqu</groupId>
+                <artifactId>jimuqu-ai</artifactId>
                 <version>${revision}</version>
             </dependency>
         </dependencies>

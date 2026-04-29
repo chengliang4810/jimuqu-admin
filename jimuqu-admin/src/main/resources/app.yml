@@ -28,6 +28,7 @@ solon.config.add: "./app.yml"
 # 批量加载内部配置
 solon.config.load:
   - "config/*.yml"
+  - "jimuqu-ai.yml"
 
 # 记录器级别的配置示例
 solon.logging.logger:
@@ -164,7 +165,7 @@ sse:
 --- # websocket
 websocket:
   # 如果关闭 需要和前端开关一起关闭
-  enabled: false
+  enabled: true
   # 路径
   path: /resource/websocket
 
