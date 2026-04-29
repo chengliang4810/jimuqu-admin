@@ -2,7 +2,10 @@ package com.jimuqu.common.web.config;
 
 import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Configuration;
+import org.noear.solon.Solon;
+import org.noear.solon.serialization.snack4.Snack4StringSerializer;
 import org.noear.solon.web.cors.CrossInterceptor;
+import com.jimuqu.common.web.sensitive.SensitiveJsonRender;
 
 /**
  * web 通用配置
@@ -33,6 +36,14 @@ public class WebConfig {
                 .allowCredentials(true)
                 // 有效期 1800秒
                 .maxAge(3600);
+    }
+
+    /**
+     * 替换默认 JSON 渲染器，统一处理 @Sensitive 响应字段。
+     */
+    @Bean
+    public void sensitiveJsonRender(Snack4StringSerializer snack4StringSerializer) {
+        Solon.app().renders().register("@json", new SensitiveJsonRender(snack4StringSerializer));
     }
 
 }

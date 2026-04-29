@@ -3,6 +3,8 @@ package com.jimuqu.system.domain.vo;
 import cn.xbatis.db.annotations.Ignore;
 import cn.xbatis.db.annotations.NestedResultEntity;
 import cn.xbatis.db.annotations.ResultEntity;
+import com.jimuqu.common.core.sensitive.annotation.Sensitive;
+import com.jimuqu.common.core.sensitive.enums.SensitiveType;
 import com.jimuqu.system.domain.SysDept;
 import com.jimuqu.system.domain.SysRole;
 import com.jimuqu.system.domain.SysUser;
@@ -54,10 +56,12 @@ public class SysUserVo implements Serializable {
     /**
      * 用户邮箱
      */
+    @Sensitive(type = SensitiveType.EMAIL)
     private String email;
     /**
      * 手机号码
      */
+    @Sensitive(type = SensitiveType.MOBILE)
     private String phonenumber;
     /**
      * 用户性别（0男 1女 2未知）

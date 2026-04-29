@@ -64,6 +64,12 @@
             <artifactId>mapstruct-plus-solon-plugin</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- 离线IP地址定位库 -->
         <dependency>
             <groupId>org.lionsoul</groupId>

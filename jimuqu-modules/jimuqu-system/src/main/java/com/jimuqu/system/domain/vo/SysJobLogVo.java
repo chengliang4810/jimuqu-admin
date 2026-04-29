@@ -1,0 +1,89 @@
+package com.jimuqu.system.domain.vo;
+
+import cn.xbatis.db.annotations.ResultEntity;
+import com.jimuqu.system.domain.SysJobLog;
+import io.github.linpeilie.annotations.AutoMapper;
+import lombok.Data;
+import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Date;
+
+/**
+ * 定时任务运行日志视图对象
+ *
+ * @author jimuqu-admin
+ * @since 2026-04-29
+ */
+@Data
+@FieldNameConstants
+@Accessors(chain = true)
+@ResultEntity(SysJobLog.class)
+@AutoMapper(target = SysJobLog.class)
+public class SysJobLogVo implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 日志主键
+     */
+    private Long id;
+
+    /**
+     * 任务主键
+     */
+    private Long jobId;
+
+    /**
+     * 任务名称
+     */
+    private String jobName;
+
+    /**
+     * 任务分组
+     */
+    private String jobGroup;
+
+    /**
+     * 白名单处理器标识
+     */
+    private String handlerKey;
+
+    /**
+     * 处理器参数JSON
+     */
+    private String handlerParam;
+
+    /**
+     * 运行状态（0成功 1失败 2跳过）
+     */
+    private Integer status;
+
+    /**
+     * 开始时间
+     */
+    private Date startTime;
+
+    /**
+     * 结束时间
+     */
+    private Date endTime;
+
+    /**
+     * 耗时毫秒
+     */
+    private Long durationMs;
+
+    /**
+     * 错误信息
+     */
+    private String errorMessage;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+}

@@ -69,7 +69,7 @@ public class ExcelDownHandler implements SheetWriteHandler {
         this.dropDownOptions = options;
         this.currentOptionsColumnIndex = 0;
         this.currentLinkedOptionsSheetIndex = 0;
-        this.dictService = Solon.context().getBean(DictService.class);
+        this.dictService = Solon.context() == null ? null : Solon.context().getBean(DictService.class);
     }
 
     /**
@@ -102,6 +102,9 @@ public class ExcelDownHandler implements SheetWriteHandler {
                 String converterExp = format.readConverterExp();
                 if (StrUtil.isNotBlank(dictType)) {
                     // 如果传递了字典名，则依据字典建立下拉
+                    if (dictService == null) {
+                        throw new ServiceException("未初始化字典服务，无法创建字典下拉：" + dictType);
+                    }
                     Collection<String> values = Optional.ofNullable(dictService.getAllDictByDictType(dictType))
                             .orElseThrow(() -> new ServiceException(String.format("字典 %s 不存在", dictType)))
                             .values();
