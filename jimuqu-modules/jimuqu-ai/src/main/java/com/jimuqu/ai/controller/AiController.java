@@ -22,7 +22,7 @@ public class AiController {
     @Mapping("/chat")
     @Produces(MimeType.TEXT_EVENT_STREAM_UTF8_VALUE)
     public Flux<SseEvent> chat(ChatRequestVo request) throws IOException {
-        String content = request.getMessage().getContent();
+        String content = request == null || request.getMessage() == null ? null : request.getMessage().getContent();
         if(content == null || content.trim().isEmpty()) {
             return Flux.just(new SseEvent().data("请输入内容"));
         }
