@@ -1,0 +1,29 @@
+{
+  "skill_name": "sa-token",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "我在 Spring Boot 3 项目里接入 Sa-Token，想做前后端分离登录：登录成功返回 token，后续请求从 Header 读取；同时配置 30 天 timeout、30 分钟 active-timeout、Bearer 前缀。请给依赖、配置、登录/校验代码，并说明 StpUtil、StpLogic、SaTokenConfig 的关系和排查 token 读不到的步骤。",
+      "expected_output": "应选择 sa-token-spring-boot3-starter；配置 sa-token.token-name、timeout、active-timeout、is-read-header、is-read-cookie 取舍、is-write-header 或手动返回 StpUtil.getTokenValue、token-prefix=Bearer；代码使用 StpUtil.login/checkLogin/getTokenValue；说明 StpUtil 是默认门面、StpLogic 是实现、SaTokenConfig 是配置；排查 Header 名、前缀格式、isReadHeader、NotLoginException 场景值、上下文适配；不要套 Spring Security。",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "Sa-Token 权限认证怎么落地？我需要从数据库加载用户权限和角色，接口上用 @SaCheckPermission，同时全局拦截 /admin/** 要 admin 或 super-admin，/user/** 要 user 权限，登录接口放行。请说明 StpInterface、注解鉴权、SaRouter/SaInterceptor 的写法，以及常见为什么注解不生效。",
+      "expected_output": "应实现 StpInterface.getPermissionList/getRoleList，并说明调用鉴权时才执行、框架默认不缓存权限；示例使用 @SaCheckPermission/@SaCheckRole 或 type；Spring MVC 用 SaInterceptor + SaRouter.match/notMatch/check；登录接口放行；说明注解不生效排查：starter/拦截器注册、isAnnotation、@SaIgnore、多账号 type、StpInterface 注册；强调后端必须鉴权。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Solon 项目集成 Sa-Token 后，StpUtil.login 可以调用，但路由过滤和注解鉴权没生效。我用的是 sa-token-solon-plugin。请按源码解释 SaSolonPlugin、SaBeanRegister、SaTokenFilter 怎么工作，给 Solon 的配置/过滤器示例，并说明 SaTokenFilter 和 SaTokenInterceptor 的取舍。",
+      "expected_output": "应使用 sa-token-solon-plugin；说明 SaSolonPlugin.start 注册 SaBeanRegister/SaBeanInject 以及 SSO/OAuth2/APIKey/Sign 注册器；SaBeanRegister 读取 ${sa-token} 配置、注册上下文/CORS/防火墙过滤器并替换 routeMatcher 为 PathAnalyzer；SaTokenFilter 是 Solon Filter，支持注解与路由规则，和 SaTokenInterceptor 二选一不要同时用；示例用 Solon @Controller/@Mapping/Filter，不套 WebMvcConfigurer。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "我们要在 Sa-Token 里选择 JWT、SSO、OAuth2、API Key 和接口签名：后台管理系统登录用 JWT，第三方插件授权用 API Key，开放平台用 OAuth2，多个内部系统统一登录用 SSO，跨系统充值接口要防篡改防重放。请说明各模块依赖、适用边界、核心类/注解和安全坑点。",
+      "expected_output": "应区分 sa-token-jwt 三种 StpLogicJwt 模式及 stateless 限制；API Key 用 sa-token-apikey、SaApiKeyUtil、@SaCheckApiKey、scope、SaApiKeyDataLoader；OAuth2 用 sa-token-oauth2，四种 grant_type、SaOAuth2DataLoader/Processor；SSO 用 sa-token-sso 三种模式；Sign 用 sa-token-sign、@SaCheckSign、nonce/timestamp/sign/secretKey 防重放；提醒秘钥不入库/不下发前端、scope 后端校验，不混淆 SSO 与 OAuth2。",
+      "files": []
+    }
+  ]
+}

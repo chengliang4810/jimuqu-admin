@@ -1,0 +1,23 @@
+{
+  "skill_name": "autotable",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "我用 AutoTable 给 User 实体自动建表，需要 id 自增主键、username 非空长度 50、email 唯一索引、content 在 MySQL 用 longtext 在 PostgreSQL 用 text、status 默认 0。请给注解写法，并说明 @AutoColumn、@AutoColumns、@PrimaryKey、@Index 的关键属性和坑点。",
+      "expected_output": "应使用 @AutoTable、@PrimaryKey(autoIncrement=true)、@AutoColumn(length/notNull/comment/defaultValue)、@Index(type=UNIQUE)、@AutoColumns 多 dialect 配置；说明 dialect 未指定为默认配置，type 不填会类型映射，字段排序/数据库专属能力有边界；不套 JPA/Hibernate 注解。",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "AutoTable 在生产环境怎么配置才安全？我想自动记录 SQL，整理成 Flyway 脚本，同时避免删表删字段风险。请解释 mode=validate/update/create/none、record-sql、auto-drop-table、auto-drop-column、logic-drop-column-prefix 的取舍。",
+      "expected_output": "生产推荐 validate 或 enable=false；开发可 update，测试初始化可 create；create/auto-drop-table/auto-drop-column 有数据丢失风险；record-sql 可 file/db/custom，建议指定 version/folder-path；logic-drop-column-prefix 可替代物理删列；说明 Flyway/Liquibase 流程。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Solon 项目里引入 auto-table-solon-plugin 后没有创建表，日志只有 AutoTable执行结束。请按源码排查 @EnableAutoTable、资源加载时机、DataSource、model-package、方言策略、@AutoTable 实体扫描，并说明 AutoTablePlugin 怎么启动 AutoTableBootstrap。",
+      "expected_output": "应说明 Solon AutoTablePlugin 检查启动类 @EnableAutoTable；通过 context.lifecycle(-100) 资源加载后执行；取 DataSource、注册 SolonDataSourceHandler、收集策略/扫描器/回调/拦截器后调用 AutoTableBootstrap.start；排查 enable/mode、实体 @AutoTable、扫描范围 model-package/basePackages/classes、数据源、方言策略；引用源码路径。",
+      "files": []
+    }
+  ]
+}

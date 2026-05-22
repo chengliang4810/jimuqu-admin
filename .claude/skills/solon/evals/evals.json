@@ -1,0 +1,23 @@
+{
+  "skill_name": "solon",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Solon 应用里 app.yml 不生效，只能读 properties。请排查可能缺了哪个模块、Solon 配置文件加载真实行为，以及不要按 Spring Boot application.yml 习惯误判。",
+      "expected_output": "需要 solon-config-yaml 支持 .yml/.yaml；PropsLoaderExt 支持 .properties/.yml/.yaml；Solon 常用 app.yml 而非默认 Spring application.yml 语义；检查依赖和文件名/加载路径。",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "Solon 自定义插件类写好了但 start 没执行。请从插件声明、META-INF/solon、solon.plugin、priority、包路径和依赖加载角度排查。",
+      "expected_output": "插件声明必须在 resources/META-INF/solon/*.properties；包含 solon.plugin=全限定类名，可有 solon.plugin.priority；PluginUtil 扫描 META-INF/solon/*.properties；确认 jar 在 classpath、类名正确、有无多个插件逗号分隔；不要用 spring.factories。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "迁移到 Solon 后 Controller 没路由、Service 没注入、参数校验不触发。代码里用了 @RestController、@Autowired、Spring @Validated/@RequestBody。请给 Solon 原生替换清单和排查顺序。",
+      "expected_output": "Controller 用 @Controller+@Mapping；注入用 @Inject；请求体用 @Body；路径变量 @Path；参数校验按 Solon validation reference 查证；检查启动类 Solon.start source package 扫描范围；避免 Spring MVC/Validator 注解惯性。",
+      "files": []
+    }
+  ]
+}

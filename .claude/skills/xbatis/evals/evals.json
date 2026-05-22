@@ -1,0 +1,23 @@
+{
+  "skill_name": "xbatis",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "我在 Xbatis 里要写一个用户列表查询：支持 id 精确匹配、用户名模糊搜索、状态 IN、创建时间 BETWEEN，返回 UserVo 并分页。请给 Entity、Query 对象和 QueryChain 写法，并说明 forSearch、returnType、paging 的注意点。不要使用 MyBatis-Plus Wrapper。",
+      "expected_output": "应使用 Xbatis @Table/@TableId/@TableField；Query 使用 @ConditionTarget 和 @Condition 的 EQ/LIKE/IN/BETWEEN；可提 ObjectConditionLifeCycle；查询链使用 QueryChain.of(mapper).forSearch().where(query).returnType(UserVo.class).paging(pager)；说明分页对象需适配 IPager；不使用 LambdaQueryWrapper/IService/selectOne 等 MyBatis-Plus API。",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "Xbatis 的 QueryChain.create() 查询时报 you need specify entityType 或 mapper 没设置。请基于源码解释 create、of(MybatisMapper)、of(BaseMapper, Class) 的区别，给修复方式，并说明 get/list/count/exists/paging/mapWithKey 分别是什么终止方法。",
+      "expected_output": "应说明 QueryChain.create() 不是常规入口，执行前要 withMapper；of(MybatisMapper) 可由 MybatisMapper.getEntityType 推断实体；of(BaseMapper, Class) 需要显式 entityType；列出 get、getOptional、list、cursor、count、exists、paging、mapWithKey；引用 QueryChain 源码路径。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我想给 Xbatis 实体做逻辑删除、乐观锁、租户字段和分表，还要有插入/更新默认值。请列出应该查哪些注解和测试文件，说明哪些能力不能凭 MyBatis-Plus 经验硬写，并指出 @TableField(update=false) 和 UpdateChain 的关系。",
+      "expected_output": "应提 @LogicDelete/@LogicDeleteTime、@Version、@TenantId、@SplitTable/@SplitTableKey/@TableSplitter、@TableField(defaultValue/updateDefaultValue)；建议查 LogicDeleteTestCase、VersionTestCase、TenantTestCase、splitTable 测试、DefaultValue 测试；说明 @TableField(update=false) 对实体/Model 修改方法生效，对 UpdateChain 不生效，neverUpdate 强制也不生效；明确不要套 MyBatis-Plus 逻辑删除/租户/乐观锁写法。",
+      "files": []
+    }
+  ]
+}

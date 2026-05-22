@@ -1,0 +1,29 @@
+{
+  "skill_name": "solon-ai",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Solon AI 的 ChatModel 启动时报 The dialect(provider) no matched, check config or dependencies。我用的是本地 Ollama，配置写了 apiUrl 和 model 但没写 provider。请基于源码解释为什么会失败，给修复后的 app.yml，并列出还要检查哪些依赖/插件。",
+      "expected_output": "解释 ChatModel 通过 ChatDialectManager.select(config) 选择方言；指出缺少 provider=ollama；给出修复 app.yml；检查 solon-ai-dialect-ollama、AiPlugin、ChatDialect 注册；引用源码路径。",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "我不想用 InMemoryRepository 了，准备接 Qdrant。请按 Solon AI 源码给 QdrantRepository 的最小构造代码，说明 collectionName 默认值、初始化时如何确定向量维度、save 时是否会自动 embedding，并给出相关测试路径。",
+      "expected_output": "使用 QdrantClient/QdrantGrpcClient 与 QdrantRepository.builder(embeddingModel, client).collectionName(...).build()；说明默认 solon_ai、build/init collection、embeddingModel.dimensions、save 自动 embed；引用 QdrantRepository 和测试路径。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "帮我补一个 Solon AI MCP 服务端示例：Streamable /mcp，除了 getWeather 工具，还要暴露 config://app-version 资源和一个生成主题问题的 Prompt。请说明 ResourceMapping、PromptMapping 有哪些属性，以及 McpPlugin 怎样把这些方法挂到 endpoint provider。",
+      "expected_output": "使用 @McpServerEndpoint、@ToolMapping、@ResourceMapping(uri=..., mimeType=...)、@PromptMapping；说明 ResourceMapping/PromptMapping 属性；说明 McpPlugin 加 MethodToolProvider/MethodResourceProvider/MethodPromptProvider；引用源码或测试路径。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "我要做一个 TeamAgent 审批流：先让 planner 生成方案，然后停在人工审核节点，外部写入 audit_approved 后恢复执行 confirmer。请按 Solon AI 测试里的 HITL 模式给代码骨架，说明用哪个 session、如何 context.stop、如何恢复。",
+      "expected_output": "使用 TeamAgent.graphAdjuster、InMemoryAgentSession、TaskComponent、FlowContext、context.stop、context.put(\"audit_approved\", true)、team.prompt().session(session).call() 恢复；引用 TeamAgentHumanInTheLoopTest 路径。",
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "skill_name": "fastexcel",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "我在 Java 项目里用 cn.idev.excel:fastexcel 1.3.0 导出用户列表，字段有 id、username、createTime，需要 @ExcelProperty 控制列顺序和日期格式，输出到 Web 响应 OutputStream。请给依赖、DTO、导出代码，并说明 EasyExcel 和 FastExcelFactory 的关系、autoCloseStream(false)、doWrite 的资源关闭行为。",
+      "expected_output": "应使用 cn.idev.excel:fastexcel 1.3.0；DTO 使用 @ExcelProperty(value/index/order) 和 @DateTimeFormat；代码用 cn.idev.excel.EasyExcel.write(outputStream, DTO.class).autoCloseStream(false).sheet(...).doWrite(list)；说明 EasyExcel extends FastExcelFactory，doWrite 会 finish，autoCloseStream(false) 适合外部响应流；不要写 com.alibaba.excel 或 Hutool ExcelUtil。",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "我要导入一个可能有 20 万行的 Excel，不能一次性读进内存。请用 FastExcel 写一个 AnalysisEventListener 分批处理，每 1000 行入库，读取表头，处理 ExcelDataConvertException 返回行列错误，并说明 doReadSync 为什么不适合。",
+      "expected_output": "应使用 EasyExcel.read(inputStream, Head.class, listener).sheet().doRead；listener 继承 AnalysisEventListener，实现 invokeHeadMap/invoke/doAfterAllAnalysed/onException；invoke 中 batch 达到 1000 批处理并 clear；ExcelDataConvertException 取 rowIndex/columnIndex；说明 doReadSync 用 SyncReadListener 返回 List 会占内存；可提 numRows/hasNext 限制。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "FastExcel 自定义 Converter 怎么写？我有 Long 订单号，超过 15 位导出必须是字符串防止 Excel 精度丢失，导入时也要能从字符串转 Long。请给 Converter 实现、@ExcelProperty 字段级使用和全局 registerConverter 两种写法，并说明 supportJavaTypeKey/supportExcelTypeKey 的坑。",
+      "expected_output": "应实现 cn.idev.excel.converters.Converter<Long>，返回 supportJavaTypeKey Long.class、supportExcelTypeKey STRING；实现 convertToJavaData(ReadCellData, ExcelContentProperty, GlobalConfiguration) 和 convertToExcelData(Long,... ) 返回 WriteCellData；字段使用 @ExcelProperty(converter=...)，全局使用 registerConverter(new ...())；说明只实现单方向会抛 UnsupportedOperationException、Excel cell 类型匹配、null 处理、大数值超过 15 位字符串。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "我需要用 FastExcel 做模板填充和多 sheet 导出：模板里有 {user.name} 列表和 {summary.total} 对象，另一个 sheet 写明细列表。请给 ExcelWriter + WriteSheet + FillWrapper/FillConfig 的代码，并说明 finish、模板路径可信、公式注入和自动列宽/合并性能风险。",
+      "expected_output": "应使用 EasyExcel.write(os).withTemplate(templateInputStream).autoCloseStream(false).build，try/finally finish；使用 EasyExcel.writerSheet(...).build，writer.fill(new FillWrapper(...), FillConfig.builder().forceNewRow(true).build(), sheet) 和 writer.write(detailRows, otherSheet)；说明模板路径可信、finish 必须调用、用户文本防公式注入、复杂样式/合并/自动列宽性能风险。",
+      "files": []
+    }
+  ]
+}

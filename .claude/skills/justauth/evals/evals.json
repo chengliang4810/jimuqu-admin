@@ -1,0 +1,23 @@
+{
+  "skill_name": "justauth",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "我要用 JustAuth 接 Gitee 登录，已经有回调 code 和 state。请给出最小授权、回调、换 token、获取用户信息的流程，并说明 state 为什么不能省。",
+      "expected_output": "应使用 AuthRequest / AuthDefaultRequest / AuthConfig / AuthCallback / AuthResponse / AuthUser；说明 state 校验、防 CSRF、redirectUri 一致性；代码应体现回调后先校验再换 token 再取用户信息。",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "JustAuth 里不同 provider 的字段和 scope 可能不一样，我想做一个可切换 provider 的第三方登录入口。请说明 provider 选择、AuthRequest 创建和缓存 state 的基本思路。",
+      "expected_output": "应说明 provider 不能混用、AuthRequest 要按 provider 创建、AuthStateCache 适合保存短期 state；强调 redirectUri、scope 和回调参数要按平台分别配置。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "JustAuth 回调接口偶尔收到异常跳转或用户信息不完整，我应该优先检查哪些地方？请给一份排查清单。",
+      "expected_output": "应给出 provider 是否选对、回调参数是否完整、redirectUri 是否一致、state 是否匹配、用户信息字段是否因 provider 不同而变化的排查清单。",
+      "files": []
+    }
+  ]
+}

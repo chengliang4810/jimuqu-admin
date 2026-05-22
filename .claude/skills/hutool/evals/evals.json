@@ -1,0 +1,29 @@
+{
+  "skill_name": "hutool",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "我只想在一个 Java 8 项目里用 Hutool 做字符串判空、类型转换、Bean 拷贝和集合/Map 处理，不想引入 hutool-all。请给最小 Maven 依赖、示例代码，并说明 StrUtil.isBlank/isEmpty、Convert 静默转换、BeanUtil.copyProperties 的 CopyOptions 坑点。",
+      "expected_output": "应选择 hutool-core 依赖；示例包含 StrUtil.isBlank/isEmpty、Convert.toInt(value, default)、BeanUtil.copyProperties + CopyOptions.setIgnoreNullValue、CollUtil/MapUtil；说明 blank 与 empty 区别、Convert 带默认值失败不抛错、Bean 拷贝 getter/setter/大小写/null 覆盖/深拷贝边界；不默认要求 hutool-all。",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "Hutool DateUtil 和 FileUtil 怎么安全使用？我有外部传入的日期字符串和文件路径，要解析日期、按天统计、读取 UTF-8 文件，还要递归扫描目录。请给代码，并说明秒/毫秒时间戳、时区、字符集、路径穿越和大文件 OOM 的注意点。",
+      "expected_output": "应使用 hutool-core；示例包含 DateUtil.parse/format/beginOfDay/endOfDay/between 或 LocalDateTimeUtil、FileUtil.readUtf8String/loopFiles/walkFiles；说明 DateUtil.date(long) 是毫秒级、外部日期显式格式和时区、读写显式 UTF-8、限制路径在基准目录内、防路径穿越、大文件不要 readBytes/readUtf8 一次性读入。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我需要用 Hutool 调第三方 HTTP JSON 接口：POST JSON、带 Authorization header、5 秒超时、解析响应为 UserResp；同时说明 JSONUtil 的 parseObj/toBean、HttpRequest 的 URL 编码/Cookie/timeout 行为，以及 SSRF/Token 泄露风险。",
+      "expected_output": "应选择 hutool-http + hutool-json；示例使用 HttpRequest.post(url).header(...).body(JSONUtil.toJsonStr(payload)).timeout(5000).execute().body()，再 JSONUtil.toBean 或 parseObj；说明 JSONUtil.parse 对字符串/数组/Bean 的行为、ignoreNullValue 边界、HttpRequest 基于 HttpURLConnection、of(url) 编码策略、全局 CookieManager、必须 timeout；提醒用户可控 URL 防 SSRF、不要 token 放 URL、限制响应大小。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Hutool 里 Crypto、JWT、Excel、Setting、Cache、Cron 分别该引哪个模块？请给一个摘要签名、AES 加密、JWT 创建校验、Excel 读写、Setting 分组读取、Timed/LRU 缓存、Cron 定时任务的最小示例，并指出安全坑点。",
+      "expected_output": "应分别说明 hutool-crypto、hutool-jwt、hutool-poi、hutool-setting、hutool-cache、hutool-cron；示例使用 SecureUtil.sha256/aes、JWTUtil.createToken/verify、ExcelUtil.getReader/getWriter、Setting.getStr/getInt、CacheUtil、CronUtil.schedule/start；提醒 MD5/SHA1 不存密码、JWT payload 非加密、秘钥不硬编码、Excel 关闭资源和公式注入、缓存非分布式、Cron 长任务重叠。",
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "skill_name": "x-file-storage",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "我在 Solon 项目里接入 x-file-storage 2.3.0，需要把 UploadedFile 上传到指定平台，设置原始文件名和路径，返回 FileInfo。请给最小可用代码，并说明 fileStorageService.of(...).upload() 前后要注意什么。",
+      "expected_output": "应使用 org.dromara.x.file.storage.core.FileStorageService、FileInfo 和 UploadedFile；代码应通过 of(file) 设置 originalFilename/path/platform 后 upload；说明预处理链作用、平台名必须来自配置、外部流不要乱关。",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "x-file-storage 里我要上传图片并生成缩略图，同时把对象 id、对象类型和自定义属性一起带上。请给出链式写法，并提醒哪些输入不能直接信任。",
+      "expected_output": "应展示 setObjectId/setObjectType/putAttr/thumbnail 或 image 处理链；说明不要信任用户传入的路径、平台名和原始文件名；提醒图片格式和缩略图后缀要匹配。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我想给 x-file-storage 加文件记录和删除后的清理逻辑。请说明 FileRecorder 适合做什么、什么时候不应该把它当成存储逻辑本身。",
+      "expected_output": "应解释 FileRecorder 用于上传记录扩展，不是存储本身；删除时要确认记录是否同步清理；不要把记录链与上传主链耦合成重复封装。",
+      "files": []
+    }
+  ]
+}
