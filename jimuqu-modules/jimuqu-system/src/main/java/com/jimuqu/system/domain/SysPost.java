@@ -34,7 +34,7 @@ public class SysPost extends BaseEntity {
     /**
      * 岗位ID
      */
-    @TableId(value = IdAutoType.GENERATOR, generatorName = IdentifierGeneratorType.DEFAULT)
+    @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
     @AutoColumn(comment = "岗位ID")
     private Long postId;
     /**

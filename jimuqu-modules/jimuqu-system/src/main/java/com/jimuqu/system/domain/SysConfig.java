@@ -34,7 +34,7 @@ public class SysConfig extends BaseEntity {
     /**
      * 参数主键
      */
-    @TableId(value = IdAutoType.GENERATOR, generatorName = IdentifierGeneratorType.DEFAULT)
+    @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
     @AutoColumn(comment = "参数主键")
     private Long id;
     /**

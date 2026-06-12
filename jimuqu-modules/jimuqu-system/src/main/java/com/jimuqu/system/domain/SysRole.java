@@ -34,7 +34,7 @@ public class SysRole extends BaseEntity {
     /**
      * 角色ID
      */
-    @TableId(value = IdAutoType.GENERATOR, generatorName = IdentifierGeneratorType.DEFAULT)
+    @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
     @AutoColumn(comment = "角色ID")
     private Long id;
     /**

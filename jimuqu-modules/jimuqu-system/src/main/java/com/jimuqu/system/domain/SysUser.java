@@ -37,7 +37,7 @@ public class SysUser extends BaseEntity {
     /**
      * 用户ID
      */
-    @TableId(value = IdAutoType.GENERATOR, generatorName = IdentifierGeneratorType.DEFAULT)
+    @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
     @AutoColumn(comment = "用户ID")
     private Long id;
     /**

@@ -38,7 +38,7 @@ public class SysJob extends BaseEntity {
     /**
      * 任务主键
      */
-    @TableId(value = IdAutoType.GENERATOR, generatorName = IdentifierGeneratorType.DEFAULT)
+    @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
     @AutoColumn(comment = "任务主键")
     private Long id;
 

@@ -40,7 +40,7 @@ public class SysApiKey extends BaseEntity {
     /**
      * API密钥ID
      */
-    @TableId(value = IdAutoType.GENERATOR, generatorName = IdentifierGeneratorType.DEFAULT)
+    @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
     @AutoColumn(comment = "API密钥ID")
     private Long id;
 

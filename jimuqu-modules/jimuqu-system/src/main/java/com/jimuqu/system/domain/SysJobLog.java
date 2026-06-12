@@ -38,7 +38,7 @@ public class SysJobLog extends BaseEntity {
     /**
      * 日志主键
      */
-    @TableId(value = IdAutoType.GENERATOR, generatorName = IdentifierGeneratorType.DEFAULT)
+    @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
     @AutoColumn(comment = "日志主键")
     private Long id;
 

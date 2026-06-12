@@ -111,6 +111,8 @@ REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `c
 REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (118, 1, '文件管理', 10, 'oss', 'system/oss/index', '', '1', '0', 'C', '0', '1', 'system:oss:list', 'solar:folder-with-files-outline', '文件管理菜单', 103, 1, '2025-05-27 13:19:44', NULL, NULL);
 REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (123, 1, '客户端管理', 11, 'client', 'system/client/index', '', '1', '0', 'C', '0', '0', 'system:client:list', 'solar:monitor-smartphone-outline', '客户端管理菜单', 103, 1, '2025-05-27 13:19:44', NULL, NULL);
 REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (124, 2, '服务监控', 3, 'server', 'monitor/server/index', '', '1', '0', 'C', '0', '0', 'system:monitor:list', 'solar:server-bold', '服务监控菜单', 103, 1, '2025-09-05 13:19:44', NULL, NULL);
+REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (125, 2, '定时任务', 4, 'job', 'system/job/index', '', '1', '0', 'C', '0', '0', 'system:job:list', 'ri:todo-line', '在线定时任务管理菜单', 103, 1, '2026-06-12 00:00:00', NULL, NULL);
+REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (126, 2, '任务日志', 5, 'jobLog', 'system/job/log/index', '', '1', '0', 'C', '0', '0', 'system:job:log', 'material-symbols:logo-dev-outline', '定时任务运行日志菜单', 103, 1, '2026-06-12 00:00:00', NULL, NULL);
 
 -- 用户管理按钮
 REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1001, 100, '用户查询', 1, '', '', '', '1', '0', 'F', '0', '0', 'system:user:query', '#', '', 103, 1, '2025-05-27 13:19:44', NULL, NULL);
@@ -168,6 +170,15 @@ REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `c
 REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1063, 123, '客户端管理修改', 3, '#', '', '', '1', '0', 'F', '0', '0', 'system:client:edit', '#', '', 103, 1, '2025-05-27 13:19:44', NULL, NULL);
 REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1064, 123, '客户端管理删除', 4, '#', '', '', '1', '0', 'F', '0', '0', 'system:client:remove', '#', '', 103, 1, '2025-05-27 13:19:44', NULL, NULL);
 REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1065, 123, '客户端管理导出', 5, '#', '', '', '1', '0', 'F', '0', '0', 'system:client:export', '#', '', 103, 1, '2025-05-27 13:19:44', NULL, NULL);
+
+-- 定时任务管理按钮
+REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1066, 125, '定时任务查询', 1, '#', '', '', '1', '0', 'F', '0', '0', 'system:job:query', '#', '', 103, 1, '2026-06-12 00:00:00', NULL, NULL);
+REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1067, 125, '定时任务新增', 2, '#', '', '', '1', '0', 'F', '0', '0', 'system:job:add', '#', '', 103, 1, '2026-06-12 00:00:00', NULL, NULL);
+REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1068, 125, '定时任务修改', 3, '#', '', '', '1', '0', 'F', '0', '0', 'system:job:update', '#', '', 103, 1, '2026-06-12 00:00:00', NULL, NULL);
+REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1069, 125, '定时任务删除', 4, '#', '', '', '1', '0', 'F', '0', '0', 'system:job:delete', '#', '', 103, 1, '2026-06-12 00:00:00', NULL, NULL);
+REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1070, 125, '定时任务启动', 5, '#', '', '', '1', '0', 'F', '0', '0', 'system:job:start', '#', '', 103, 1, '2026-06-12 00:00:00', NULL, NULL);
+REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1071, 125, '定时任务停止', 6, '#', '', '', '1', '0', 'F', '0', '0', 'system:job:stop', '#', '', 103, 1, '2026-06-12 00:00:00', NULL, NULL);
+REPLACE INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `order_num`, `path`, `component`, `query_param`, `is_frame`, `is_cache`, `menu_type`, `visible`, `status`, `perms`, `icon`, `remark`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (1072, 125, '定时任务执行', 7, '#', '', '', '1', '0', 'F', '0', '0', 'system:job:run', '#', '', 103, 1, '2026-06-12 00:00:00', NULL, NULL);
 
 -- ===========================================================
 -- 9. 岗位初始值
@@ -297,6 +308,15 @@ REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 1062);
 REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 1063);
 REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 1064);
 REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 1065);
+REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 125);
+REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 126);
+REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 1066);
+REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 1067);
+REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 1068);
+REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 1069);
+REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 1070);
+REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 1071);
+REPLACE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES (2, 1072);
 
 -- ===========================================================
 -- 数据库初始化完成

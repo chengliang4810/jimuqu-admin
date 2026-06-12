@@ -35,7 +35,7 @@ public class SysFile extends BaseEntity {
     /**
      * 文件id
      */
-    @TableId(value = IdAutoType.GENERATOR, generatorName = IdentifierGeneratorType.DEFAULT)
+    @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
     @AutoColumn(comment = "文件id", length = 32)
     private String id;
     /**

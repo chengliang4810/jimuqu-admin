@@ -34,7 +34,7 @@ public class SysDictType extends BaseEntity {
     /**
      * 字典主键
      */
-    @TableId(value = IdAutoType.GENERATOR, generatorName = IdentifierGeneratorType.DEFAULT)
+    @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
     @AutoColumn(comment = "字典主键")
     private Long dictId;
     /**

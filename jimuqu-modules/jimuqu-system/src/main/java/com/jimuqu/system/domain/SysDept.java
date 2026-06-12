@@ -34,7 +34,7 @@ public class SysDept extends BaseEntity {
     /**
      * 部门ID
      */
-    @TableId(value = IdAutoType.GENERATOR, generatorName = IdentifierGeneratorType.DEFAULT)
+    @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
     @AutoColumn(comment = "主键")
     private Long id;
     /**

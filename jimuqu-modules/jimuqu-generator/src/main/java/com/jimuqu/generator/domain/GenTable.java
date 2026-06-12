@@ -32,7 +32,7 @@ public class GenTable extends BaseEntity {
     /**
      * 主键
      */
-    @TableId(value = IdAutoType.GENERATOR, generatorName = IdentifierGeneratorType.DEFAULT)
+    @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
     protected Long id;
 
     /**

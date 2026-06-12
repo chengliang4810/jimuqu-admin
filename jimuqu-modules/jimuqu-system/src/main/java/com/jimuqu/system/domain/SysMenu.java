@@ -45,7 +45,7 @@ public class SysMenu extends BaseEntity {
     /**
      * 菜单ID
      */
-    @TableId(value = IdAutoType.GENERATOR, generatorName = IdentifierGeneratorType.DEFAULT)
+    @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
     @AutoColumn(comment = "菜单ID")
     private Long id;
     /**
