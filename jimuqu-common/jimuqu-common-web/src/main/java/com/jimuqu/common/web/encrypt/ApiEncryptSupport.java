@@ -2,6 +2,8 @@ package com.jimuqu.common.web.encrypt;
 
 import cn.hutool.v7.core.text.StrUtil;
 import com.jimuqu.common.core.encrypt.annotation.ApiEncrypt;
+import com.jimuqu.common.core.encrypt.domain.RsaKeyPair;
+import com.jimuqu.common.core.encrypt.utils.ApiCryptoUtil;
 import org.noear.solon.Solon;
 import org.noear.solon.core.handle.Action;
 import org.noear.solon.core.handle.Context;
@@ -16,6 +18,7 @@ public class ApiEncryptSupport {
     private static final String JSON = "json";
     private static final String PUBLIC_KEY_CONFIG = "api.encrypt.public-key";
     private static final String PRIVATE_KEY_CONFIG = "api.encrypt.private-key";
+    private static final RsaKeyPair DEFAULT_KEY_PAIR = ApiCryptoUtil.generateRsaKeyPair();
 
     private ApiEncryptSupport() {
     }
@@ -49,13 +52,17 @@ public class ApiEncryptSupport {
         if (apiEncrypt != null && StrUtil.isNotBlank(apiEncrypt.publicKey())) {
             return apiEncrypt.publicKey();
         }
-        return Solon.cfg().get(PUBLIC_KEY_CONFIG);
+        return StrUtil.defaultIfBlank(Solon.cfg().get(PUBLIC_KEY_CONFIG), DEFAULT_KEY_PAIR.getPublicKey());
     }
 
     public static String resolvePrivateKey(ApiEncrypt apiEncrypt) {
         if (apiEncrypt != null && StrUtil.isNotBlank(apiEncrypt.privateKey())) {
             return apiEncrypt.privateKey();
         }
-        return Solon.cfg().get(PRIVATE_KEY_CONFIG);
+        return StrUtil.defaultIfBlank(Solon.cfg().get(PRIVATE_KEY_CONFIG), DEFAULT_KEY_PAIR.getPrivateKey());
+    }
+
+    public static RsaKeyPair currentKeyPair() {
+        return new RsaKeyPair(resolvePublicKey(null), resolvePrivateKey(null));
     }
 }

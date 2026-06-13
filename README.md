@@ -24,10 +24,10 @@
 - [X] idempotent 幂等功能
 - [X] 集成fesod(FastExcel)导入导出功能
 - [X] 在线定时任务管理功能
-- [ ] 定时任务结合FastExcel定时导出报表
-- [ ] encrypt API接口数据加解密模块
-- [ ] sensitive 脱敏模块
-- [ ] 在线插件管理功能，支持插件开发
+- [X] 定时任务结合FastExcel定时导出报表
+- [X] encrypt API接口数据加解密模块
+- [X] sensitive 脱敏模块
+- [X] 在线插件管理功能，支持插件开发
 - [ ] 无侵入式基于注释内容生成接口文档
 - [ ] 前端H5/Uniapp开发
 - [ ] AI大模型接入

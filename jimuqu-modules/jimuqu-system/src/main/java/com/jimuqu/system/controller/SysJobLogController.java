@@ -7,6 +7,7 @@ import com.jimuqu.common.log.enums.BusinessType;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.common.core.utils.JsonUtil;
+import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.web.core.BaseController;
 import com.jimuqu.system.domain.query.SysJobLogQuery;
 import com.jimuqu.system.domain.vo.SysJobLogVo;
@@ -20,6 +21,9 @@ import org.noear.solon.annotation.Post;
 import org.noear.solon.validation.annotation.NotEmpty;
 import org.noear.solon.validation.annotation.NotNull;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -87,6 +91,17 @@ public class SysJobLogController extends BaseController {
     public DownloadedFile download(@NotNull(message = "运行日志主键不能为空") Long id) {
         SysJobLogVo log = sysJobLogService.queryById(id);
         Assert.notNull(log, "运行日志不存在");
+        if (StringUtil.isNotBlank(log.getResultFilePath())) {
+            Path path = Paths.get(log.getResultFilePath());
+            Assert.isTrue(Files.isRegularFile(path), "运行结果文件不存在");
+            try {
+                String contentType = StringUtil.defaultIfBlank(log.getResultContentType(), "application/octet-stream");
+                String fileName = StringUtil.defaultIfBlank(log.getResultFileName(), "job-result-" + id);
+                return new DownloadedFile(contentType, Files.readAllBytes(path), fileName);
+            } catch (Exception e) {
+                throw new IllegalStateException("下载运行结果文件失败", e);
+            }
+        }
         byte[] content = JsonUtil.toStringFormat(log).getBytes(java.nio.charset.StandardCharsets.UTF_8);
         return new DownloadedFile("text/plain;charset=UTF-8", content, "job-log-" + id + ".txt");
     }

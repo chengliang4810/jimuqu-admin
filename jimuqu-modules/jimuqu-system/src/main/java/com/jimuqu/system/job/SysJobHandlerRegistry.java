@@ -70,7 +70,7 @@ public class SysJobHandlerRegistry {
     /**
      * 执行处理器。
      */
-    public void invoke(SysJob job) throws Throwable {
+    public Object invoke(SysJob job) throws Throwable {
         if (job == null || StringUtil.isBlank(job.getHandlerKey())) {
             throw new IllegalArgumentException("任务处理器标识不能为空");
         }
@@ -78,7 +78,7 @@ public class SysJobHandlerRegistry {
         if (handlerMethod == null) {
             throw new IllegalArgumentException("未找到定时任务处理器: " + job.getHandlerKey());
         }
-        handlerMethod.invoke(job);
+        return handlerMethod.invoke(job);
     }
 
     private void scanBean(String beanName, BeanWrap beanWrap, Map<String, HandlerMethod> scanned) {
@@ -152,12 +152,12 @@ public class SysJobHandlerRegistry {
                     .setMethodName(method.getName());
         }
 
-        public void invoke(SysJob job) throws Throwable {
+        public Object invoke(SysJob job) throws Throwable {
             try {
                 if (method.getParameterCount() == 0) {
-                    method.invoke(bean);
+                    return method.invoke(bean);
                 } else {
-                    method.invoke(bean, buildArgument(method.getParameterTypes()[0], job));
+                    return method.invoke(bean, buildArgument(method.getParameterTypes()[0], job));
                 }
             } catch (InvocationTargetException e) {
                 throw e.getTargetException();

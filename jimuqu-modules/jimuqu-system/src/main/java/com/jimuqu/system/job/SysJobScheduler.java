@@ -1,6 +1,7 @@
 package com.jimuqu.system.job;
 
 import com.jimuqu.common.core.utils.StringUtil;
+import com.jimuqu.common.excel.core.LargeExcelExportResult;
 import com.jimuqu.system.domain.SysJob;
 import com.jimuqu.system.domain.SysJobLog;
 import com.jimuqu.system.mapper.SysJobLogMapper;
@@ -9,6 +10,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -36,6 +41,7 @@ public class SysJobScheduler {
     public static final int LOG_SUCCESS = 0;
     public static final int LOG_FAIL = 1;
     public static final int LOG_SKIP = 2;
+    private static final String RESULT_TYPE_EXCEL = "EXCEL";
 
     private final ScheduledExecutorService scheduledExecutorService;
     private final SysJobMapper sysJobMapper;
@@ -125,21 +131,23 @@ public class SysJobScheduler {
             return;
         }
         if (!Boolean.TRUE.equals(job.getAllowConcurrent()) && !runningJobIds.add(jobId)) {
-            saveLog(job, LOG_SKIP, new Date(), new Date(), "上一次任务仍在运行，已跳过本次触发");
+            saveLog(job, LOG_SKIP, new Date(), new Date(), "上一次任务仍在运行，已跳过本次触发", null);
             return;
         }
         Date startTime = new Date();
         Integer status = LOG_SUCCESS;
         String errorMessage = null;
+        JobResultAttachment resultAttachment = null;
         try {
-            handlerRegistry.invoke(job);
+            Object result = handlerRegistry.invoke(job);
+            resultAttachment = saveResultAttachment(job, result);
         } catch (Throwable e) {
             status = LOG_FAIL;
             errorMessage = StringUtil.substring(e.getMessage() == null ? e.toString() : e.getMessage(), 0, 4000);
             log.error("定时任务执行失败 jobId={}, handlerKey={}", job.getId(), job.getHandlerKey(), e);
         } finally {
             Date endTime = new Date();
-            saveLog(job, status, startTime, endTime, errorMessage);
+            saveLog(job, status, startTime, endTime, errorMessage, resultAttachment);
             job.setLastRunTime(endTime);
             if (isEnabled(job)) {
                 job.setNextRunTime(calculateNextRunTime(job.getCronExpression()));
@@ -149,7 +157,28 @@ public class SysJobScheduler {
         }
     }
 
-    private void saveLog(SysJob job, Integer status, Date startTime, Date endTime, String errorMessage) {
+    private JobResultAttachment saveResultAttachment(SysJob job, Object result) {
+        if (result instanceof LargeExcelExportResult exportResult) {
+            try {
+                Path source = exportResult.getPath();
+                Path targetDir = Paths.get("runtime", "job-results", String.valueOf(job.getId()));
+                Files.createDirectories(targetDir);
+                Path target = targetDir.resolve(System.currentTimeMillis() + "-" + sanitizeFileName(exportResult.getFileName()));
+                Files.move(source, target);
+                return JobResultAttachment.excel(exportResult, target);
+            } catch (IOException e) {
+                throw new IllegalStateException("保存定时报表导出结果失败", e);
+            }
+        }
+        return null;
+    }
+
+    private void saveLog(SysJob job,
+                         Integer status,
+                         Date startTime,
+                         Date endTime,
+                         String errorMessage,
+                         JobResultAttachment resultAttachment) {
         SysJobLog logEntity = new SysJobLog()
                 .setJobId(job.getId())
                 .setJobName(job.getJobName())
@@ -161,10 +190,44 @@ public class SysJobScheduler {
                 .setEndTime(endTime)
                 .setDurationMs(endTime.getTime() - startTime.getTime())
                 .setErrorMessage(errorMessage);
+        if (resultAttachment != null) {
+            logEntity.setResultType(resultAttachment.resultType)
+                    .setResultFileName(resultAttachment.fileName)
+                    .setResultFilePath(resultAttachment.filePath)
+                    .setResultContentType(resultAttachment.contentType)
+                    .setResultFileSize(resultAttachment.fileSize)
+                    .setResultTotalRows(resultAttachment.totalRows)
+                    .setResultFileCount(resultAttachment.fileCount);
+        }
         sysJobLogMapper.save(logEntity);
     }
 
     private boolean isEnabled(SysJob job) {
         return job != null && STATUS_ENABLED == (job.getStatus() == null ? STATUS_DISABLED : job.getStatus());
+    }
+
+    private String sanitizeFileName(String fileName) {
+        return StringUtil.defaultIfBlank(fileName, "job-result").replaceAll("[\\\\/:*?\"<>|]", "_");
+    }
+
+    private record JobResultAttachment(String resultType,
+                                       String fileName,
+                                       String filePath,
+                                       String contentType,
+                                       Long fileSize,
+                                       Long totalRows,
+                                       Integer fileCount) {
+
+        private static JobResultAttachment excel(LargeExcelExportResult result, Path path) throws IOException {
+            return new JobResultAttachment(
+                    RESULT_TYPE_EXCEL,
+                    result.getFileName(),
+                    path.toAbsolutePath().normalize().toString(),
+                    result.getContentType(),
+                    Files.size(path),
+                    result.getTotalRows(),
+                    result.getFileCount()
+            );
+        }
     }
 }

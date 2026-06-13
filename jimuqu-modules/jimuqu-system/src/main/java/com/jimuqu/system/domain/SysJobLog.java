@@ -101,4 +101,46 @@ public class SysJobLog extends BaseEntity {
      */
     @AutoColumn(comment = "错误信息", type = MysqlTypeConstant.TEXT)
     private String errorMessage;
+
+    /**
+     * 结果类型
+     */
+    @AutoColumn(comment = "结果类型", length = 50)
+    private String resultType;
+
+    /**
+     * 结果文件名
+     */
+    @AutoColumn(comment = "结果文件名", length = 255)
+    private String resultFileName;
+
+    /**
+     * 结果文件路径
+     */
+    @AutoColumn(comment = "结果文件路径", length = 1000)
+    private String resultFilePath;
+
+    /**
+     * 结果内容类型
+     */
+    @AutoColumn(comment = "结果内容类型", length = 200)
+    private String resultContentType;
+
+    /**
+     * 结果文件大小
+     */
+    @AutoColumn(comment = "结果文件大小")
+    private Long resultFileSize;
+
+    /**
+     * 导出总行数
+     */
+    @AutoColumn(comment = "导出总行数")
+    private Long resultTotalRows;
+
+    /**
+     * 导出文件数量
+     */
+    @AutoColumn(comment = "导出文件数量")
+    private Integer resultFileCount;
 }

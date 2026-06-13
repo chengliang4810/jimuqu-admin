@@ -58,4 +58,39 @@ public class SysJobLogBo extends BoBaseEntity {
      * 错误信息
      */
     private String errorMessage;
+
+    /**
+     * 结果类型
+     */
+    private String resultType;
+
+    /**
+     * 结果文件名
+     */
+    private String resultFileName;
+
+    /**
+     * 结果文件路径
+     */
+    private String resultFilePath;
+
+    /**
+     * 结果内容类型
+     */
+    private String resultContentType;
+
+    /**
+     * 结果文件大小
+     */
+    private Long resultFileSize;
+
+    /**
+     * 导出总行数
+     */
+    private Long resultTotalRows;
+
+    /**
+     * 导出文件数量
+     */
+    private Integer resultFileCount;
 }
