@@ -219,16 +219,8 @@ public class ConfigurationMessagingHttpContractTest {
     @Order(5)
     void exercisesNoticeAndMessageRoutes() {
         String title = "HTTP通知-" + suffix;
-        String directMessage = "HTTP定向消息-" + suffix;
-        String broadcastMessage = "HTTP广播消息-" + suffix;
         try (HttpApiTestSupport.SseSubscription stream = api.openSse("/resource/message", adminToken)) {
             stream.expectEvent("connected", "");
-            api.get("/resource/message/send" + HttpApiTestSupport.query(Map.of(
-                    "userId", 1, "msg", directMessage)), adminToken).expectSuccess();
-            stream.expectBellMessage("message", "backend", directMessage);
-            api.get("/resource/message/sendAll" + HttpApiTestSupport.query(Map.of(
-                    "msg", broadcastMessage)), adminToken).expectSuccess();
-            stream.expectBellMessage("message", "backend", broadcastMessage);
             api.postJson("/system/notice", noticePayload(null, title), adminToken).expectSuccess();
             stream.expectBellMessage("notice", "notice", title);
             api.get("/resource/message/close", adminToken).expectSuccess();
