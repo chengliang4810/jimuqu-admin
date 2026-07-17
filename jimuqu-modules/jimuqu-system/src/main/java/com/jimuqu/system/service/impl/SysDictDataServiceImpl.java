@@ -107,6 +107,15 @@ public class SysDictDataServiceImpl implements SysDictDataService {
         return sysDictDataMapper.update(sysDictData) > 0;
     }
 
+    @Override
+    public boolean checkDictDataUnique(SysDictDataBo bo) {
+        return !QueryChain.of(sysDictDataMapper)
+                .eq(SysDictData::getDictTypeKey, bo.getDictTypeKey())
+                .eq(SysDictData::getDictValue, bo.getDictValue())
+                .ne(bo.getId() != null, SysDictData::getId, bo.getId())
+                .exists();
+    }
+
     /**
      * 批量删除字典数据
      */

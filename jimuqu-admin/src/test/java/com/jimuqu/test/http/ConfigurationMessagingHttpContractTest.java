@@ -85,6 +85,9 @@ public class ConfigurationMessagingHttpContractTest {
 
         long dataId = scalarLong(api.postJson("/system/dict/data",
                 dictDataPayload(null, dictKey, dictLabel, "v1"), adminToken).expectSuccess());
+        HttpApiTestSupport.Response duplicateData = api.postJson("/system/dict/data",
+                dictDataPayload(null, dictKey, "重复标签-" + suffix, "v1"), adminToken).expectEnvelope();
+        assertNotEquals(200, duplicateData.code(), "同一类型下字典键值不得重复");
 
         HttpApiTestSupport.Response assignedType = api.delete("/system/dict/type/" + dictId, adminToken)
                 .expectEnvelope();

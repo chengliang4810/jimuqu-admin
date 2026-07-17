@@ -58,6 +58,8 @@ public interface SysDictDataService {
      */
     Boolean updateByBo(SysDictDataBo bo);
 
+    boolean checkDictDataUnique(SysDictDataBo bo);
+
     /**
      * 批量删除代码生成模板信息
      *

@@ -3,6 +3,7 @@ package com.jimuqu.system.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.jimuqu.common.core.checker.Assert;
 import com.jimuqu.common.core.utils.StringUtil;
+import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.excel.utils.ExcelUtil;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
@@ -87,6 +88,9 @@ public class SysDictDataController extends BaseController {
     @Log(title = "新增字典数据", businessType = BusinessType.ADD)
     public Long add(@Body @Validated(AddGroup.class) SysDictDataBo bo) {
         normalizeBellFields(bo);
+        if (!sysDictDataService.checkDictDataUnique(bo)) {
+            throw new ServiceException("新增字典数据'" + bo.getDictValue() + "'失败，字典键值已存在");
+        }
         boolean result = sysDictDataService.insertByBo(bo);
         Assert.isTrue(result, "新增字典数据失败");
         return bo.getId();
@@ -102,6 +106,9 @@ public class SysDictDataController extends BaseController {
     @Log(title = "更新字典数据", businessType = BusinessType.UPDATE)
     public void edit(@Body @Validated(UpdateGroup.class) SysDictDataBo bo) {
         normalizeBellFields(bo);
+        if (!sysDictDataService.checkDictDataUnique(bo)) {
+            throw new ServiceException("修改字典数据'" + bo.getDictValue() + "'失败，字典键值已存在");
+        }
         boolean result = sysDictDataService.updateByBo(bo);
         Assert.isTrue(result, "更新字典数据失败");
     }
