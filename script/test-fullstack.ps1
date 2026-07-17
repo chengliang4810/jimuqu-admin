@@ -492,7 +492,7 @@ try {
         PLAYWRIGHT_REUSE_EXISTING_SERVER = 'true'
         PLAYWRIGHT_WEB_SERVER_COMMAND = "corepack pnpm preview --host 127.0.0.1 --port $frontendPort --strictPort"
         VITE_GLOB_API_URL = '/prod-api'
-        VITE_GLOB_ENABLE_ENCRYPT = 'false'
+        VITE_GLOB_ENABLE_ENCRYPT = 'true'
         VITE_PORT = "$frontendPort"
         CI = 'true'
     }
@@ -557,8 +557,8 @@ try {
     if ($runtimeConfigText.Contains("http://127.0.0.1:$backendPort")) {
         throw 'Frontend runtime config leaked the Playwright backend proxy target.'
     }
-    if (-not $runtimeConfigText.Contains('"VITE_GLOB_ENABLE_ENCRYPT":"false"')) {
-        throw 'Frontend runtime config did not disable transport encryption for the full-stack test.'
+    if (-not $runtimeConfigText.Contains('"VITE_GLOB_ENABLE_ENCRYPT":"true"')) {
+        throw 'Frontend runtime config did not enable transport encryption for the full-stack test.'
     }
     Assert-PortAvailable $frontendPort
     $frontendOutLog = Join-Path $artifactRoot 'frontend.out.log'
