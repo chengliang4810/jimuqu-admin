@@ -85,6 +85,10 @@ public class ConfigurationMessagingHttpContractTest {
 
         long dataId = scalarLong(api.postJson("/system/dict/data",
                 dictDataPayload(null, dictKey, dictLabel, "v1"), adminToken).expectSuccess());
+
+        HttpApiTestSupport.Response assignedType = api.delete("/system/dict/type/" + dictId, adminToken)
+                .expectEnvelope();
+        assertNotEquals(200, assignedType.code(), "仍有字典数据的类型不得删除");
         api.get("/system/dict/data/list" + HttpApiTestSupport.query(Map.of(
                 "dictTypeKey", dictKey, "pageNum", 1, "pageSize", 20)), adminToken).expectPage();
         api.get("/system/dict/data/" + dataId, adminToken).expectSuccess();
@@ -93,10 +97,17 @@ public class ConfigurationMessagingHttpContractTest {
         assertTrue(values.stream().anyMatch(item -> item instanceof Map<?, ?> map
                 && dictLabel.equals(map.get("dictLabel"))), "按类型查询必须返回新建字典项");
 
-        api.putJson("/system/dict/type", dictTypePayload(dictId, dictKey, dictName + "-改"), adminToken)
+        String renamedKey = dictKey + "_renamed";
+        api.putJson("/system/dict/type", dictTypePayload(dictId, renamedKey, dictName + "-改"), adminToken)
                 .expectSuccess();
-        api.putJson("/system/dict/data", dictDataPayload(dataId, dictKey, dictLabel + "-改", "v2"), adminToken)
+        assertEquals(1, api.get("/system/dict/data/type/" + renamedKey, deniedToken)
+                .expectSuccess().dataList().size(), "修改字典类型时必须同步已有字典数据");
+        api.putJson("/system/dict/data", dictDataPayload(dataId, renamedKey, dictLabel + "-改", "v2"), adminToken)
                 .expectSuccess();
+
+        HttpApiTestSupport.Response duplicate = api.postJson("/system/dict/type",
+                dictTypePayload(null, renamedKey, "重复字典-" + suffix), adminToken).expectEnvelope();
+        assertNotEquals(200, duplicate.code(), "重复字典类型不得写入");
 
         api.postForm("/system/dict/type/export", Map.of("dictKey", dictKey), adminToken)
                 .expectSpreadsheet();

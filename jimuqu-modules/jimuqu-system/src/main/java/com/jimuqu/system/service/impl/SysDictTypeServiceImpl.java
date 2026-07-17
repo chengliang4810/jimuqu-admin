@@ -2,6 +2,7 @@ package com.jimuqu.system.service.impl;
 
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.service.DictService;
+import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
@@ -16,6 +17,8 @@ import com.jimuqu.system.service.SysDictTypeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
+import org.noear.solon.data.annotation.Transaction;
+import cn.hutool.v7.core.util.ObjUtil;
 
 import java.util.Collection;
 import java.util.List;
@@ -91,9 +94,26 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
      * 修改字典类型
      */
     @Override
+    @Transaction
     public Boolean updateByBo(SysDictTypeBo bo) {
+        SysDictType old = sysDictTypeMapper.getById(bo.getDictId());
+        if (old == null) {
+            return false;
+        }
+        if (!ObjUtil.equals(old.getDictKey(), bo.getDictKey())) {
+            sysDictDataMapper.update(new SysDictData().setDictTypeKey(bo.getDictKey()),
+                    where -> where.eq(SysDictData::getDictTypeKey, old.getDictKey()));
+        }
         SysDictType sysDictType = MapstructUtil.convert(bo, SysDictType.class);
         return sysDictTypeMapper.update(sysDictType) > 0;
+    }
+
+    @Override
+    public boolean checkDictKeyUnique(SysDictTypeBo bo) {
+        return !QueryChain.of(sysDictTypeMapper)
+                .eq(SysDictType::getDictKey, bo.getDictKey())
+                .ne(ObjUtil.isNotNull(bo.getDictId()), SysDictType::getDictId, bo.getDictId())
+                .exists();
     }
 
     /**
@@ -101,6 +121,13 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
      */
     @Override
     public Integer deleteByIds(Collection<Long> ids) {
+        for (SysDictType type : QueryChain.of(sysDictTypeMapper)
+                .in(SysDictType::getDictId, ids).list()) {
+            if (QueryChain.of(sysDictDataMapper)
+                    .eq(SysDictData::getDictTypeKey, type.getDictKey()).exists()) {
+                throw new ServiceException(type.getDictName() + "已分配，不能删除");
+            }
+        }
         return sysDictTypeMapper.deleteByIds(ids);
     }
 
