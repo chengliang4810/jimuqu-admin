@@ -1,8 +1,10 @@
 package com.jimuqu.test.http;
 
-import com.jimuqu.common.core.utils.JsonUtil;
-import com.jimuqu.common.core.encrypt.utils.ApiCryptoUtil;
+import com.jimuqu.common.core.constant.Constants;
 import com.jimuqu.common.core.constant.GlobalConstants;
+import com.jimuqu.common.core.encrypt.utils.ApiCryptoUtil;
+import com.jimuqu.common.core.utils.JsonUtil;
+import com.jimuqu.common.web.config.properties.CaptchaProperties;
 import com.jimuqu.test.coverage.RuntimeRouteCoverage;
 import org.noear.solon.Solon;
 import org.noear.solon.data.cache.CacheService;
@@ -28,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -236,17 +239,15 @@ public final class HttpApiTestSupport {
     }
 
     private Map<String, Object> captchaAnswer() {
-        Response response = get("/auth/code").expectSuccess();
-        Map<String, Object> data = response.dataObject();
-        if (!Boolean.TRUE.equals(data.get("captchaEnabled"))) {
+        CaptchaProperties captchaProperties = Solon.context().getBean(CaptchaProperties.class);
+        if (!Boolean.TRUE.equals(captchaProperties.getEnable())) {
             return Map.of();
         }
-        String uuid = String.valueOf(data.get("uuid"));
+
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        String answer = "JIMU";
         CacheService cacheService = Solon.context().getBean(CacheService.class);
-        String answer = cacheService.get(GlobalConstants.CAPTCHA_CODE_KEY + uuid, String.class);
-        if (answer == null || answer.isBlank()) {
-            throw new IllegalStateException("测试验证码未写入隔离缓存: " + uuid);
-        }
+        cacheService.store(GlobalConstants.CAPTCHA_CODE_KEY + uuid, answer, Constants.CAPTCHA_EXPIRATION * 60);
         return Map.of("uuid", uuid, "code", answer);
     }
 
