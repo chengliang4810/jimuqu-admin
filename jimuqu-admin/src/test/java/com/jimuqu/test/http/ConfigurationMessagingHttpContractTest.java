@@ -208,7 +208,8 @@ public class ConfigurationMessagingHttpContractTest {
         HttpApiTestSupport.Response duplicate = api.postJson("/system/client",
                 clientPayload(null, clientKey, "duplicate_" + suffix, "0"), adminToken).expectEnvelope();
         assertNotEquals(200, duplicate.code(), "重复客户端 key 不得写入");
-        assertTrue(String.valueOf(duplicate.json().get("msg")).contains("已存在"));
+        assertTrue(String.valueOf(duplicate.json().get("msg")).contains("已存在"),
+                "重复客户端响应应保留上游业务消息: " + duplicate.json());
 
         assertEquals(1L, scalarLong(api.delete("/system/client/" + clientPk, adminToken).expectSuccess()));
     }

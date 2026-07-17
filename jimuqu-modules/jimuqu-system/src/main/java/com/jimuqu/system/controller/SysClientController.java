@@ -2,6 +2,7 @@ package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.jimuqu.common.core.checker.Assert;
+import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
 import com.jimuqu.common.excel.utils.ExcelUtil;
@@ -83,12 +84,13 @@ public class SysClientController extends BaseController {
     @NoRepeatSubmit
     @SaCheckPermission("system:client:add")
     @Log(title = "新增授权管理对象 sys_client", businessType = BusinessType.ADD)
-    public Long add(@Validated(AddGroup.class) SysClientBo bo) {
-        Assert.isTrue(sysClientService.checkClientKeyUnique(bo),
-                "新增客户端'" + bo.getClientKey() + "'失败，客户端key已存在");
+    public R<Long> add(@Validated(AddGroup.class) SysClientBo bo) {
+        if (!sysClientService.checkClientKeyUnique(bo)) {
+            return R.fail("新增客户端'" + bo.getClientKey() + "'失败，客户端key已存在");
+        }
         boolean result = sysClientService.insertByBo(bo);
         Assert.isTrue(result, "新增授权管理对象 sys_client失败");
-        return bo.getId();
+        return R.ok(bo.getId());
     }
 
     /**
@@ -99,11 +101,13 @@ public class SysClientController extends BaseController {
     @Mapping
     @SaCheckPermission("system:client:edit")
     @Log(title = "更新授权管理对象 sys_client", businessType = BusinessType.UPDATE)
-    public void edit(@Validated(UpdateGroup.class) SysClientBo bo) {
-        Assert.isTrue(sysClientService.checkClientKeyUnique(bo),
-                "修改客户端'" + bo.getClientKey() + "'失败，客户端key已存在");
+    public R<Void> edit(@Validated(UpdateGroup.class) SysClientBo bo) {
+        if (!sysClientService.checkClientKeyUnique(bo)) {
+            return R.fail("修改客户端'" + bo.getClientKey() + "'失败，客户端key已存在");
+        }
         boolean result = sysClientService.updateByBo(bo);
         Assert.isTrue(result, "更新授权管理对象 sys_client失败");
+        return R.ok();
     }
 
     /**
