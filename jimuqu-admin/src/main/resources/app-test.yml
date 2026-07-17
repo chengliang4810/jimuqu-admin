@@ -2,6 +2,12 @@
 server.port: ${JIMU_TEST_SERVER_PORT}
 solon.threads.virtual.enabled: false
 
+captcha:
+  enable: false
+
+api-decrypt:
+  enabled: false
+
 solon.dataSources.jimuqu!:
   class: "org.noear.solon.data.dynamicds.DynamicDataSource"
   strict: true
