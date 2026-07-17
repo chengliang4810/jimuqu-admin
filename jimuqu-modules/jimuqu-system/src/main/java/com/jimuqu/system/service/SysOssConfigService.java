@@ -11,6 +11,10 @@ import com.jimuqu.system.domain.vo.SysOssConfigVo;
 import com.jimuqu.system.mapper.SysOssConfigMapper;
 import lombok.RequiredArgsConstructor;
 import org.dromara.x.file.storage.core.FileStorageService;
+import org.dromara.x.file.storage.core.FileStorageProperties;
+import org.dromara.x.file.storage.core.platform.FileStorage;
+import org.dromara.x.file.storage.core.platform.MinioFileStorage;
+import org.dromara.x.file.storage.core.platform.MinioFileStorageClientFactory;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
 
@@ -25,6 +29,15 @@ public class SysOssConfigService {
 
     private final SysOssConfigMapper mapper;
     private final FileStorageService fileStorageService;
+
+    public void initPlatforms() {
+        QueryChain.of(mapper).list().forEach(config -> {
+            registerPlatform(config);
+            if ("Y".equals(config.getStatus()) && fileStorageService.getFileStorage(config.getConfigKey()) != null) {
+                fileStorageService.getProperties().setDefaultPlatform(config.getConfigKey());
+            }
+        });
+    }
 
     public Page<SysOssConfigVo> queryPage(SysOssConfigQuery query, PageQuery pageQuery) {
         return QueryChain.of(mapper)
@@ -50,6 +63,9 @@ public class SysOssConfigService {
             disableCurrentDefault();
         }
         int rows = mapper.save(entity);
+        if (rows > 0) {
+            registerPlatform(entity);
+        }
         bo.setOssConfigId(entity.getOssConfigId());
         return rows;
     }
@@ -57,28 +73,50 @@ public class SysOssConfigService {
     @Transaction
     public int update(SysOssConfigBo bo) {
         assertConfigKeyUnique(bo);
+        SysOssConfig old = mapper.getById(bo.getOssConfigId());
         if ("Y".equals(bo.getStatus())) {
             disableCurrentDefault();
         }
-        return mapper.update(toEntity(bo));
+        SysOssConfig entity = toEntity(bo);
+        int rows = mapper.update(entity);
+        if (rows > 0) {
+            if (old != null && !old.getConfigKey().equals(entity.getConfigKey())) {
+                removePlatform(old.getConfigKey());
+            }
+            removePlatform(entity.getConfigKey());
+            registerPlatform(entity);
+        }
+        return rows;
     }
 
     public int delete(List<Long> ids) {
-        return mapper.deleteByIds(ids);
+        List<String> configKeys = QueryChain.of(mapper)
+                .select(SysOssConfig::getConfigKey)
+                .where(where -> where.in(SysOssConfig::getOssConfigId, ids))
+                .list().stream().map(SysOssConfig::getConfigKey).toList();
+        int rows = mapper.deleteByIds(ids);
+        if (rows > 0) {
+            configKeys.forEach(this::removePlatform);
+        }
+        return rows;
     }
 
     @Transaction
     public int changeStatus(SysOssConfigBo bo) {
         if ("Y".equals(bo.getStatus())) {
-            Assert.notNull(fileStorageService.getFileStorage(bo.getConfigKey()),
-                    "存储平台未注册: " + bo.getConfigKey());
+            SysOssConfig config = mapper.getById(bo.getOssConfigId());
+            Assert.notNull(config, "存储配置不存在");
+            registerPlatform(config);
+            Assert.notNull(fileStorageService.getFileStorage(config.getConfigKey()),
+                    "存储平台未注册: " + config.getConfigKey());
             disableCurrentDefault();
         }
         int rows = mapper.update(new SysOssConfig()
                         .setOssConfigId(bo.getOssConfigId())
                         .setStatus(bo.getStatus()));
         if (rows > 0 && "Y".equals(bo.getStatus())) {
-            fileStorageService.getProperties().setDefaultPlatform(bo.getConfigKey());
+            SysOssConfig config = mapper.getById(bo.getOssConfigId());
+            fileStorageService.getProperties().setDefaultPlatform(config.getConfigKey());
         }
         return rows;
     }
@@ -86,6 +124,37 @@ public class SysOssConfigService {
     private void disableCurrentDefault() {
         mapper.update(new SysOssConfig().setStatus("N"),
                 where -> where.eq(SysOssConfig::getStatus, "Y"));
+    }
+
+    private void registerPlatform(SysOssConfig config) {
+        if (config.getEndpoint() == null || config.getEndpoint().isBlank()
+                || fileStorageService.getFileStorage(config.getConfigKey()) != null) {
+            return;
+        }
+        FileStorageProperties.MinioConfig properties = new FileStorageProperties.MinioConfig();
+        properties.setPlatform(config.getConfigKey());
+        properties.setAccessKey(config.getAccessKey());
+        properties.setSecretKey(config.getSecretKey());
+        properties.setEndPoint(endpoint(config));
+        properties.setBucketName(config.getBucketName());
+        properties.setDomain(config.getDomainUrl());
+        properties.setBasePath(config.getPrefix());
+        fileStorageService.getFileStorageList().add(
+                new MinioFileStorage(properties, new MinioFileStorageClientFactory(properties)));
+    }
+
+    private String endpoint(SysOssConfig config) {
+        if (config.getEndpoint().startsWith("http://") || config.getEndpoint().startsWith("https://")) {
+            return config.getEndpoint();
+        }
+        return ("Y".equals(config.getIsHttps()) ? "https://" : "http://") + config.getEndpoint();
+    }
+
+    private void removePlatform(String configKey) {
+        FileStorage platform = fileStorageService.getFileStorage(configKey);
+        if (platform != null && fileStorageService.getFileStorageList().remove(platform)) {
+            platform.close();
+        }
     }
 
     private void assertConfigKeyUnique(SysOssConfigBo bo) {
