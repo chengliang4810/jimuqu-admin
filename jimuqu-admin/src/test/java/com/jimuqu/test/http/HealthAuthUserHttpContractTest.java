@@ -88,6 +88,13 @@ public class HealthAuthUserHttpContractTest {
                 "socialState", "invalid"
         ));
         HttpApiTestSupport.Response unauthenticatedUnlock = http.delete("/auth/unlock/999999");
+        HttpApiTestSupport.Response disabledRegister = http.postJson("/auth/register", Map.of(
+                "clientId", HttpApiTestSupport.PC_CLIENT_ID,
+                "grantType", "password",
+                "username", registeredUsername,
+                "password", "Register123!",
+                "userType", "pc_user"
+        ));
 
         captcha.expectStatus(200).expectSuccess();
         assertInstanceOf(Boolean.class, captcha.dataObject().get("captchaEnabled"));
@@ -99,6 +106,8 @@ public class HealthAuthUserHttpContractTest {
         unauthenticatedCodes.expectStatus(401).expectCode(401);
         unauthenticatedCallback.expectStatus(401).expectCode(401);
         unauthenticatedUnlock.expectStatus(401).expectCode(401);
+        disabledRegister.expectStatus(200).expectCode(500);
+        assertEquals("当前系统没有开启注册功能！", disabledRegister.json().get("msg"));
     }
 
     @Test
@@ -128,13 +137,25 @@ public class HealthAuthUserHttpContractTest {
                 "socialState", "invalid"
         ), adminToken);
         HttpApiTestSupport.Response unlockMissing = http.delete("/auth/unlock/999999", adminToken);
-        HttpApiTestSupport.Response register = http.postJson("/auth/register", Map.of(
-                "clientId", HttpApiTestSupport.PC_CLIENT_ID,
-                "grantType", "password",
-                "username", registeredUsername,
-                "password", "Register123!",
-                "userType", "pc_user"
-        ));
+        http.putJson("/system/config/updateByKey", Map.of(
+                "configKey", "sys.account.registerUser",
+                "configValue", "true"
+        ), adminToken).expectSuccess();
+        HttpApiTestSupport.Response register;
+        try {
+            register = http.postJson("/auth/register", Map.of(
+                    "clientId", HttpApiTestSupport.PC_CLIENT_ID,
+                    "grantType", "password",
+                    "username", registeredUsername,
+                    "password", "Register123!",
+                    "userType", "pc_user"
+            ));
+        } finally {
+            http.putJson("/system/config/updateByKey", Map.of(
+                    "configKey", "sys.account.registerUser",
+                    "configValue", "false"
+            ), adminToken).expectSuccess();
+        }
 
         codes.expectStatus(200).expectSuccess();
         assertTrue(codes.dataList().contains("*:*:*"));
