@@ -5,12 +5,14 @@ import com.jimuqu.common.core.utils.StringUtil;
 import lombok.AllArgsConstructor;
 import me.zhyd.oauth.cache.AuthStateCache;
 import org.noear.solon.annotation.Inject;
+import org.noear.solon.annotation.Component;
 import org.noear.solon.data.cache.CacheService;
 
 /**
  * 授权状态缓存
  */
 @AllArgsConstructor
+@Component
 public class AuthRedisStateCache implements AuthStateCache {
 
     @Inject
