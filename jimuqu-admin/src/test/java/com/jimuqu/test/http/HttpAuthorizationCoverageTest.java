@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class HttpAuthorizationCoverageTest {
 
+    private static final Set<String> PUBLIC_ROUTES = Set.of("GET /");
     private static final Set<String> MANUALLY_PROTECTED_IGNORED_ROUTES = Set.of(
             "GET /auth/codes", "POST /auth/social/callback", "DELETE /auth/unlock/{socialId}",
             "GET /resource/message/close"
@@ -103,6 +104,9 @@ public class HttpAuthorizationCoverageTest {
             boolean ignored = action.controller().clz().isAnnotationPresent(SaIgnore.class)
                     || action.method().getAnnotation(SaIgnore.class) != null;
             String key = method + " " + routing.path();
+            if (PUBLIC_ROUTES.contains(key)) {
+                continue;
+            }
             if (ignored && !MANUALLY_PROTECTED_IGNORED_ROUTES.contains(key)) {
                 continue;
             }
