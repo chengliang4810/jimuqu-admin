@@ -10,6 +10,7 @@ import com.jimuqu.system.domain.query.SysOssConfigQuery;
 import com.jimuqu.system.domain.vo.SysOssConfigVo;
 import com.jimuqu.system.mapper.SysOssConfigMapper;
 import lombok.RequiredArgsConstructor;
+import org.dromara.x.file.storage.core.FileStorageService;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
 
@@ -23,6 +24,7 @@ import java.util.List;
 public class SysOssConfigService {
 
     private final SysOssConfigMapper mapper;
+    private final FileStorageService fileStorageService;
 
     public Page<SysOssConfigVo> queryPage(SysOssConfigQuery query, PageQuery pageQuery) {
         return QueryChain.of(mapper)
@@ -68,11 +70,17 @@ public class SysOssConfigService {
     @Transaction
     public int changeStatus(SysOssConfigBo bo) {
         if ("Y".equals(bo.getStatus())) {
+            Assert.notNull(fileStorageService.getFileStorage(bo.getConfigKey()),
+                    "存储平台未注册: " + bo.getConfigKey());
             disableCurrentDefault();
         }
-        return mapper.update(new SysOssConfig()
+        int rows = mapper.update(new SysOssConfig()
                         .setOssConfigId(bo.getOssConfigId())
                         .setStatus(bo.getStatus()));
+        if (rows > 0 && "Y".equals(bo.getStatus())) {
+            fileStorageService.getProperties().setDefaultPlatform(bo.getConfigKey());
+        }
+        return rows;
     }
 
     private void disableCurrentDefault() {
