@@ -19,7 +19,9 @@ jimuqu.cache:
   db: ${JIMU_TEST_REDIS_DB}
   keyHeader: ${JIMU_TEST_REDIS_PREFIX}
 
-jimuqu.ratelimit.enabled: false
+jimuqu:
+  ratelimit:
+    enabled: false
 
 auto-table:
   enable: true
