@@ -22,6 +22,17 @@ public class ApiEncryptInterceptor implements RouterInterceptor {
 
     @Override
     public void doIntercept(Context ctx, Handler mainHandler, RouterInterceptorChain chain) throws Throwable {
+        String frontendEncryptKey = ctx.header("encrypt-key");
+        if (StrUtil.isNotBlank(frontendEncryptKey) && ApiEncryptSupport.isJsonRequest(ctx)) {
+            String body = ctx.bodyNew();
+            if (StrUtil.isNotBlank(body)) {
+                ctx.bodyNew(ApiCryptoUtil.decryptFrontend(body, frontendEncryptKey,
+                        ApiEncryptSupport.resolvePrivateKey(null)));
+            }
+            chain.doIntercept(ctx, mainHandler);
+            return;
+        }
+
         ApiEncrypt apiEncrypt = ApiEncryptSupport.findAnnotation(ctx.action());
         if (apiEncrypt == null || !apiEncrypt.request() || !ApiEncryptSupport.isJsonRequest(ctx)) {
             chain.doIntercept(ctx, mainHandler);
@@ -30,14 +41,6 @@ public class ApiEncryptInterceptor implements RouterInterceptor {
 
         String body = ctx.bodyNew();
         if (StrUtil.isBlank(body)) {
-            chain.doIntercept(ctx, mainHandler);
-            return;
-        }
-
-        String frontendEncryptKey = ctx.header("encrypt-key");
-        if (StrUtil.isNotBlank(frontendEncryptKey)) {
-            String privateKey = ApiEncryptSupport.resolvePrivateKey(apiEncrypt);
-            ctx.bodyNew(ApiCryptoUtil.decryptFrontend(body, frontendEncryptKey, privateKey));
             chain.doIntercept(ctx, mainHandler);
             return;
         }
