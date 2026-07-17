@@ -3,6 +3,7 @@ package com.jimuqu.common.web.filter;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.exception.auth.AuthException;
 import com.jimuqu.common.core.exception.ServiceException;
+import com.jimuqu.common.core.exception.base.BaseException;
 import com.jimuqu.common.core.utils.ip.AddressUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
@@ -50,6 +51,10 @@ public class GlobalExceptionFilter implements Filter {
             log.error(e.getMessage());
             ctx.render(serviceError(e));
         }
+        catch (BaseException e) {
+            log.error(e.getMessage());
+            ctx.render(baseError(e));
+        }
         // 其他异常
         catch (Throwable e) {
             String exceptionName = e.getClass().getSimpleName();
@@ -70,6 +75,11 @@ public class GlobalExceptionFilter implements Filter {
     }
 
     static R<Void> serviceError(ServiceException exception) {
+        Integer code = exception.getCode();
+        return R.fail(code == null ? 500 : code, exception.getMessage());
+    }
+
+    static R<Void> baseError(BaseException exception) {
         Integer code = exception.getCode();
         return R.fail(code == null ? 500 : code, exception.getMessage());
     }
