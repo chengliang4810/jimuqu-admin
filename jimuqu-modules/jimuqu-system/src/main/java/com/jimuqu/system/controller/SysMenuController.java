@@ -100,6 +100,9 @@ public class SysMenuController extends BaseController {
         if (!menuService.checkMenuNameUnique(menu)) {
             return R.fail("新增菜单'" + menu.getMenuName() + "'失败，菜单名称已存在");
         }
+        if (!menuService.checkRouteConfigUnique(menu)) {
+            return R.fail("新增菜单'" + menu.getMenuName() + "'失败，路由地址或名称已存在");
+        }
         if (UserConstants.YES_FRAME.equals(menu.getIsFrame()) && !StringUtil.isHttp(menu.getPath())) {
             return R.fail("新增菜单'" + menu.getMenuName() + "'失败，地址必须以http(s)://开头");
         }
@@ -115,6 +118,9 @@ public class SysMenuController extends BaseController {
     public R<Void> edit(@Body @Validated(UpdateGroup.class) SysMenuBo menu) {
         if (!menuService.checkMenuNameUnique(menu)) {
             return R.fail("修改菜单'" + menu.getMenuName() + "'失败，菜单名称已存在");
+        }
+        if (!menuService.checkRouteConfigUnique(menu)) {
+            return R.fail("修改菜单'" + menu.getMenuName() + "'失败，路由地址或名称已存在");
         }
         if (UserConstants.YES_FRAME.equals(menu.getIsFrame()) && !StringUtil.isHttp(menu.getPath())) {
             return R.fail("修改菜单'" + menu.getMenuName() + "'失败，地址必须以http(s)://开头");

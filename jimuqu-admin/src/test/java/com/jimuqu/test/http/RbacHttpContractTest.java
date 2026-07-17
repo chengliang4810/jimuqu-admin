@@ -191,6 +191,11 @@ public class RbacHttpContractTest {
                 .expectEnvelope();
         assertNotEquals(200, response.code(), "外链菜单必须使用 http(s) 地址");
         assertTrue(String.valueOf(response.json().get("msg")).contains("http"));
+
+        HttpApiTestSupport.Response duplicateRoute = api.postJson("/system/menu",
+                menuPayload("重复路由-" + suffix, "http-menu-" + suffix), adminToken).expectEnvelope();
+        assertNotEquals(200, duplicateRoute.code(), "同级路由地址不得重复");
+        assertTrue(String.valueOf(duplicateRoute.json().get("msg")).contains("路由"));
     }
 
     private void exerciseDeptRoutes(long deptId, String deptName) {

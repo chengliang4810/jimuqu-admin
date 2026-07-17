@@ -382,6 +382,22 @@ public class SysMenuServiceImpl implements SysMenuService {
         }
     }
 
+    @Override
+    public boolean checkRouteConfigUnique(SysMenuBo bo) {
+        if (UserConstants.TYPE_BUTTON.equals(bo.getMenuType())) {
+            return true;
+        }
+        String path = StringUtil.isBlank(bo.getPath()) ? "" : bo.getPath();
+        String routeName = StringUtil.upperFirst(path);
+        return QueryChain.of(sysMenuMapper)
+                .in(SysMenu::getMenuType, List.of(UserConstants.TYPE_DIR, UserConstants.TYPE_MENU))
+                .list().stream()
+                .filter(menu -> !Objects.equals(menu.getId(), bo.getId()))
+                .noneMatch(menu -> (Objects.equals(menu.getParentId(), bo.getParentId())
+                        && path.equalsIgnoreCase(StringUtil.isBlank(menu.getPath()) ? "" : menu.getPath()))
+                        || routeName.equalsIgnoreCase(menu.getRouteName()));
+    }
+
     private Set<String> splitPermissions(List<String> values) {
         if (CollUtil.isEmpty(values)) {
             return Collections.emptySet();

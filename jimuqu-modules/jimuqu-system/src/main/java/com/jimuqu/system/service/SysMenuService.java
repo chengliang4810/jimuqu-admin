@@ -160,4 +160,6 @@ public interface SysMenuService {
      * @return 结果
      */
     boolean checkMenuNameUnique(SysMenuBo menu);
+
+    boolean checkRouteConfigUnique(SysMenuBo menu);
 }
