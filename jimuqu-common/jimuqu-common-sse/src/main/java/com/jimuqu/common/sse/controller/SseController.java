@@ -44,6 +44,7 @@ public class SseController {
     @SaIgnore
     @Mapping(value = "close")
     public R<Void> close() {
+        StpUtil.checkLogin();
         String tokenValue = StpUtil.getTokenValue();
         Long userId = LoginHelper.getUserId();
         sseEmitterManager.disconnect(userId, tokenValue);
