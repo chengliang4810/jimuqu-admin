@@ -2,7 +2,7 @@ package com.jimuqu.system.controller;
 
 import com.jimuqu.common.web.core.BaseController;
 import com.jimuqu.system.domain.vo.SysMessageBoxVo;
-import com.jimuqu.system.service.SysNoticeService;
+import com.jimuqu.system.service.SysMessageService;
 import lombok.RequiredArgsConstructor;
 import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Get;
@@ -16,11 +16,11 @@ import org.noear.solon.annotation.Mapping;
 @Mapping("/resource/message")
 public class SysMessageController extends BaseController {
 
-    private final SysNoticeService noticeService;
+    private final SysMessageService messageService;
 
     @Get
     @Mapping("/box")
     public SysMessageBoxVo box() {
-        return noticeService.queryMessageBox();
+        return messageService.queryMessageBox();
     }
 }
