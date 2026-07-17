@@ -131,7 +131,9 @@ public class RbacHttpContractTest {
         api.putJson("/system/role/permission", Map.of(
                 "roleId", roleId,
                 "menuIds", List.of(menuId),
-                "menuCheckStrictly", true
+                "menuCheckStrictly", true,
+                "dataScope", "1",
+                "deptIds", List.of()
         ), adminToken).expectSuccess();
         api.putJson("/system/role/dataScope", Map.of(
                 "roleId", roleId,
@@ -139,6 +141,11 @@ public class RbacHttpContractTest {
                 "deptIds", List.of(deptId),
                 "deptCheckStrictly", true
         ), adminToken).expectSuccess();
+        assertNotEquals(200, api.putJson("/system/role/dataScope", Map.of(
+                "roleId", roleId, "dataScope", "9", "deptIds", List.of(deptId)), adminToken)
+                .expectEnvelope().code(), "未知数据范围不得写入");
+        assertEquals("2", api.get("/system/role/" + roleId, adminToken)
+                .expectSuccess().dataObject().get("dataScope"), "拒绝后原数据范围必须保持不变");
         api.putJson("/system/role/changeStatus", Map.of("roleId", roleId, "status", "0"), adminToken)
                 .expectSuccess();
 

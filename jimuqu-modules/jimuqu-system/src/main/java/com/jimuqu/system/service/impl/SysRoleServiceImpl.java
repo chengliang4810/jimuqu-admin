@@ -14,6 +14,7 @@ import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
+import com.jimuqu.common.mybatis.enums.DataScopeType;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.SysRole;
 import com.jimuqu.system.domain.SysRoleDept;
@@ -223,6 +224,7 @@ public class SysRoleServiceImpl implements SysRoleService {
     @Override
     @Transaction
     public int authDataScope(SysRoleBo bo) {
+        checkDataScope(bo.getDataScope());
         SysRole current = roleMapper.getById(bo.getId());
         if (current == null) {
             throw new ServiceException("角色不存在");
@@ -238,6 +240,7 @@ public class SysRoleServiceImpl implements SysRoleService {
     @Override
     @Transaction
     public int updateRolePermission(SysRoleBo bo) {
+        checkDataScope(bo.getDataScope());
         SysRole current = roleMapper.getById(bo.getId());
         if (current == null) {
             throw new ServiceException("角色不存在");
@@ -250,6 +253,12 @@ public class SysRoleServiceImpl implements SysRoleService {
         replaceRoleDepts(bo.getId(), bo.getDeptIds());
         cleanOnlineUserByRole(bo.getId());
         return rows > 0 ? rows : 1;
+    }
+
+    private void checkDataScope(String dataScope) {
+        if (DataScopeType.findCode(dataScope) == null) {
+            throw new ServiceException("未知的数据权限范围: " + dataScope);
+        }
     }
 
     @Override
