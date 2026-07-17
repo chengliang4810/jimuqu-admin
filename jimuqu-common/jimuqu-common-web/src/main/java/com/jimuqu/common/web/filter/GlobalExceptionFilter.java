@@ -2,6 +2,7 @@ package com.jimuqu.common.web.filter;
 
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.exception.auth.AuthException;
+import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.ip.AddressUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
@@ -44,6 +45,11 @@ public class GlobalExceptionFilter implements Filter {
             ctx.status(e.getCode());
             ctx.render(R.fail(e.getCode(), e.getMessage()));
         }
+        // 业务异常
+        catch (ServiceException e) {
+            log.error(e.getMessage());
+            ctx.render(serviceError(e));
+        }
         // 其他异常
         catch (Throwable e) {
             String exceptionName = e.getClass().getSimpleName();
@@ -61,6 +67,11 @@ public class GlobalExceptionFilter implements Filter {
             log.error("系统异常: {}, 请求路径: {}, 请求地址: {}, 请求IP: {}", e.getMessage(), ctx.path(), AddressUtil.getRealAddressByIP(realIp), realIp, e);
             ctx.render(R.fail(500, "发生未知异常，请联系管理员"));
         }
+    }
+
+    static R<Void> serviceError(ServiceException exception) {
+        Integer code = exception.getCode();
+        return R.fail(code == null ? 500 : code, exception.getMessage());
     }
 
     private void drainRequestBody(Context ctx) {
