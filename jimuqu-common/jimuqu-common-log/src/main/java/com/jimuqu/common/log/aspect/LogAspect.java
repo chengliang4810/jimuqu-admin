@@ -22,8 +22,10 @@ import org.noear.solon.core.route.RouterInterceptor;
 import org.noear.solon.core.route.RouterInterceptorChain;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 
 /**
@@ -160,14 +162,41 @@ public class LogAspect implements RouterInterceptor {
     private void setRequestValue(Context joinPoint, OperLogEvent operLog, String[] excludeParamNames) throws Exception {
         Map<String, List<String>> paramsMap = joinPoint.paramMap().toValuesMap();
         String requestMethod = operLog.getRequestMethod();
-        if (MapUtil.isEmpty(paramsMap)
-                && SaHttpMethod.PUT.name().equals(requestMethod) || SaHttpMethod.POST.name().equals(requestMethod)) {
-            String params = joinPoint.body();
+        if (MapUtil.isEmpty(paramsMap) && (SaHttpMethod.PUT.name().equals(requestMethod)
+                || SaHttpMethod.POST.name().equals(requestMethod)
+                || SaHttpMethod.DELETE.name().equals(requestMethod))) {
+            String params = sanitizeRequestBody(joinPoint.body(), excludeParamNames);
             operLog.setOperParam(StringUtil.substring(params, 0, 2000));
         } else {
             MapUtil.removeAny(paramsMap, EXCLUDE_PROPERTIES);
             MapUtil.removeAny(paramsMap, excludeParamNames);
             operLog.setOperParam(StringUtil.substring(JsonUtil.toString(paramsMap), 0, 2000));
+        }
+    }
+
+    static String sanitizeRequestBody(String body, String[] excludeParamNames) {
+        if (StringUtil.isBlank(body)) {
+            return body;
+        }
+        try {
+            Object value = JsonUtil.toObject(body, Object.class);
+            Set<String> excluded = new LinkedHashSet<>(List.of(EXCLUDE_PROPERTIES));
+            excluded.addAll(List.of(excludeParamNames));
+            removeExcludedFields(value, excluded);
+            return JsonUtil.toString(value);
+        } catch (RuntimeException ignored) {
+            return body;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void removeExcludedFields(Object value, Set<String> excluded) {
+        if (value instanceof Map<?, ?> map) {
+            Map<String, Object> values = (Map<String, Object>) map;
+            values.keySet().removeIf(excluded::contains);
+            values.values().forEach(item -> removeExcludedFields(item, excluded));
+        } else if (value instanceof Collection<?> collection) {
+            collection.forEach(item -> removeExcludedFields(item, excluded));
         }
     }
 

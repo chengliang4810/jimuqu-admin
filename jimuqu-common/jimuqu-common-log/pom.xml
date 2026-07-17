@@ -17,6 +17,11 @@
             <groupId>com.jimuqu</groupId>
             <artifactId>jimuqu-common-satoken</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 
