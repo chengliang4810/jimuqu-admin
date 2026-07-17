@@ -3,12 +3,14 @@ package com.jimuqu.system.service;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.sse.utils.SseMessageUtil;
+import com.jimuqu.common.websocket.holder.WebSocketSessionHolder;
 import com.jimuqu.system.domain.SysMessage;
 import com.jimuqu.system.domain.vo.SysMessageBoxVo;
 import com.jimuqu.system.domain.vo.SysMessageVo;
 import com.jimuqu.system.mapper.SysMessageMapper;
 import lombok.RequiredArgsConstructor;
 import org.noear.solon.annotation.Component;
+import org.noear.solon.Solon;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -33,6 +35,9 @@ public class SysMessageService {
         mapper.save(entity);
         payload.setMessageId(String.valueOf(entity.getMessageId()));
         SseMessageUtil.sendPayload(payload);
+        if (Solon.cfg().getBool("websocket.enabled", false)) {
+            WebSocketSessionHolder.sendAll(JsonUtil.toString(payload));
+        }
     }
 
     public SysMessageBoxVo queryMessageBox() {

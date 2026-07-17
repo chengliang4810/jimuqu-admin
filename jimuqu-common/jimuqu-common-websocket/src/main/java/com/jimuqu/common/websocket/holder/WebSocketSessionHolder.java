@@ -73,4 +73,15 @@ public class WebSocketSessionHolder {
     public static Boolean existSession(Long sessionKey) {
         return USER_SESSION_MAP.containsKey(sessionKey);
     }
+
+    public static void sendAll(String message) {
+        USER_SESSION_MAP.values().stream()
+                .flatMap(sessions -> sessions.values().stream())
+                .forEach(session -> {
+                    try {
+                        session.send(message);
+                    } catch (Exception ignored) {
+                    }
+                });
+    }
 }
