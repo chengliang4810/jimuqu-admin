@@ -1,6 +1,7 @@
 package com.jimuqu.test.http;
 
 import com.jimuqu.common.core.utils.JsonUtil;
+import com.jimuqu.common.core.encrypt.utils.ApiCryptoUtil;
 import com.jimuqu.test.coverage.RuntimeRouteCoverage;
 import org.noear.solon.Solon;
 
@@ -12,10 +13,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.interfaces.RSAPrivateCrtKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -143,6 +149,11 @@ public final class HttpApiTestSupport {
 
     private Response sendRequest(String method, String path, HttpRequest.BodyPublisher publisher,
                                  String contentType, String token) {
+        return sendRequest(method, path, publisher, contentType, token, Map.of());
+    }
+
+    private Response sendRequest(String method, String path, HttpRequest.BodyPublisher publisher,
+                                 String contentType, String token, Map<String, String> headers) {
         URI uri = baseUri.resolve(path.startsWith("/") ? path.substring(1) : path);
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
                 .timeout(Duration.ofSeconds(20))
@@ -153,6 +164,7 @@ public final class HttpApiTestSupport {
         if (token != null && !token.isBlank()) {
             builder.header("Authorization", token.startsWith("Bearer ") ? token : "Bearer " + token);
         }
+        headers.forEach(builder::header);
 
         builder.method(method, publisher);
 
@@ -176,13 +188,38 @@ public final class HttpApiTestSupport {
     }
 
     public String login(String username, String password) {
-        Response response = postJson("/auth/login", Map.of(
+        String json = JsonUtil.toString(Map.of(
                 "clientId", PC_CLIENT_ID,
                 "grantType", "password",
                 "username", username,
                 "password", password
-        )).expectSuccess();
-        return response.dataString("access_token");
+        ));
+        try {
+            String aesKey = ApiCryptoUtil.randomAesKey();
+            String encryptedKey = ApiCryptoUtil.encryptByRsa(
+                    Base64.getEncoder().encodeToString(aesKey.getBytes(StandardCharsets.UTF_8)), requestPublicKey());
+            Response response = sendRequest("POST", "/auth/login",
+                    HttpRequest.BodyPublishers.ofString(ApiCryptoUtil.encryptByAes(json, aesKey),
+                            StandardCharsets.UTF_8),
+                    "application/json", null,
+                    Map.of(Solon.cfg().get("api-decrypt.headerFlag", "encrypt-key"), encryptedKey)).expectSuccess();
+            return response.dataString("access_token");
+        } catch (Exception exception) {
+            throw new IllegalStateException("无法构造 Bell 加密登录请求", exception);
+        }
+    }
+
+    private static String requestPublicKey() {
+        try {
+            byte[] encoded = Base64.getDecoder().decode(Solon.cfg().get("api-decrypt.privateKey"));
+            RSAPrivateCrtKey privateKey = (RSAPrivateCrtKey) KeyFactory.getInstance("RSA")
+                    .generatePrivate(new PKCS8EncodedKeySpec(encoded));
+            return Base64.getEncoder().encodeToString(KeyFactory.getInstance("RSA")
+                    .generatePublic(new RSAPublicKeySpec(privateKey.getModulus(), privateKey.getPublicExponent()))
+                    .getEncoded());
+        } catch (Exception exception) {
+            throw new IllegalStateException("无法从测试配置推导请求加密公钥", exception);
+        }
     }
 
     public void assertCoverageComplete() {
