@@ -169,6 +169,7 @@ public class AuthController {
     @Mapping("/register" )
     @ApiEncrypt
     public R<Void> register(@Body @Validated RegisterBody user) {
+        ValidUtils.validateEntity(user);
         if (!configService.selectRegisterEnabled()) {
             return R.fail("当前系统没有开启注册功能！");
         }
