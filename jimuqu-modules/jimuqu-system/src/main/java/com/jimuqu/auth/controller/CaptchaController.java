@@ -7,12 +7,18 @@ import com.jimuqu.common.core.constant.Constants;
 import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.utils.StringUtil;
+import com.jimuqu.common.ratelimit.core.RateLimitConfig;
+import com.jimuqu.common.ratelimit.core.RateLimiter;
+import com.jimuqu.common.ratelimit.enums.RateLimitAlgorithm;
+import com.jimuqu.common.ratelimit.exception.RateLimitException;
 import com.jimuqu.common.web.config.properties.CaptchaProperties;
 import com.jimuqu.common.web.core.BaseController;
 import lombok.RequiredArgsConstructor;
 import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Mapping;
+import org.noear.solon.Solon;
+import org.noear.solon.core.handle.Context;
 import org.noear.solon.data.cache.CacheService;
 
 import javax.imageio.ImageIO;
@@ -44,12 +50,15 @@ public class CaptchaController extends BaseController {
     private final CaptchaProperties captchaProperties;
     private final CacheService cacheService;
     private final VerificationCodeService verificationCodeService;
+    private final RateLimiter rateLimiter;
+    private final RateLimitConfig globalRateLimitConfig;
 
     @Get
     @Mapping("/resource/sms/code")
     public R<Void> smsCode(String phoneNumber) {
+        checkRate("captcha:sms:" + phoneNumber, 1);
         if (StringUtil.isBlank(phoneNumber) || !PHONE_PATTERN.matcher(phoneNumber).matches()) {
-            return R.fail("请输入正确的手机号");
+            return R.fail("请输入正确的手机号！");
         }
         verificationCodeService.sendSms(phoneNumber);
         return R.ok();
@@ -58,9 +67,13 @@ public class CaptchaController extends BaseController {
     @Get
     @Mapping("/resource/email/code")
     public R<Void> emailCode(String email) {
-        if (StringUtil.isBlank(email) || !EMAIL_PATTERN.matcher(email).matches()) {
-            return R.fail("请输入正确的邮箱地址");
+        if (!emailEnabled()) {
+            return R.fail("当前系统没有开启邮箱功能！");
         }
+        if (StringUtil.isBlank(email) || !EMAIL_PATTERN.matcher(email).matches()) {
+            return R.fail("请输入正确的邮箱地址！");
+        }
+        checkRate("captcha:email:" + email, 1);
         verificationCodeService.sendEmail(email);
         return R.ok();
     }
@@ -71,6 +84,7 @@ public class CaptchaController extends BaseController {
         if (!Boolean.TRUE.equals(captchaProperties.getEnable())) {
             return R.ok(new CaptchaVo().setCaptchaEnabled(false));
         }
+        checkRate("captcha:image:" + Context.current().realIp(), 10);
 
         String uuid = UUID.randomUUID().toString().replace("-", "");
         CaptchaChallenge challenge = createChallenge();
@@ -84,6 +98,25 @@ public class CaptchaController extends BaseController {
                 .setUuid(uuid)
                 .setImg(renderPng(challenge.display()));
         return R.ok(captcha);
+    }
+
+    private boolean emailEnabled() {
+        return StringUtil.isNotBlank(Solon.cfg().get("auth.verification.local-code", ""))
+                || Solon.cfg().getBool("mail.enabled", false);
+    }
+
+    private void checkRate(String key, int count) {
+        if (!globalRateLimitConfig.isEnabled()) {
+            return;
+        }
+        RateLimitConfig config = new RateLimitConfig();
+        config.setAlgorithm(RateLimitAlgorithm.FIXED_WINDOW);
+        config.setWindow(60);
+        config.setMaxBurst(count);
+        config.setKeyPrefix(globalRateLimitConfig.getKeyPrefix());
+        if (!rateLimiter.tryAcquire(key, 1, config)) {
+            throw new RateLimitException(globalRateLimitConfig.getErrorMessage());
+        }
     }
 
     CaptchaChallenge createChallenge() {
