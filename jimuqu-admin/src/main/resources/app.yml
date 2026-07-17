@@ -2,6 +2,13 @@
 # 多数情况下是将配置的默认值写出来方便修改，所以看起来多
 # server配置
 server.port: 5320
+captcha:
+  # 是否启用验证码校验
+  enable: true
+  # 验证码类型 math 数学计算 char 字符验证
+  type: math
+  numberLength: 1
+  charLength: 4
 # Bell 6.X API 请求解密与响应加密配置。
 api-decrypt:
   enabled: true

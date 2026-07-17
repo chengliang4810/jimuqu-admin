@@ -73,22 +73,34 @@ public class CaptchaController extends BaseController {
         }
 
         String uuid = UUID.randomUUID().toString().replace("-", "");
-        String code = randomCode(resolveLength());
+        CaptchaChallenge challenge = createChallenge();
         cacheService.store(
                 GlobalConstants.CAPTCHA_CODE_KEY + uuid,
-                code,
+                challenge.answer(),
                 Constants.CAPTCHA_EXPIRATION * 60
         );
         CaptchaVo captcha = new CaptchaVo()
                 .setCaptchaEnabled(true)
                 .setUuid(uuid)
-                .setImg(renderPng(code));
+                .setImg(renderPng(challenge.display()));
         return R.ok(captcha);
     }
 
-    private int resolveLength() {
-        Integer configured = captchaProperties.getCharLength();
-        return configured == null || configured < 4 ? 4 : Math.min(configured, 8);
+    CaptchaChallenge createChallenge() {
+        if ("math".equals(captchaProperties.getType())) {
+            int limit = (int) Math.pow(10, captchaProperties.getNumberLength());
+            int left = RANDOM.nextInt(limit);
+            int right = RANDOM.nextInt(limit);
+            char operator = "+-*".charAt(RANDOM.nextInt(3));
+            int answer = switch (operator) {
+                case '+' -> left + right;
+                case '-' -> left - right;
+                default -> left * right;
+            };
+            return new CaptchaChallenge(left + String.valueOf(operator) + right + "=", String.valueOf(answer));
+        }
+        String code = randomCode(captchaProperties.getCharLength());
+        return new CaptchaChallenge(code, code);
     }
 
     private String randomCode(int length) {
@@ -128,5 +140,8 @@ public class CaptchaController extends BaseController {
             ImageIO.write(image, "png", output);
             return Base64.getEncoder().encodeToString(output.toByteArray());
         }
+    }
+
+    record CaptchaChallenge(String display, String answer) {
     }
 }
