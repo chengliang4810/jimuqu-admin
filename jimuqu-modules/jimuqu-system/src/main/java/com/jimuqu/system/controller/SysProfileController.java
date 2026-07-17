@@ -2,6 +2,7 @@ package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.secure.BCrypt;
 import com.jimuqu.common.core.domain.R;
+import com.jimuqu.common.core.encrypt.annotation.ApiEncrypt;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.log.annotation.Log;
 import com.jimuqu.common.log.enums.BusinessType;
@@ -69,7 +70,7 @@ public class SysProfileController extends BaseController {
      *
      * @param bo 新旧密码
      */
-    // @ApiEncrypt
+    @ApiEncrypt
     @Log(title = "个人信息", businessType = BusinessType.UPDATE)
     @Put
     @Mapping("/updatePwd" )

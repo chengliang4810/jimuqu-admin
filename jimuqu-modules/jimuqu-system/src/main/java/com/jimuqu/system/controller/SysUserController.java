@@ -7,6 +7,7 @@ import cn.hutool.v7.core.tree.MapTree;
 import com.jimuqu.common.core.checker.Assert;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.domain.R;
+import com.jimuqu.common.core.encrypt.annotation.ApiEncrypt;
 import com.jimuqu.common.core.domain.model.LoginUser;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.core.utils.StreamUtil;
@@ -218,6 +219,7 @@ public class SysUserController extends BaseController {
      */
     @Put
     @Mapping("/resetPwd")
+    @ApiEncrypt
     @SaCheckPermission("system:user:resetPwd")
     @Log(title = "用户管理", businessType = BusinessType.UPDATE)
     public R<Void> resetPwd(@Body SysUserBo user) {
