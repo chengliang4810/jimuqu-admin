@@ -59,8 +59,7 @@ public class GlobalExceptionFilter implements Filter {
             }
             String realIp = ctx.realIp();
             log.error("系统异常: {}, 请求路径: {}, 请求地址: {}, 请求IP: {}", e.getMessage(), ctx.path(), AddressUtil.getRealAddressByIP(realIp), realIp, e);
-            e.printStackTrace();
-            ctx.render(R.fail(500, e.getMessage()));
+            ctx.render(R.fail(500, "发生未知异常，请联系管理员"));
         }
     }
 

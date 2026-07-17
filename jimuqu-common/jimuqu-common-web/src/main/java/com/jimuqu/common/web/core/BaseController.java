@@ -1,6 +1,5 @@
 package com.jimuqu.common.web.core;
 
-import cn.hutool.v7.core.text.StrUtil;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.exception.ServiceException;
 import org.noear.solon.core.handle.*;
@@ -75,14 +74,13 @@ public class BaseController implements Render {
         else {
             //此处是重点，把一些特别的类型进行标准化转换
             if (obj instanceof Throwable err) {
-                err.printStackTrace();
                 if (obj instanceof ServiceException exception) {
                     obj = R.fail(exception.getCode(), exception.getMessage());
                 } else if (obj instanceof ValidatorException validatorException) {
                     obj = R.fail(400, "验证异常: " + validatorException.getMessage());
                 } else {
                     // 非手动校验或抛出的ServiceException
-                    obj = R.fail(StrUtil.format("服务端异常, 请联系管理员, 异常信息: [{}]", err.getMessage()));
+                    obj = R.fail("发生未知异常，请联系管理员");
                 }
             } else if (!(obj instanceof R<?>)) {
                 //非Result结构构建为Result
