@@ -15,7 +15,6 @@ import org.noear.solon.core.handle.Filter;
 import org.noear.solon.core.handle.FilterChain;
 
 import java.lang.reflect.Method;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 限流拦截器
@@ -30,11 +29,13 @@ public class RateLimitFilter implements Filter {
     @Inject
     private RateLimitConfig globalConfig;
 
-    private final ConcurrentHashMap<String, RateLimitConfig> configCache = new ConcurrentHashMap<>();
-
     @Override
     public void doFilter(Context ctx, FilterChain chain) throws Throwable {
         try {
+            if (!globalConfig.isEnabled()) {
+                chain.doFilter(ctx);
+                return;
+            }
             // 获取当前请求的控制器方法
             Method method = getHandlerMethod(ctx);
             if (method == null) {
@@ -122,24 +123,18 @@ public class RateLimitFilter implements Filter {
     /**
      * 创建限流配置
      */
-    private RateLimitConfig createRateLimitConfig(RateLimit rateLimit) {
-        String cacheKey = rateLimit.type() + ":" + rateLimit.permitsPerSecond() + ":" + rateLimit.maxBurst();
-
-        return configCache.computeIfAbsent(cacheKey, k -> {
-            RateLimitConfig config = new RateLimitConfig();
-            config.setType(rateLimit.type());
-            config.setPermitsPerSecond(rateLimit.permitsPerSecond());
-            config.setMaxBurst(rateLimit.maxBurst());
-            config.setWindow(rateLimit.window());
-            config.setAlgorithm(rateLimit.algorithm());
-            config.setEnabled(rateLimit.enabled());
-
-            if (StrUtil.isNotEmpty(rateLimit.message())) {
-                config.setErrorMessage(rateLimit.message());
-            }
-
-            return config;
-        });
+    static RateLimitConfig createRateLimitConfig(RateLimit rateLimit) {
+        RateLimitConfig config = new RateLimitConfig();
+        config.setType(rateLimit.type());
+        config.setPermitsPerSecond(rateLimit.permitsPerSecond());
+        config.setMaxBurst(rateLimit.maxBurst());
+        config.setWindow(rateLimit.window());
+        config.setAlgorithm(rateLimit.algorithm());
+        config.setEnabled(rateLimit.enabled());
+        if (StrUtil.isNotEmpty(rateLimit.message())) {
+            config.setErrorMessage(rateLimit.message());
+        }
+        return config;
     }
 
 
