@@ -4,7 +4,6 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.common.sse.core.SseEmitterManager;
-import com.jimuqu.common.sse.utils.SseMessageUtil;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.annotation.Mapping;
@@ -46,31 +45,6 @@ public class SseController {
         String tokenValue = StpUtil.getTokenValue();
         Long userId = LoginHelper.getUserId();
         sseEmitterManager.disconnect(userId, tokenValue);
-        return R.ok();
-    }
-
-    /**
-     * 向特定用户发送消息
-     *
-     * @param userId 目标用户的 ID
-     * @param msg    要发送的消息内容
-     */
-    @Get
-    @Mapping(value = "send")
-    public R<Void> send(Long userId, String msg) {
-        SseMessageUtil.sendMessage(userId, msg);
-        return R.ok();
-    }
-
-    /**
-     * 向所有用户发送消息
-     *
-     * @param msg 要发送的消息内容
-     */
-    @Get
-    @Mapping(value = "sendAll")
-    public R<Void> send(String msg) {
-        SseMessageUtil.sendMessage(msg);
         return R.ok();
     }
 
