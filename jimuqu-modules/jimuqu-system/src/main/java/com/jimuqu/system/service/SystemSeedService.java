@@ -72,6 +72,8 @@ public class SystemSeedService {
 
     private void seedConfig() {
         insertConfig(1L, "用户初始密码", "sys.user.initPassword", "admin123", "新增用户的默认密码");
+        insertConfig(2L, "是否开启用户注册功能", "sys.account.registerUser", "false",
+                "true:开启, false:关闭");
         insertConfig(11L, "OSS预览列表资源开关", "sys.oss.previewListResource", "true",
                 "true:开启, false:关闭");
     }

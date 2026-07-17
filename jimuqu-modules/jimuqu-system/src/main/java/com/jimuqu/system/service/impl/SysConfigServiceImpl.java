@@ -103,6 +103,15 @@ public class SysConfigServiceImpl implements SysConfigService {
     }
 
     @Override
+    public boolean selectRegisterEnabled() {
+        SysConfig config = QueryChain.of(sysConfigMapper)
+                .eq(SysConfig::getConfigKey, "sys.account.registerUser")
+                .select(SysConfig::getConfigValue)
+                .get();
+        return config != null && Boolean.parseBoolean(config.getConfigValue());
+    }
+
+    @Override
     public boolean checkConfigKeyUnique(SysConfigBo bo) {
         return !QueryChain.of(sysConfigMapper)
                 .eq(SysConfig::getConfigKey, bo.getConfigKey())

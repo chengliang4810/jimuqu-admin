@@ -60,6 +60,8 @@ public interface SysConfigService {
 
     Boolean updateByKey(SysConfigBo bo);
 
+    boolean selectRegisterEnabled();
+
     boolean checkConfigKeyUnique(SysConfigBo bo);
 
     /**

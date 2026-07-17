@@ -22,6 +22,7 @@ import com.jimuqu.common.social.utils.SocialUtils;
 import com.jimuqu.common.sse.utils.SseMessageUtil;
 import com.jimuqu.system.domain.SysClient;
 import com.jimuqu.system.service.SysClientService;
+import com.jimuqu.system.service.SysConfigService;
 import com.jimuqu.system.service.SysSocialService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +53,7 @@ public class AuthController {
     private final SocialProperties socialProperties;
     private final SysRegisterService registerService;
     private final SysSocialService socialService;
+    private final SysConfigService configService;
 
     /**
      * 登录方法
@@ -166,9 +168,9 @@ public class AuthController {
     @Mapping("/register" )
     @ApiEncrypt
     public R<Void> register(@Body RegisterBody user) {
-//        if (!configService.selectRegisterEnabled()) {
-//            return R.fail("当前系统没有开启注册功能！" );
-//        }
+        if (!configService.selectRegisterEnabled()) {
+            return R.fail("当前系统没有开启注册功能！");
+        }
         registerService.register(user);
         return R.ok();
     }
