@@ -45,6 +45,8 @@ public class RouterVo {
      */
     private String query;
 
+    private String ext;
+
     /**
      * 当你一个路由下面的 children 声明的路由大于1个时，自动会变成嵌套的模式--如组件页面
      */

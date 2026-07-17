@@ -99,6 +99,10 @@ public class SysMenuBo extends BoBaseEntity {
      * 菜单图标
      */
     private String icon;
+    @Length(min = 0, max = 255, message = "激活菜单路径长度不能超过{max}个字符")
+    private String activeMenu;
+    @Length(min = 0, max = 2000, message = "扩展字段长度不能超过{max}个字符")
+    private String ext;
     /**
      * 备注
      */

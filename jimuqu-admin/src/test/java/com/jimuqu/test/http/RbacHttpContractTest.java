@@ -172,8 +172,12 @@ public class RbacHttpContractTest {
     }
 
     private void exerciseMenuRoutes(long menuId, String menuName, long roleId) {
-        api.get("/system/menu/getRouters", adminToken).expectSuccess();
-        api.get("/system/menu/" + menuId, adminToken).expectSuccess();
+        HttpApiTestSupport.Response routers = api.get("/system/menu/getRouters", adminToken).expectSuccess();
+        assertTrue(routers.json().toString().contains("Http-menu-" + suffix + menuId),
+                "动态路由 name 必须包含菜单 ID");
+        HttpApiTestSupport.Response detail = api.get("/system/menu/" + menuId, adminToken).expectSuccess();
+        assertEquals("/system/menu", detail.dataObject().get("activeMenu"));
+        assertEquals("{\"badge\":\"test\"}", detail.dataObject().get("ext"));
         api.get("/system/menu/treeselect", adminToken).expectSuccess();
         api.get("/system/menu/roleMenuTreeselect/" + roleId, adminToken).expectSuccess();
 
@@ -244,6 +248,8 @@ public class RbacHttpContractTest {
         payload.put("status", "0");
         payload.put("perms", "test:rbac:list");
         payload.put("icon", "test");
+        payload.put("activeMenu", "/system/menu");
+        payload.put("ext", "{\"badge\":\"test\"}");
         return payload;
     }
 

@@ -84,6 +84,8 @@ public class SysMenuVo implements Serializable {
      * 菜单图标
      */
     private String icon;
+    private String activeMenu;
+    private String ext;
     /**
      * 备注
      */

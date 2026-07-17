@@ -230,11 +230,12 @@ public class SysMenuServiceImpl implements SysMenuService {
         for (SysMenu menu : menus) {
             RouterVo router = new RouterVo();
             router.setHidden("1".equals(menu.getVisible()));
-            router.setName(menu.getRouteName());
+            router.setName(menu.getRouteName() + menu.getId());
             router.setPath(menu.getRouterPath());
             router.setComponent(menu.getComponentInfo());
             router.setQuery(menu.getQueryParam());
-            router.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), StringUtil.equals("1", menu.getIsCache()), menu.getPath()));
+            router.setExt(menu.getExt());
+            router.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), StringUtil.equals("1", menu.getIsCache()), menu.getPath(), menu.getActiveMenu()));
             List<SysMenu> cMenus = menu.getChildren();
             if (CollUtil.isNotEmpty(cMenus) && UserConstants.TYPE_DIR.equals(menu.getMenuType())) {
                 router.setAlwaysShow(true);
@@ -246,9 +247,10 @@ public class SysMenuServiceImpl implements SysMenuService {
                 RouterVo children = new RouterVo();
                 children.setPath(menu.getPath());
                 children.setComponent(menu.getComponent());
-                children.setName(StrUtil.upperFirst(menu.getPath()));
-                children.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), StringUtil.equals("1", menu.getIsCache()), menu.getPath()));
+                children.setName(StrUtil.upperFirst(menu.getPath()) + menu.getId());
+                children.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), StringUtil.equals("1", menu.getIsCache()), menu.getPath(), menu.getActiveMenu()));
                 children.setQuery(menu.getQueryParam());
+                children.setExt(menu.getExt());
                 childrenList.add(children);
                 router.setChildren(childrenList);
             } else if (menu.getParentId().intValue() == 0 && menu.isInnerLink()) {
@@ -259,8 +261,9 @@ public class SysMenuServiceImpl implements SysMenuService {
                 String routerPath = SysMenu.innerLinkReplaceEach(menu.getPath());
                 children.setPath(routerPath);
                 children.setComponent(UserConstants.INNER_LINK);
-                children.setName(StrUtil.upperFirst(routerPath));
+                children.setName(StrUtil.upperFirst(routerPath) + menu.getId());
                 children.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), menu.getPath()));
+                children.setExt(menu.getExt());
                 childrenList.add(children);
                 router.setChildren(childrenList);
             }

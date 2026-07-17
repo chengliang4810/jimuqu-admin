@@ -33,6 +33,8 @@ public class MetaVo {
      */
     private String link;
 
+    private String activeMenu;
+
     public MetaVo(String title, String icon) {
         this.title = title;
         this.icon = icon;
@@ -51,9 +53,14 @@ public class MetaVo {
     }
 
     public MetaVo(String title, String icon, boolean noCache, String link) {
+        this(title, icon, noCache, link, null);
+    }
+
+    public MetaVo(String title, String icon, boolean noCache, String link, String activeMenu) {
         this.title = title;
         this.icon = icon;
         this.noCache = noCache;
+        this.activeMenu = activeMenu;
         if (StringUtil.isHttp(link)) {
             this.link = link;
         }

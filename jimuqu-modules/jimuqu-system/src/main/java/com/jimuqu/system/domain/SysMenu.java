@@ -113,6 +113,12 @@ public class SysMenu extends BaseEntity {
      */
     @AutoColumn(comment = "菜单图标", length = 100, defaultValue = "#")
     private String icon;
+    /** 激活菜单路径。 */
+    @AutoColumn(comment = "激活菜单路径", length = 255)
+    private String activeMenu;
+    /** Vben 路由扩展 JSON。 */
+    @AutoColumn(comment = "扩展字段", length = 2000)
+    private String ext;
     /**
      * 备注
      */
