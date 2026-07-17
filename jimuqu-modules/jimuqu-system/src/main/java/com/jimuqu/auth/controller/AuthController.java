@@ -61,7 +61,7 @@ public class AuthController {
      */
     @Post
     @Mapping("/login" )
-    @ApiEncrypt(response = false)
+    @ApiEncrypt
     public R<LoginVo> login(@Body String body) {
         LoginBody loginBody = JsonUtil.toObject(body, LoginBody.class);
         ValidUtils.validateEntity(loginBody);

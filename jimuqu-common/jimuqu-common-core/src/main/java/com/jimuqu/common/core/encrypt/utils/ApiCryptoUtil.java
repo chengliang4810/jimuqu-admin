@@ -1,16 +1,12 @@
 package com.jimuqu.common.core.encrypt.utils;
 
 import cn.hutool.v7.core.text.StrUtil;
-import com.jimuqu.common.core.encrypt.domain.ApiEncryptPayload;
 import com.jimuqu.common.core.encrypt.domain.RsaKeyPair;
 import com.jimuqu.common.core.exception.ServiceException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
@@ -22,147 +18,98 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
-/**
- * 接口 RSA + AES 混合加解密工具。
- *
- * @author chengliang
- */
+/** Bell 6.X 接口 RSA + AES 加解密工具。 */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ApiCryptoUtil {
 
     private static final String RSA = "RSA";
-    private static final String RSA_TRANSFORMATION = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
-    private static final String FRONTEND_RSA_TRANSFORMATION = "RSA/ECB/PKCS1Padding";
+    private static final String RSA_TRANSFORMATION = "RSA/ECB/PKCS1Padding";
     private static final String AES = "AES";
-    private static final String AES_TRANSFORMATION = "AES/GCM/NoPadding";
-    private static final int AES_KEY_SIZE = 256;
-    private static final int AES_IV_SIZE = 12;
-    private static final int AES_TAG_LENGTH = 128;
+    private static final String AES_TRANSFORMATION = "AES/ECB/PKCS5Padding";
+    private static final String KEY_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    public static String decryptRequest(String body, String encryptedKey, String privateKey) {
+        if (StrUtil.hasBlank(body, encryptedKey, privateKey)) {
+            throw new ServiceException("接口加密参数不完整");
+        }
+        try {
+            String encodedAesKey = new String(rsa(Cipher.DECRYPT_MODE,
+                    Base64.getDecoder().decode(encryptedKey), parsePrivateKey(privateKey)), StandardCharsets.UTF_8);
+            String aesKey = new String(Base64.getDecoder().decode(encodedAesKey), StandardCharsets.UTF_8);
+            return decryptByAes(body, aesKey);
+        } catch (Exception e) {
+            throw new ServiceException("接口请求解密失败: " + e.getMessage());
+        }
+    }
+
+    public static String encryptByAes(String content, String aesKey) throws Exception {
+        Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
+        cipher.init(Cipher.ENCRYPT_MODE, aesKey(aesKey));
+        return Base64.getEncoder().encodeToString(cipher.doFinal(content.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    public static String decryptByAes(String content, String aesKey) throws Exception {
+        Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
+        cipher.init(Cipher.DECRYPT_MODE, aesKey(aesKey));
+        return new String(cipher.doFinal(Base64.getDecoder().decode(content)), StandardCharsets.UTF_8);
+    }
+
+    public static String encryptByRsa(String content, String publicKey) throws Exception {
+        return Base64.getEncoder().encodeToString(rsa(Cipher.ENCRYPT_MODE,
+                content.getBytes(StandardCharsets.UTF_8), parsePublicKey(publicKey)));
+    }
+
+    public static String randomAesKey() {
+        StringBuilder key = new StringBuilder(32);
+        for (int i = 0; i < 32; i++) {
+            key.append(KEY_CHARS.charAt(RANDOM.nextInt(KEY_CHARS.length())));
+        }
+        return key.toString();
+    }
 
     public static RsaKeyPair generateRsaKeyPair() {
         try {
             KeyPairGenerator generator = KeyPairGenerator.getInstance(RSA);
-            generator.initialize(2048);
+            generator.initialize(1024);
             java.security.KeyPair keyPair = generator.generateKeyPair();
             return new RsaKeyPair(
                     Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()),
-                    Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded())
-            );
+                    Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()));
         } catch (Exception e) {
             throw new ServiceException("生成RSA密钥对失败: " + e.getMessage());
         }
     }
 
-    public static ApiEncryptPayload encrypt(String json, String publicKey) {
-        if (StrUtil.isBlank(json)) {
-            return new ApiEncryptPayload();
+    private static SecretKeySpec aesKey(String key) {
+        int length = key == null ? 0 : key.getBytes(StandardCharsets.UTF_8).length;
+        if (length != 16 && length != 24 && length != 32) {
+            throw new ServiceException("AES秘钥长度要求为16位、24位、32位");
         }
-        try {
-            SecretKey aesKey = generateAesKey();
-            byte[] iv = randomIv();
-            byte[] encryptedData = aesEncrypt(json.getBytes(StandardCharsets.UTF_8), aesKey.getEncoded(), iv);
-            byte[] encryptedKey = rsaEncrypt(aesKey.getEncoded(), parsePublicKey(publicKey));
-            return new ApiEncryptPayload()
-                    .setEncryptKey(Base64.getEncoder().encodeToString(encryptedKey))
-                    .setIv(Base64.getEncoder().encodeToString(iv))
-                    .setData(Base64.getEncoder().encodeToString(encryptedData));
-        } catch (Exception e) {
-            throw new ServiceException("接口响应加密失败: " + e.getMessage());
-        }
+        return new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), AES);
     }
 
-    public static String decrypt(ApiEncryptPayload payload, String privateKey) {
-        if (payload == null || StrUtil.hasBlank(payload.getEncryptKey(), payload.getIv(), payload.getData())) {
-            throw new ServiceException("接口加密参数不完整");
-        }
-        try {
-            byte[] aesKey = rsaDecrypt(Base64.getDecoder().decode(payload.getEncryptKey()), parsePrivateKey(privateKey));
-            byte[] iv = Base64.getDecoder().decode(payload.getIv());
-            byte[] data = Base64.getDecoder().decode(payload.getData());
-            return new String(aesDecrypt(data, aesKey, iv), StandardCharsets.UTF_8);
-        } catch (ServiceException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ServiceException("接口请求解密失败: " + e.getMessage());
-        }
-    }
-
-    /** 解密 Bell 前端的 RSA 密钥头 + AES/ECB 请求体协议。 */
-    public static String decryptFrontend(String body, String encryptedKey, String privateKey) {
-        if (StrUtil.hasBlank(body, encryptedKey, privateKey)) {
-            throw new ServiceException("接口加密参数不完整");
-        }
-        try {
-            byte[] encodedKey = rsaDecrypt(Base64.getDecoder().decode(cleanKey(encryptedKey)),
-                    parsePrivateKey(privateKey), FRONTEND_RSA_TRANSFORMATION);
-            String key = new String(Base64.getDecoder().decode(encodedKey), StandardCharsets.UTF_8);
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), AES));
-            return new String(cipher.doFinal(Base64.getDecoder().decode(body)), StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new ServiceException("接口请求解密失败: " + e.getMessage());
-        }
-    }
-
-    private static SecretKey generateAesKey() throws Exception {
-        KeyGenerator generator = KeyGenerator.getInstance(AES);
-        generator.init(AES_KEY_SIZE);
-        return generator.generateKey();
-    }
-
-    private static byte[] randomIv() {
-        byte[] iv = new byte[AES_IV_SIZE];
-        new SecureRandom().nextBytes(iv);
-        return iv;
-    }
-
-    private static byte[] aesEncrypt(byte[] data, byte[] aesKey, byte[] iv) throws Exception {
-        Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
-        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(aesKey, AES), new GCMParameterSpec(AES_TAG_LENGTH, iv));
-        return cipher.doFinal(data);
-    }
-
-    private static byte[] aesDecrypt(byte[] data, byte[] aesKey, byte[] iv) throws Exception {
-        Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
-        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(aesKey, AES), new GCMParameterSpec(AES_TAG_LENGTH, iv));
-        return cipher.doFinal(data);
-    }
-
-    private static byte[] rsaEncrypt(byte[] data, PublicKey publicKey) throws Exception {
+    private static byte[] rsa(int mode, byte[] data, java.security.Key key) throws Exception {
         Cipher cipher = Cipher.getInstance(RSA_TRANSFORMATION);
-        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-        return cipher.doFinal(data);
-    }
-
-    private static byte[] rsaDecrypt(byte[] data, PrivateKey privateKey) throws Exception {
-        return rsaDecrypt(data, privateKey, RSA_TRANSFORMATION);
-    }
-
-    private static byte[] rsaDecrypt(byte[] data, PrivateKey privateKey, String transformation) throws Exception {
-        Cipher cipher = Cipher.getInstance(transformation);
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        cipher.init(mode, key);
         return cipher.doFinal(data);
     }
 
     private static PublicKey parsePublicKey(String publicKey) throws Exception {
-        if (StrUtil.isBlank(publicKey)) {
-            throw new ServiceException("接口加密公钥未配置");
-        }
-        byte[] keyBytes = Base64.getDecoder().decode(cleanKey(publicKey));
-        return KeyFactory.getInstance(RSA).generatePublic(new X509EncodedKeySpec(keyBytes));
+        return KeyFactory.getInstance(RSA).generatePublic(
+                new X509EncodedKeySpec(Base64.getDecoder().decode(cleanKey(publicKey))));
     }
 
     private static PrivateKey parsePrivateKey(String privateKey) throws Exception {
-        if (StrUtil.isBlank(privateKey)) {
-            throw new ServiceException("接口加密私钥未配置");
-        }
-        byte[] keyBytes = Base64.getDecoder().decode(cleanKey(privateKey));
-        return KeyFactory.getInstance(RSA).generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
+        return KeyFactory.getInstance(RSA).generatePrivate(
+                new PKCS8EncodedKeySpec(Base64.getDecoder().decode(cleanKey(privateKey))));
     }
 
     private static String cleanKey(String key) {
-        return key
-                .replace("-----BEGIN PUBLIC KEY-----", "")
+        if (StrUtil.isBlank(key)) {
+            throw new ServiceException("RSA秘钥未配置");
+        }
+        return key.replace("-----BEGIN PUBLIC KEY-----", "")
                 .replace("-----END PUBLIC KEY-----", "")
                 .replace("-----BEGIN PRIVATE KEY-----", "")
                 .replace("-----END PRIVATE KEY-----", "")

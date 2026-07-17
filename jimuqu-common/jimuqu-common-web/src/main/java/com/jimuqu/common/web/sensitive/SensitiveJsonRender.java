@@ -53,10 +53,13 @@ public class SensitiveJsonRender implements Render {
 
     private String encryptIfNecessary(String json, Context ctx) throws Exception {
         ApiEncrypt apiEncrypt = ApiEncryptSupport.findAnnotation(ctx.action());
-        if (apiEncrypt == null || !apiEncrypt.response()) {
+        if (!ApiEncryptSupport.enabled() || apiEncrypt == null || !apiEncrypt.response()) {
             return json;
         }
-        String publicKey = ApiEncryptSupport.resolvePublicKey(apiEncrypt);
-        return serializer.serialize(ApiCryptoUtil.encrypt(json, publicKey));
+        String aesKey = ApiCryptoUtil.randomAesKey();
+        ctx.headerSet(ApiEncryptSupport.headerFlag(), ApiCryptoUtil.encryptByRsa(
+                java.util.Base64.getEncoder().encodeToString(aesKey.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                ApiEncryptSupport.publicKey()));
+        return ApiCryptoUtil.encryptByAes(json, aesKey);
     }
 }

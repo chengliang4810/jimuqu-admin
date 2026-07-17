@@ -1,6 +1,5 @@
 package com.jimuqu.common.core.encrypt;
 
-import com.jimuqu.common.core.encrypt.domain.ApiEncryptPayload;
 import com.jimuqu.common.core.encrypt.domain.RsaKeyPair;
 import com.jimuqu.common.core.encrypt.utils.ApiCryptoUtil;
 import org.junit.jupiter.api.Test;
@@ -15,18 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ApiCryptoUtilTest {
 
     @Test
-    void hybridEncryptAndDecryptRoundTripJson() {
-        String json = "{\"mobile\":\"13812345678\",\"name\":\"张三\"}";
-        RsaKeyPair keyPair = ApiCryptoUtil.generateRsaKeyPair();
-
-        ApiEncryptPayload encrypted = ApiCryptoUtil.encrypt(json, keyPair.getPublicKey());
-        String decrypted = ApiCryptoUtil.decrypt(encrypted, keyPair.getPrivateKey());
-
-        assertEquals(json, decrypted);
-    }
-
-    @Test
-    void decryptFrontendRsaPkcs1AndAesEcbRequest() throws Exception {
+    void decryptBellRsaPkcs1AndAesEcbRequest() throws Exception {
         String json = "{\"username\":\"admin\",\"password\":\"admin123\"}";
         String aesKey = "01234567890123456789012345678901";
         RsaKeyPair keyPair = ApiCryptoUtil.generateRsaKeyPair();
@@ -40,6 +28,27 @@ class ApiCryptoUtilTest {
         aes.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(aesKey.getBytes(StandardCharsets.UTF_8), "AES"));
         String body = Base64.getEncoder().encodeToString(aes.doFinal(json.getBytes(StandardCharsets.UTF_8)));
 
-        assertEquals(json, ApiCryptoUtil.decryptFrontend(body, encryptedKey, keyPair.getPrivateKey()));
+        assertEquals(json, ApiCryptoUtil.decryptRequest(body, encryptedKey, keyPair.getPrivateKey()));
+    }
+
+    @Test
+    void encryptBellResponseWithRsaHeaderAndAesBody() throws Exception {
+        String json = "{\"code\":200,\"msg\":\"成功\",\"data\":{}}";
+        String aesKey = ApiCryptoUtil.randomAesKey();
+        RsaKeyPair keyPair = ApiCryptoUtil.generateRsaKeyPair();
+
+        String encryptedKey = ApiCryptoUtil.encryptByRsa(
+                Base64.getEncoder().encodeToString(aesKey.getBytes(StandardCharsets.UTF_8)),
+                keyPair.getPublicKey());
+        Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        rsa.init(Cipher.DECRYPT_MODE, java.security.KeyFactory.getInstance("RSA")
+                .generatePrivate(new java.security.spec.PKCS8EncodedKeySpec(
+                        Base64.getDecoder().decode(keyPair.getPrivateKey()))));
+        String decryptedKey = new String(Base64.getDecoder().decode(rsa.doFinal(
+                Base64.getDecoder().decode(encryptedKey))), StandardCharsets.UTF_8);
+        String encryptedBody = ApiCryptoUtil.encryptByAes(json, aesKey);
+
+        assertEquals(aesKey, decryptedKey);
+        assertEquals(json, ApiCryptoUtil.decryptByAes(encryptedBody, decryptedKey));
     }
 }
