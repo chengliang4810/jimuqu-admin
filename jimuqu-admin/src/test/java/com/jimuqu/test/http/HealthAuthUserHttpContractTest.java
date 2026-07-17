@@ -143,6 +143,13 @@ public class HealthAuthUserHttpContractTest {
         ), adminToken).expectSuccess();
         HttpApiTestSupport.Response register;
         try {
+            http.postJson("/auth/register", Map.of(
+                    "clientId", HttpApiTestSupport.PC_CLIENT_ID,
+                    "grantType", "password",
+                    "username", "x",
+                    "password", "",
+                    "userType", "pc_user"
+            )).expectCode(500);
             register = http.postJson("/auth/register", Map.of(
                     "clientId", HttpApiTestSupport.PC_CLIENT_ID,
                     "grantType", "password",

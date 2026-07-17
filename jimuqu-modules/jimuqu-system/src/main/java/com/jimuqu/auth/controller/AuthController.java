@@ -33,6 +33,7 @@ import me.zhyd.oauth.utils.AuthStateUtils;
 import org.noear.solon.annotation.*;
 import org.noear.solon.core.util.RunUtil;
 import org.noear.solon.validation.ValidUtils;
+import org.noear.solon.validation.annotation.Validated;
 
 import java.util.Set;
 
@@ -167,7 +168,7 @@ public class AuthController {
     @Post
     @Mapping("/register" )
     @ApiEncrypt
-    public R<Void> register(@Body RegisterBody user) {
+    public R<Void> register(@Body @Validated RegisterBody user) {
         if (!configService.selectRegisterEnabled()) {
             return R.fail("当前系统没有开启注册功能！");
         }
