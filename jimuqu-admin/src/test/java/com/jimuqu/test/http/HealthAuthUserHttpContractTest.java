@@ -190,6 +190,7 @@ public class HealthAuthUserHttpContractTest {
         HttpApiTestSupport.Response createInfo = http.get("/system/user/", adminToken);
         HttpApiTestSupport.Response currentInfo = http.get("/system/user/getInfo", adminToken);
         HttpApiTestSupport.Response authRole = http.get("/system/user/authRole/2", adminToken);
+        HttpApiTestSupport.Response unlock = http.get("/system/user/unlock/2", adminToken);
         HttpApiTestSupport.Response deptTree = http.get("/system/user/deptTree", adminToken);
         HttpApiTestSupport.Response profile = http.get("/system/user/profile", adminToken);
         HttpApiTestSupport.Response social = http.get("/system/social/list", adminToken);
@@ -209,6 +210,7 @@ public class HealthAuthUserHttpContractTest {
         assertEquals(List.of("superadmin"), currentInfo.dataObject().get("roles"));
         authRole.expectStatus(200).expectSuccess();
         assertEquals("custom_user", object(authRole.dataObject().get("user")).get("userName"));
+        unlock.expectStatus(200).expectSuccess();
         deptTree.expectStatus(200).expectSuccess();
         assertFalse(deptTree.dataList().isEmpty(), "部门树不能为空");
         profile.expectStatus(200).expectSuccess();
