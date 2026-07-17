@@ -138,12 +138,17 @@ public class ResourceMonitorHttpContractTest {
                 adminToken, "admin");
 
         String otherToken = api.loginAdmin();
-        String encodedOtherToken = URLEncoder.encode(otherToken, StandardCharsets.UTF_8);
-        assertOnlineSession(api.get("/monitor/online", otherToken).expectPage(), otherToken, "admin");
-        api.delete("/monitor/online/myself/" + encodedOtherToken, adminToken).expectSuccess();
+        HttpApiTestSupport.Response otherSessions = api.get("/monitor/online", otherToken).expectPage();
+        assertOnlineSession(otherSessions, otherToken, "admin");
+
+        String foreignToken = "foreign-" + suffix;
+        api.delete("/monitor/online/myself/" + foreignToken, adminToken).expectSuccess();
         api.get("/monitor/online", otherToken).expectPage();
+
+        String encodedOtherToken = URLEncoder.encode(otherToken, StandardCharsets.UTF_8);
         api.delete("/monitor/online/" + encodedOtherToken, adminToken).expectSuccess();
         api.get("/monitor/online", otherToken).expectStatus(401).expectCode(401);
+        api.get("/monitor/cache", adminToken).expectSuccess();
     }
 
     @Test
