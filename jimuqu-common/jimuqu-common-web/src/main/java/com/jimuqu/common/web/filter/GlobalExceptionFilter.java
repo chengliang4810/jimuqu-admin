@@ -5,6 +5,7 @@ import com.jimuqu.common.core.exception.auth.AuthException;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.exception.base.BaseException;
 import com.jimuqu.common.core.utils.ip.AddressUtil;
+import com.jimuqu.common.web.validation.ValidationMessageResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.core.handle.Context;
@@ -34,7 +35,7 @@ public class GlobalExceptionFilter implements Filter {
         // 参数验证异常
         catch (ValidatorException e) {
             ctx.status(400);
-            ctx.render(R.fail(400, e.getMessage()));
+            ctx.render(R.fail(400, ValidationMessageResolver.resolve(e, ctx.header("Accept-Language"))));
         }
         // 权限异常
         catch (AuthException e) {

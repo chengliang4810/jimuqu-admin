@@ -81,6 +81,12 @@ public class HealthAuthUserHttpContractTest {
                 "username", "disabled_user",
                 "password", HttpApiTestSupport.DEFAULT_PASSWORD
         )));
+        HttpApiTestSupport.Response invalidUsernameLogin = http.postEncryptedJson("/auth/login", http.withCaptcha(Map.of(
+                "clientId", HttpApiTestSupport.PC_CLIENT_ID,
+                "grantType", "password",
+                "username", "x",
+                "password", HttpApiTestSupport.DEFAULT_PASSWORD
+        )));
         HttpApiTestSupport.Response unauthenticatedCodes = http.get("/auth/codes");
         HttpApiTestSupport.Response unauthenticatedCallback = http.postJson("/auth/social/callback", Map.of(
                 "source", "not-configured",
@@ -103,6 +109,8 @@ public class HealthAuthUserHttpContractTest {
         unsupportedBinding.expectStatus(200).expectCode(500);
         invalidClient.expectStatus(200).expectCode(500);
         disabledUser.expectStatus(200).expectCode(500);
+        invalidUsernameLogin.expectFailure(400, 400, "账户长度必须在2到20个字符之间");
+        assertEquals("账户长度必须在2到20个字符之间", invalidUsernameLogin.json().get("msg"));
         unauthenticatedCodes.expectStatus(401).expectCode(401);
         unauthenticatedCallback.expectStatus(401).expectCode(401);
         unauthenticatedUnlock.expectStatus(401).expectCode(401);
@@ -143,13 +151,15 @@ public class HealthAuthUserHttpContractTest {
         ), adminToken).expectSuccess();
         HttpApiTestSupport.Response register;
         try {
-            http.postEncryptedJson("/auth/register", http.withCaptcha(Map.of(
+            HttpApiTestSupport.Response invalidRegister = http.postEncryptedJson("/auth/register", http.withCaptcha(Map.of(
                     "clientId", HttpApiTestSupport.PC_CLIENT_ID,
                     "grantType", "password",
                     "username", "x",
-                    "password", "",
+                    "password", "Register123!",
                     "userType", "pc_user"
-            ))).expectCode(500);
+            )));
+            invalidRegister.expectFailure(400, 400, "账户长度必须在2到20个字符之间");
+            assertEquals("账户长度必须在2到20个字符之间", invalidRegister.json().get("msg"));
             register = http.postEncryptedJson("/auth/register", http.withCaptcha(Map.of(
                     "clientId", HttpApiTestSupport.PC_CLIENT_ID,
                     "grantType", "password",
