@@ -2,6 +2,7 @@ package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.jimuqu.common.core.domain.R;
+import com.jimuqu.common.core.exception.check.AssertException;
 import com.jimuqu.common.log.annotation.Log;
 import com.jimuqu.common.log.enums.BusinessType;
 import com.jimuqu.common.mybatis.core.Page;
@@ -51,7 +52,11 @@ public class SysOssConfigController extends BaseController {
     @SaCheckPermission("system:ossConfig:add")
     @Log(title = "对象存储配置", businessType = BusinessType.ADD)
     public R<Void> add(@Validated SysOssConfigBo bo) {
-        return toAjax(service.insert(bo));
+        try {
+            return toAjax(service.insert(bo));
+        } catch (AssertException e) {
+            return R.fail(e.getMessage());
+        }
     }
 
     @Put
@@ -60,7 +65,11 @@ public class SysOssConfigController extends BaseController {
     @SaCheckPermission("system:ossConfig:edit")
     @Log(title = "对象存储配置", businessType = BusinessType.UPDATE)
     public R<Void> edit(@Validated SysOssConfigBo bo) {
-        return toAjax(service.update(bo));
+        try {
+            return toAjax(service.update(bo));
+        } catch (AssertException e) {
+            return R.fail(e.getMessage());
+        }
     }
 
     @Put

@@ -162,7 +162,7 @@ public class SysOssConfigService {
                 .where(where -> where.eq(SysOssConfig::getConfigKey, bo.getConfigKey())
                         .ne(bo.getOssConfigId() != null, SysOssConfig::getOssConfigId, bo.getOssConfigId()))
                 .exists();
-        Assert.isFalse(exists, "配置key已存在: " + bo.getConfigKey());
+        Assert.isFalse(exists, "操作配置'" + bo.getConfigKey() + "'失败, 配置key已存在!");
     }
 
     private SysOssConfig toEntity(SysOssConfigBo bo) {
