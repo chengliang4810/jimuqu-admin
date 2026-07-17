@@ -69,10 +69,14 @@ public class SysUserOnlineController extends BaseController {
     @Delete
     @Mapping("/myself/{tokenId}")
     public R<Void> removeMyself(String tokenId) {
-        if (Objects.equals(StpUtil.getTokenValue(), tokenId)) {
+        if (ownsToken(StpUtil.getTokenValueListByLoginId(StpUtil.getLoginIdAsString()), tokenId)) {
             kickout(tokenId);
         }
         return R.ok();
+    }
+
+    static boolean ownsToken(List<String> tokenIds, String tokenId) {
+        return tokenIds != null && tokenIds.contains(tokenId);
     }
 
     private List<SysUserOnlineVo> listAllOnline() {
