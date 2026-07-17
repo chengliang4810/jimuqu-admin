@@ -32,6 +32,7 @@ public class ApiCryptoUtil {
 
     private static final String RSA = "RSA";
     private static final String RSA_TRANSFORMATION = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
+    private static final String FRONTEND_RSA_TRANSFORMATION = "RSA/ECB/PKCS1Padding";
     private static final String AES = "AES";
     private static final String AES_TRANSFORMATION = "AES/GCM/NoPadding";
     private static final int AES_KEY_SIZE = 256;
@@ -86,6 +87,23 @@ public class ApiCryptoUtil {
         }
     }
 
+    /** 解密 Bell 前端的 RSA 密钥头 + AES/ECB 请求体协议。 */
+    public static String decryptFrontend(String body, String encryptedKey, String privateKey) {
+        if (StrUtil.hasBlank(body, encryptedKey, privateKey)) {
+            throw new ServiceException("接口加密参数不完整");
+        }
+        try {
+            byte[] encodedKey = rsaDecrypt(Base64.getDecoder().decode(cleanKey(encryptedKey)),
+                    parsePrivateKey(privateKey), FRONTEND_RSA_TRANSFORMATION);
+            String key = new String(Base64.getDecoder().decode(encodedKey), StandardCharsets.UTF_8);
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), AES));
+            return new String(cipher.doFinal(Base64.getDecoder().decode(body)), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new ServiceException("接口请求解密失败: " + e.getMessage());
+        }
+    }
+
     private static SecretKey generateAesKey() throws Exception {
         KeyGenerator generator = KeyGenerator.getInstance(AES);
         generator.init(AES_KEY_SIZE);
@@ -117,7 +135,11 @@ public class ApiCryptoUtil {
     }
 
     private static byte[] rsaDecrypt(byte[] data, PrivateKey privateKey) throws Exception {
-        Cipher cipher = Cipher.getInstance(RSA_TRANSFORMATION);
+        return rsaDecrypt(data, privateKey, RSA_TRANSFORMATION);
+    }
+
+    private static byte[] rsaDecrypt(byte[] data, PrivateKey privateKey, String transformation) throws Exception {
+        Cipher cipher = Cipher.getInstance(transformation);
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
         return cipher.doFinal(data);
     }

@@ -9,6 +9,7 @@ import com.jimuqu.auth.service.SysLoginService;
 import com.jimuqu.auth.service.SysRegisterService;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.domain.R;
+import com.jimuqu.common.core.encrypt.annotation.ApiEncrypt;
 import com.jimuqu.common.core.domain.model.LoginBody;
 import com.jimuqu.common.core.domain.model.RegisterBody;
 import com.jimuqu.common.core.domain.model.SocialLoginBody;
@@ -60,6 +61,7 @@ public class AuthController {
      */
     @Post
     @Mapping("/login" )
+    @ApiEncrypt(response = false)
     public R<LoginVo> login(@Body String body) {
         LoginBody loginBody = JsonUtil.toObject(body, LoginBody.class);
         ValidUtils.validateEntity(loginBody);

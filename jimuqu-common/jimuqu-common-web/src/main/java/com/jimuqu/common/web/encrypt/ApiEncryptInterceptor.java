@@ -34,6 +34,14 @@ public class ApiEncryptInterceptor implements RouterInterceptor {
             return;
         }
 
+        String frontendEncryptKey = ctx.header("encrypt-key");
+        if (StrUtil.isNotBlank(frontendEncryptKey)) {
+            String privateKey = ApiEncryptSupport.resolvePrivateKey(apiEncrypt);
+            ctx.bodyNew(ApiCryptoUtil.decryptFrontend(body, frontendEncryptKey, privateKey));
+            chain.doIntercept(ctx, mainHandler);
+            return;
+        }
+
         ApiEncryptPayload payload = parsePayload(body, apiEncrypt.required());
         if (payload != null) {
             String privateKey = ApiEncryptSupport.resolvePrivateKey(apiEncrypt);
