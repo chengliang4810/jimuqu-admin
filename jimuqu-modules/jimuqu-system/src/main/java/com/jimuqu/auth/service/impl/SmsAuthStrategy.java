@@ -11,7 +11,9 @@ import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.domain.model.LoginUser;
 import com.jimuqu.common.core.domain.model.SmsLoginBody;
 import com.jimuqu.common.core.enums.LoginType;
+import com.jimuqu.common.core.enums.UserStatus;
 import com.jimuqu.common.core.exception.user.CaptchaExpireException;
+import com.jimuqu.common.core.exception.user.UserException;
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.satoken.utils.LoginHelper;
@@ -19,6 +21,7 @@ import com.jimuqu.system.domain.SysClient;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.mapper.SysUserMapper;
 import lombok.extern.slf4j.Slf4j;
+import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.data.cache.CacheService;
@@ -86,18 +89,19 @@ public class SmsAuthStrategy implements AuthStrategyService {
     }
 
     private SysUserVo loadUserByPhonenumber(String phonenumber) {
-//        SysUser user = userMapper.selectOneByQuery(
-//                QueryWrapper.create().from(SYS_USER)
-//                        .select(SYS_USER.PHONENUMBER, SYS_USER.STATUS)
-//                        .and(SYS_USER.PHONENUMBER.eq(phonenumber)));
-//        if (ObjUtil.isNull(user)) {
-//            log.info("登录用户：{} 不存在.", phonenumber);
-//            throw new UserException("user.not.exists", phonenumber);
-//        } else if (UserStatus.DISABLE.getCode().equals(user.getStatus())) {
-//            log.info("登录用户：{} 已被停用.", phonenumber);
-//            throw new UserException("user.blocked", phonenumber);
-//        }
-        return userMapper.selectUserByPhonenumber(phonenumber);
+        return ensureLoginAllowed(userMapper.selectUserByPhonenumber(phonenumber), phonenumber);
+    }
+
+    static SysUserVo ensureLoginAllowed(SysUserVo user, String phonenumber) {
+        if (ObjUtil.isNull(user)) {
+            log.info("登录用户：{} 不存在.", phonenumber);
+            throw new UserException("user.not.exists", phonenumber);
+        }
+        if (UserStatus.DISABLE.getCode().equals(user.getStatus())) {
+            log.info("登录用户：{} 已被停用.", phonenumber);
+            throw new UserException("user.blocked", phonenumber);
+        }
+        return user;
     }
 
 }
