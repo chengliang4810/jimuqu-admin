@@ -162,6 +162,13 @@ public class RbacHttpContractTest {
         HttpApiTestSupport.Response protectedRole = api.putJson("/system/role/changeStatus",
                 Map.of("roleId", 1, "status", "1"), adminToken).expectEnvelope();
         assertNotEquals(200, protectedRole.code(), "超级管理员角色不得被停用");
+
+        HttpApiTestSupport.Response currentUserRole = api.putJson("/system/role/authUser/cancel",
+                Map.of("roleId", 1, "userId", 1), adminToken).expectEnvelope();
+        assertNotEquals(200, currentUserRole.code(), "不得取消当前用户自己的角色");
+        assertTrue(String.valueOf(currentUserRole.json().get("msg")).contains("当前用户"));
+        assertTrue(api.get("/system/role/authUser/allocatedList?roleId=1&pageNum=1&pageSize=20", adminToken)
+                .expectPage().dataObject().get("rows").toString().contains("admin"), "拒绝后角色关联必须保持不变");
     }
 
     private void exerciseMenuRoutes(long menuId, String menuName, long roleId) {

@@ -173,8 +173,17 @@ public class SysRoleServiceImpl implements SysRoleService {
         if (UserConstants.SUPER_ADMIN_ID.equals(role.getId())) {
             throw new ServiceException("不允许操作超级管理员角色");
         }
-        if (GlobalConstants.SUPER_ADMIN_ROLE_KEY.equals(role.getRoleKey())) {
-            throw new ServiceException("不允许使用超级管理员角色标识");
+        SysRole current = role.getId() == null ? null : roleMapper.getById(role.getId());
+        if (current == null) {
+            if (GlobalConstants.SUPER_ADMIN_ROLE_KEY.equals(role.getRoleKey())) {
+                throw new ServiceException("不允许使用系统内置管理员角色标识符");
+            }
+            return;
+        }
+        if (!ObjUtil.equals(current.getRoleKey(), role.getRoleKey())
+                && (GlobalConstants.SUPER_ADMIN_ROLE_KEY.equals(current.getRoleKey())
+                || GlobalConstants.SUPER_ADMIN_ROLE_KEY.equals(role.getRoleKey()))) {
+            throw new ServiceException("不允许修改系统内置管理员角色标识符");
         }
     }
 
@@ -267,9 +276,14 @@ public class SysRoleServiceImpl implements SysRoleService {
         if (userRole == null || userRole.getRoleId() == null || userRole.getUserId() == null) {
             return 0;
         }
-        return userRoleMapper.delete(where -> where
+        checkNotCurrentUser(List.of(userRole.getUserId()));
+        int rows = userRoleMapper.delete(where -> where
                 .eq(SysUserRole::getRoleId, userRole.getRoleId())
                 .eq(SysUserRole::getUserId, userRole.getUserId()));
+        if (rows > 0) {
+            cleanOnlineUsers(List.of(userRole.getUserId()));
+        }
+        return rows;
     }
 
     @Override
@@ -277,9 +291,15 @@ public class SysRoleServiceImpl implements SysRoleService {
         if (roleId == null || userIds == null || userIds.length == 0) {
             return 0;
         }
-        return userRoleMapper.delete(where -> where
+        List<Long> requested = Arrays.stream(userIds).distinct().toList();
+        checkNotCurrentUser(requested);
+        int rows = userRoleMapper.delete(where -> where
                 .eq(SysUserRole::getRoleId, roleId)
-                .in(SysUserRole::getUserId, Arrays.asList(userIds)));
+                .in(SysUserRole::getUserId, requested));
+        if (rows > 0) {
+            cleanOnlineUsers(requested);
+        }
+        return rows;
     }
 
     @Override
@@ -289,6 +309,7 @@ public class SysRoleServiceImpl implements SysRoleService {
             return 0;
         }
         List<Long> requested = Arrays.stream(userIds).distinct().toList();
+        checkNotCurrentUser(requested);
         Set<Long> existing = new HashSet<>(QueryChain.of(userRoleMapper)
                 .select(SysUserRole::getUserId)
                 .eq(SysUserRole::getRoleId, roleId)
@@ -304,7 +325,29 @@ public class SysRoleServiceImpl implements SysRoleService {
                     return relation;
                 })
                 .toList();
-        return relations.isEmpty() ? 0 : userRoleMapper.saveBatch(relations);
+        int rows = relations.isEmpty() ? 0 : userRoleMapper.saveBatch(relations);
+        if (rows > 0) {
+            cleanOnlineUsers(requested);
+        }
+        return rows;
+    }
+
+    private void checkNotCurrentUser(Collection<Long> userIds) {
+        if (userIds.contains(LoginHelper.getUserId())) {
+            throw new ServiceException("不允许修改当前用户角色");
+        }
+    }
+
+    private void cleanOnlineUsers(Collection<Long> userIds) {
+        for (Long userId : userIds) {
+            for (UserType userType : UserType.values()) {
+                try {
+                    StpUtil.logout(userType.getUserType() + ":" + userId);
+                } catch (RuntimeException ex) {
+                    log.warn("清理用户在线会话失败，userId={}, type={}", userId, userType.getUserType(), ex);
+                }
+            }
+        }
     }
 
     private void replaceRoleMenus(Long roleId, Long[] menuIds) {
