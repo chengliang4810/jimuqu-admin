@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.noear.solon.annotation.Component;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,9 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class SysNoticeService {
+
+    private static final long MESSAGE_BOX_DAYS = 30L;
+    private static final int MESSAGE_BOX_LIMIT = 100;
 
     private final SysNoticeMapper noticeMapper;
     private final SysUserMapper userMapper;
@@ -69,13 +73,15 @@ public class SysNoticeService {
 
     public SysMessageBoxVo queryMessageBox() {
         List<SysNoticeVo> notices = QueryChain.of(noticeMapper)
-                .where(where -> where.eq(SysNotice::getStatus, "0"))
+                .where(where -> where.eq(SysNotice::getStatus, "0")
+                        .ge(SysNotice::getCreateTime,
+                                new Date(System.currentTimeMillis() - MESSAGE_BOX_DAYS * 24 * 60 * 60 * 1000)))
                 .orderBy(SysNotice::getNoticeId)
                 .returnType(SysNoticeVo.class)
                 .list();
         Collections.reverse(notices);
         SysMessageBoxVo box = new SysMessageBoxVo();
-        box.setNoticeList(notices.stream().limit(20).map(this::toMessage).toList());
+        box.setNoticeList(notices.stream().limit(MESSAGE_BOX_LIMIT).map(this::toMessage).toList());
         return box;
     }
 
