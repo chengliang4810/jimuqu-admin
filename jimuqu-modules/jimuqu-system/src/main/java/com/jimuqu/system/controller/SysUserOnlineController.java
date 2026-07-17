@@ -5,6 +5,8 @@ import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.domain.model.LoginUser;
+import com.jimuqu.common.log.annotation.Log;
+import com.jimuqu.common.log.enums.BusinessType;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.common.web.core.BaseController;
@@ -13,6 +15,7 @@ import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Delete;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Mapping;
+import org.noear.solon.validation.annotation.NoRepeatSubmit;
 
 import java.util.List;
 import java.util.Objects;
@@ -58,6 +61,8 @@ public class SysUserOnlineController extends BaseController {
     @Delete
     @Mapping("/{tokenId}")
     @SaCheckPermission("monitor:online:forceLogout")
+    @Log(title = "在线用户", businessType = BusinessType.FORCE)
+    @NoRepeatSubmit
     public R<Void> forceLogout(String tokenId) {
         kickout(tokenId);
         return R.ok();
@@ -68,6 +73,8 @@ public class SysUserOnlineController extends BaseController {
      */
     @Delete
     @Mapping("/myself/{tokenId}")
+    @Log(title = "在线设备", businessType = BusinessType.FORCE)
+    @NoRepeatSubmit
     public R<Void> removeMyself(String tokenId) {
         if (ownsToken(StpUtil.getTokenValueListByLoginId(StpUtil.getLoginIdAsString()), tokenId)) {
             kickout(tokenId);
