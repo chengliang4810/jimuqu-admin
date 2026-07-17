@@ -10,9 +10,19 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.noear.solon.test.SolonTest;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.WebSocket;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -239,6 +249,47 @@ public class ConfigurationMessagingHttpContractTest {
 
         api.putJson("/system/notice", noticePayload(noticeId, title + "-改"), adminToken).expectSuccess();
         api.delete("/system/notice/" + noticeId, adminToken).expectSuccess();
+    }
+
+    @Test
+    @Order(6)
+    void exchangesWebSocketMessages() throws Exception {
+        int port = Integer.parseInt(System.getenv("JIMU_TEST_SERVER_PORT"));
+        URI uri = URI.create("ws://127.0.0.1:" + port + "/resource/websocket?clientid=http-contract&Authorization="
+                + URLEncoder.encode("Bearer " + adminToken, StandardCharsets.UTF_8));
+        LinkedBlockingQueue<String> messages = new LinkedBlockingQueue<>();
+        CompletableFuture<Void> closed = new CompletableFuture<>();
+        WebSocket.Listener listener = new WebSocket.Listener() {
+            private final StringBuilder text = new StringBuilder();
+
+            @Override
+            public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
+                text.append(data);
+                if (last) {
+                    messages.add(text.toString());
+                    text.setLength(0);
+                }
+                webSocket.request(1);
+                return null;
+            }
+
+            @Override
+            public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+                closed.complete(null);
+                return null;
+            }
+        };
+
+        HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+        WebSocket socket = client.newWebSocketBuilder().connectTimeout(Duration.ofSeconds(10))
+                .buildAsync(uri, listener).get(10, TimeUnit.SECONDS);
+        socket.request(1);
+        socket.sendText("{\"type\":\"ping\"}", true).get(10, TimeUnit.SECONDS);
+        assertEquals("{\"type\":\"pong\"}", messages.poll(10, TimeUnit.SECONDS));
+        socket.sendText("http-contract", true).get(10, TimeUnit.SECONDS);
+        assertEquals("我收到了：http-contract", messages.poll(10, TimeUnit.SECONDS));
+        socket.sendClose(WebSocket.NORMAL_CLOSURE, "done").get(10, TimeUnit.SECONDS);
+        closed.get(10, TimeUnit.SECONDS);
     }
 
     private Map<String, Object> dictTypePayload(Long id, String key, String name) {
