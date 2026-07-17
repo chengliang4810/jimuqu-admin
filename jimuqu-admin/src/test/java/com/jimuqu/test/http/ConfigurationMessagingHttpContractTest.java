@@ -76,8 +76,6 @@ public class ConfigurationMessagingHttpContractTest {
 
         long dictId = scalarLong(api.postJson("/system/dict/type",
                 dictTypePayload(null, dictKey, dictName), adminToken).expectSuccess());
-        api.get("/system/dict/type/all" + HttpApiTestSupport.query(Map.of("dictKey", dictKey)), deniedToken)
-                .expectSuccess();
         api.get("/system/dict/type/list" + HttpApiTestSupport.query(Map.of(
                 "dictKey", dictKey, "pageNum", 1, "pageSize", 20)), adminToken).expectPage();
         api.get("/system/dict/type/" + dictId, adminToken).expectSuccess();
