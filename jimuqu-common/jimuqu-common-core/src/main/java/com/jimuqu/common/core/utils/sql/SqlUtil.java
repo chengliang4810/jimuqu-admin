@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * sql操作工具类
  *
- * @author ruoyi
+ * @author jimuqu
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SqlUtil {

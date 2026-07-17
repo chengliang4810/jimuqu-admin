@@ -1,5 +1,6 @@
 package com.jimuqu.system.domain.vo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import cn.xbatis.db.annotations.ResultEntity;
 import com.jimuqu.system.domain.SysMenu;
 import io.github.linpeilie.annotations.AutoMapper;
@@ -28,6 +29,7 @@ public class SysMenuVo implements Serializable {
     /**
      * 菜单ID
      */
+    @JsonProperty("menuId")
     private Long id;
     /**
      * 父菜单ID
@@ -52,6 +54,7 @@ public class SysMenuVo implements Serializable {
     /**
      * 路由参数
      */
+    @JsonProperty("query")
     private String queryParam;
     /**
      * 是否为外链（0是 1否）

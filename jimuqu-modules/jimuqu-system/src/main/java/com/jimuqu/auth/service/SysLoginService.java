@@ -79,8 +79,6 @@ public class SysLoginService {
         logininforEvent.setUsername(username);
         logininforEvent.setStatus(status);
         logininforEvent.setMessage(message);
-        // TODO getRequest
-        // logininforEvent.setRequest(ServletUtils.getRequest());
         EventBus.publish(logininforEvent);
     }
 
@@ -114,8 +112,6 @@ public class SysLoginService {
         sysUser.setLoginIp(ip);
         sysUser.setLoginDate(DateUtil.getNowDate());
         sysUser.setUpdateBy(userId);
-        //todo
-        // DataPermissionHelper.ignore(() -> userMapper.updateById(sysUser));
         userMapper.update(sysUser);
     }
 
@@ -137,7 +133,7 @@ public class SysLoginService {
         if (supplier.get()) {
             // 错误次数递增
             errorNumber++;
-            cacheService.store(errorKey, errorNumber, lockTime * 1000 * 60 * 60);
+            cacheService.store(errorKey, errorNumber, lockTime * 60);
             // 达到规定错误次数 则锁定登录
             if (errorNumber >= maxRetryCount) {
                 recordLogininfor(username, loginFail, StrUtil.format(loginType.getRetryLimitExceed(), maxRetryCount, lockTime));

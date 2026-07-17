@@ -1,8 +1,10 @@
 package com.jimuqu.common.satoken.config;
 
-import cn.dev33.satoken.dao.SaTokenDaoForRedisson;
+import cn.dev33.satoken.dao.SaTokenDao;
 import cn.dev33.satoken.stp.StpInterface;
+import com.jimuqu.common.satoken.core.PrefixedSaTokenDaoForRedisson;
 import com.jimuqu.common.satoken.core.SaPermissionImpl;
+import org.noear.solon.Solon;
 import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Condition;
 import org.noear.solon.annotation.Configuration;
@@ -28,8 +30,9 @@ public class SaTokenConfig {
      */
     @Bean
     @Condition(onBean = RedissonCacheService.class)
-    public SaTokenDaoForRedisson saTokenDaoForRedissonInit(@Inject RedissonCacheService redissonCacheService) {
-        return new SaTokenDaoForRedisson(redissonCacheService.client());
+    public SaTokenDao saTokenDaoForRedissonInit(@Inject RedissonCacheService redissonCacheService) {
+        String keyHeader = Solon.cfg().get("jimuqu.cache.keyHeader", "");
+        return new PrefixedSaTokenDaoForRedisson(redissonCacheService.client(), keyHeader);
     }
 
 }

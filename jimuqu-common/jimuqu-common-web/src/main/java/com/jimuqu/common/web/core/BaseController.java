@@ -79,7 +79,7 @@ public class BaseController implements Render {
                 if (obj instanceof ServiceException exception) {
                     obj = R.fail(exception.getCode(), exception.getMessage());
                 } else if (obj instanceof ValidatorException validatorException) {
-                    obj = R.fail(R.FAIL, "验证异常: " + validatorException.getMessage());
+                    obj = R.fail(400, "验证异常: " + validatorException.getMessage());
                 } else {
                     // 非手动校验或抛出的ServiceException
                     obj = R.fail(StrUtil.format("服务端异常, 请联系管理员, 异常信息: [{}]", err.getMessage()));

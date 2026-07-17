@@ -68,6 +68,11 @@ public interface SysRoleService {
     List<SysRoleVo> selectRoleAll();
 
     /**
+     * 根据角色ID集合查询正常角色。
+     */
+    List<SysRoleVo> selectRoleByIds(Collection<Long> roleIds);
+
+    /**
      * 根据用户ID获取角色选择框列表
      *
      * @param userId 用户ID
@@ -145,6 +150,11 @@ public interface SysRoleService {
      * @return 结果
      */
     int authDataScope(SysRoleBo bo);
+
+    /**
+     * 修改角色菜单权限和数据权限。
+     */
+    int updateRolePermission(SysRoleBo bo);
 
     /**
      * 批量删除代码生成模板信息

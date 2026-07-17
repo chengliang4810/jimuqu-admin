@@ -30,6 +30,8 @@ public class SysDictDataQuery implements Serializable, ObjectConditionLifeCycle 
      */
     @Condition(value = EQ)
     private Long id;
+    @Condition(value = EQ, property = "id")
+    private Long dictCode;
     /**
      * 父级ID
      */
@@ -55,6 +57,8 @@ public class SysDictDataQuery implements Serializable, ObjectConditionLifeCycle 
      */
     @Condition(value = EQ)
     private String dictTypeKey;
+    @Condition(value = EQ, property = "dictTypeKey")
+    private String dictType;
     /**
      * 样式属性（其他样式扩展）
      */

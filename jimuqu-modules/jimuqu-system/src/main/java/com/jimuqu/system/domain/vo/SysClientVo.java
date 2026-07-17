@@ -1,6 +1,7 @@
 package com.jimuqu.system.domain.vo;
 
 import cn.xbatis.db.annotations.ResultEntity;
+import cn.idev.excel.annotation.ExcelIgnore;
 import com.jimuqu.system.domain.SysClient;
 import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
@@ -9,6 +10,7 @@ import lombok.experimental.FieldNameConstants;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 授权管理对象 sys_client视图对象
@@ -42,6 +44,11 @@ public class SysClientVo implements Serializable {
      */
     private String clientSecret;
     /**
+     * 授权类型列表
+     */
+    @ExcelIgnore
+    private List<String> grantTypeList;
+    /**
      * 授权类型
      */
     private String grantType;
@@ -49,6 +56,24 @@ public class SysClientVo implements Serializable {
      * 设备类型
      */
     private String deviceType;
+    /**
+     * 允许访问路径
+     */
+    private String accessPath;
+    /**
+     * 允许访问路径列表
+     */
+    @ExcelIgnore
+    private List<String> accessPathList;
+    /**
+     * IP白名单
+     */
+    private String ipWhitelist;
+    /**
+     * IP白名单列表
+     */
+    @ExcelIgnore
+    private List<String> ipWhitelistList;
     /**
      * token活跃超时时间
      */

@@ -1,5 +1,6 @@
 package com.jimuqu.system.domain.vo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import cn.xbatis.db.annotations.ResultEntity;
 import com.jimuqu.system.domain.SysConfig;
 import io.github.linpeilie.annotations.AutoMapper;
@@ -28,6 +29,7 @@ public class SysConfigVo implements Serializable {
     /**
      * 参数主键
      */
+    @JsonProperty("configId")
     private Long id;
     /**
      * 参数名称

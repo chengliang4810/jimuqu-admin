@@ -3,7 +3,7 @@ package com.jimuqu.common.core.utils.file;
 /**
  * 媒体类型工具类
  *
- * @author ruoyi
+ * @author jimuqu
  */
 public class MimeTypeUtil {
     public static final String IMAGE_PNG = "image/png";

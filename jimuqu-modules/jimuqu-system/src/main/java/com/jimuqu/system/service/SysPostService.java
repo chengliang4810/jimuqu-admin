@@ -43,6 +43,11 @@ public interface SysPostService {
     List<Long> selectPostListByUserId(Long userId);
 
     /**
+     * 根据岗位ID集合查询正常岗位。
+     */
+    List<SysPostVo> selectPostByIds(Collection<Long> postIds);
+
+    /**
      * 校验岗位名称
      *
      * @param post 岗位信息
@@ -65,6 +70,11 @@ public interface SysPostService {
      * @return 结果
      */
     int countUserPostById(Long postId);
+
+    /**
+     * 统计部门下的岗位数。
+     */
+    long countPostByDeptId(Long deptId);
 
    /**
      * 查询岗位信息列表

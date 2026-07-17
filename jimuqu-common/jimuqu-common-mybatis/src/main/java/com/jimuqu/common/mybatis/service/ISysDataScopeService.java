@@ -1,5 +1,7 @@
 package com.jimuqu.common.mybatis.service;
 
+import com.jimuqu.common.mybatis.model.DataScopeRule;
+
 import java.util.List;
 
 /**
@@ -12,6 +14,11 @@ import java.util.List;
  * @version 1.0
  */
 public interface ISysDataScopeService {
+
+    /**
+     * 聚合用户所有启用角色的数据范围。任何计算异常均返回拒绝规则。
+     */
+    DataScopeRule resolveUserDataScope(Long userId);
 
     /**
      * 获取角色自定义权限部门ID列表
@@ -45,5 +52,10 @@ public interface ISysDataScopeService {
      * @return 是否有权限
      */
     boolean checkUserDataScope(Long userId, Long deptId);
+
+    /**
+     * 检查一条同时具有用户和部门归属的数据。
+     */
+    boolean checkUserDataScope(Long userId, Long recordUserId, Long deptId);
 
 }

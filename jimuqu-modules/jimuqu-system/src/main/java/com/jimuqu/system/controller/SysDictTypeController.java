@@ -2,6 +2,8 @@ package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.jimuqu.common.core.checker.Assert;
+import com.jimuqu.common.core.domain.R;
+import com.jimuqu.common.excel.utils.ExcelUtil;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
 import com.jimuqu.common.log.annotation.Log;
@@ -15,9 +17,13 @@ import com.jimuqu.system.domain.query.SysDictTypeQuery;
 import com.jimuqu.system.service.SysDictTypeService;
 import lombok.RequiredArgsConstructor;
 import org.noear.solon.annotation.Controller;
+import org.noear.solon.annotation.Body;
+import org.noear.solon.annotation.Delete;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Mapping;
 import org.noear.solon.annotation.Post;
+import org.noear.solon.annotation.Put;
+import org.noear.solon.core.handle.DownloadedFile;
 import org.noear.solon.validation.annotation.NoRepeatSubmit;
 import org.noear.solon.validation.annotation.NotEmpty;
 import org.noear.solon.validation.annotation.NotNull;
@@ -31,7 +37,6 @@ import java.util.List;
  * @author chengliang4810
  * @since 2025-05-27
  */
-@Post
 @Controller
 @RequiredArgsConstructor
 @Mapping("/system/dict/type")
@@ -74,11 +79,13 @@ public class SysDictTypeController extends BaseController {
     /**
      * 新增字典类型
      */
-    @Mapping("/add")
+    @Post
+    @Mapping
     @NoRepeatSubmit
     @SaCheckPermission("system:dict:add")
     @Log(title = "新增字典类型", businessType = BusinessType.ADD)
-    public Long add(@Validated(AddGroup.class) SysDictTypeBo bo) {
+    public Long add(@Body @Validated(AddGroup.class) SysDictTypeBo bo) {
+        normalizeBellFields(bo);
         boolean result = sysDictTypeService.insertByBo(bo);
         Assert.isTrue(result, "新增字典类型失败");
         return bo.getDictId();
@@ -88,10 +95,12 @@ public class SysDictTypeController extends BaseController {
      * 更新字典类型
      */
     @NoRepeatSubmit
-    @Mapping("/update")
-    @SaCheckPermission("system:dict:update")
+    @Put
+    @Mapping
+    @SaCheckPermission("system:dict:edit")
     @Log(title = "更新字典类型", businessType = BusinessType.UPDATE)
-    public void edit(@Validated(UpdateGroup.class) SysDictTypeBo bo) {
+    public void edit(@Body @Validated(UpdateGroup.class) SysDictTypeBo bo) {
+        normalizeBellFields(bo);
         boolean result = sysDictTypeService.updateByBo(bo);
         Assert.isTrue(result, "更新字典类型失败");
     }
@@ -99,13 +108,38 @@ public class SysDictTypeController extends BaseController {
     /**
      * 删除字典类型
      */
-    @Mapping("/delete/{ids}")
-    @SaCheckPermission("system:dict:delete")
+    @Delete
+    @Mapping("/{ids}")
+    @SaCheckPermission("system:dict:remove")
     @Log(title = "删除字典类型", businessType = BusinessType.DELETE)
     public Integer delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
         Integer num = sysDictTypeService.deleteByIds(ids);
         Assert.gtZero(num, "删除字典类型失败");
         return num;
+    }
+
+    @Get
+    @Mapping("/optionselect")
+    public List<SysDictTypeVo> optionselect() {
+        return sysDictTypeService.queryList(new SysDictTypeQuery());
+    }
+
+    @Post
+    @Mapping("/export")
+    @SaCheckPermission("system:dict:export")
+    public DownloadedFile export(SysDictTypeQuery query) {
+        return ExcelUtil.exportExcel(sysDictTypeService.queryList(query), "字典类型", SysDictTypeVo.class);
+    }
+
+    @Delete
+    @Mapping("/refreshCache")
+    public R<Void> refreshCache() {
+        return R.ok();
+    }
+
+    private void normalizeBellFields(SysDictTypeBo bo) {
+        bo.setDictKey(bo.getDictType());
+        bo.setDictType("L");
     }
 
 }

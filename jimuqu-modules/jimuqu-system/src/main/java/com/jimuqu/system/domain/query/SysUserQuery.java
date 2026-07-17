@@ -37,6 +37,9 @@ public class SysUserQuery implements Serializable, ObjectConditionLifeCycle {
      */
     @Ignore
     private Long deptId;
+    /** 角色用户分配查询条件。 */
+    @Ignore
+    private Long roleId;
     /**
      * 用户账号
      */
@@ -62,6 +65,11 @@ public class SysUserQuery implements Serializable, ObjectConditionLifeCycle {
      */
     @Condition(value = EQ)
     private String phonenumber;
+    /**
+     * Bell 前端使用的手机号查询参数。
+     */
+    @Ignore
+    private String phoneNumber;
     /**
      * 用户性别（0男 1女 2未知）
      */
@@ -108,7 +116,9 @@ public class SysUserQuery implements Serializable, ObjectConditionLifeCycle {
      */
     @Override
     public void beforeBuildCondition() {
-        
+        if (phonenumber == null || phonenumber.isBlank()) {
+            phonenumber = phoneNumber;
+        }
     }
 
 }

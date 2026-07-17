@@ -12,6 +12,7 @@ import com.jimuqu.system.domain.SysFile;
 import com.jimuqu.system.domain.SysFilePart;
 import com.jimuqu.system.domain.query.SysFileQuery;
 import com.jimuqu.system.domain.vo.SysFileVo;
+import com.jimuqu.system.domain.vo.SysOssVo;
 import com.jimuqu.system.mapper.SysFileMapper;
 import com.jimuqu.system.mapper.SysFilePartMapper;
 import com.jimuqu.system.service.SysFileService;
@@ -19,10 +20,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.dromara.x.file.storage.core.FileInfo;
+import org.dromara.x.file.storage.core.FileStorageService;
 import org.dromara.x.file.storage.core.hash.HashInfo;
 import org.dromara.x.file.storage.core.recorder.FileRecorder;
 import org.dromara.x.file.storage.core.upload.FilePartInfo;
 import org.noear.solon.annotation.Component;
+import org.noear.solon.Solon;
+import org.noear.solon.core.handle.DownloadedFile;
 
 import java.util.Collection;
 import java.util.List;
@@ -36,7 +40,7 @@ import java.util.Map;
  * @since 2025-06-24
  */
 @Slf4j
-@Component
+@Component(typed = true)
 @RequiredArgsConstructor
 public class SysFileServiceImpl implements SysFileService, FileRecorder {
 
@@ -88,6 +92,65 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
     @Override
     public Integer deleteByIds(Collection<String> ids) {
         return sysFileMapper.deleteByIds(ids);
+    }
+
+    @Override
+    public Page<SysOssVo> queryOssPageList(SysFileQuery query, PageQuery pageQuery) {
+        Page<SysFileVo> page = queryPageList(query, pageQuery);
+        return Page.of(page.getRows().stream().map(this::toOssVo).toList(), page.getTotal());
+    }
+
+    @Override
+    public List<SysOssVo> queryOssByIds(Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return QueryChain.of(sysFileMapper)
+                .where(where -> where.in(SysFile::getId, ids))
+                .returnType(SysFileVo.class)
+                .list()
+                .stream()
+                .map(this::toOssVo)
+                .toList();
+    }
+
+    @Override
+    public DownloadedFile download(String id) {
+        SysFile file = sysFileMapper.getById(id);
+        if (file == null) {
+            throw new IllegalArgumentException("文件数据不存在");
+        }
+        byte[] content = fileStorageService().download(toFileInfo(file)).bytes();
+        String contentType = StrUtil.blankToDefault(file.getContentType(), "application/octet-stream");
+        return new DownloadedFile(contentType, content, file.getOriginalFilename()).asAttachment(true);
+    }
+
+    @Override
+    public boolean deleteOssByIds(Collection<String> ids) {
+        boolean deleted = false;
+        for (String id : ids) {
+            SysFile file = sysFileMapper.getById(id);
+            if (file != null) {
+                deleted |= fileStorageService().delete(toFileInfo(file));
+            }
+        }
+        return deleted;
+    }
+
+    private FileStorageService fileStorageService() {
+        return Solon.context().getBean(FileStorageService.class);
+    }
+
+    private SysOssVo toOssVo(SysFileVo file) {
+        return new SysOssVo()
+                .setOssId(file.getId())
+                .setFileName(file.getFilename())
+                .setOriginalName(file.getOriginalFilename())
+                .setFileSuffix(file.getExt())
+                .setUrl(file.getUrl())
+                .setCreateTime(file.getCreateTime())
+                .setCreateBy(file.getCreateBy())
+                .setService(file.getPlatform());
     }
 
 
@@ -210,6 +273,9 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
      * 将 SysFileDetail 转为 FileInfo
      */
     public FileInfo toFileInfo(SysFile detail) {
+        if (detail == null) {
+            return null;
+        }
         FileInfo info = BeanUtil.copyProperties(
                 detail, FileInfo.class, "metadata", "userMetadata", "thMetadata", "thUserMetadata", "attr", "hashInfo");
 

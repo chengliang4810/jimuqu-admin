@@ -18,8 +18,6 @@
 
     <modules>
         <module>jimuqu-system</module>
-        <module>jimuqu-generator</module>
-        <module>jimuqu-ai</module>
     </modules>
 
 </project>

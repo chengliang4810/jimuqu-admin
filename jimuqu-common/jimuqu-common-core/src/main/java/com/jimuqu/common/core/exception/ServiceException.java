@@ -11,7 +11,7 @@ import java.io.Serial;
 /**
  * 业务异常
  *
- * @author ruoyi
+ * @author jimuqu
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

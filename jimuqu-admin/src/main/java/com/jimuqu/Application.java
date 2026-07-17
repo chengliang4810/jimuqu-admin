@@ -1,6 +1,7 @@
 package com.jimuqu;
 
 import com.jimuqu.common.ratelimit.annotation.RateLimit;
+import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.ratelimit.enums.RateLimitAlgorithm;
 import com.jimuqu.common.ratelimit.enums.RateLimitType;
 import com.jimuqu.domain.SystemVersion;
@@ -41,11 +42,11 @@ public class Application {
             algorithm = RateLimitAlgorithm.FIXED_WINDOW,
             message = "请求过于频繁"
     )
-    public SystemVersion version() {
-        return SystemVersion.builder()
-                .name("LayJava-Admin开源管理系统")
+    public R<SystemVersion> version() {
+        return R.ok(SystemVersion.builder()
+                .name("Jimuqu Admin")
                 .version(Solon.cfg().get("solon.app.version"))
-                .build();
+                .build());
     }
 
 }

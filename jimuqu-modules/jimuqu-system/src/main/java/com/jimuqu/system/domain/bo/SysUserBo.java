@@ -1,5 +1,6 @@
 package com.jimuqu.system.domain.bo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
@@ -12,6 +13,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.noear.solon.validation.annotation.*;
+import org.noear.snack4.annotation.ONodeAttr;
 
 import java.util.Date;
 import java.util.List;
@@ -33,6 +35,8 @@ public class SysUserBo extends BoBaseEntity {
      * 用户ID
      */
     @NotNull(message = "用户ID不能为空", groups = { UpdateGroup.class })
+    @JsonProperty("userId")
+    @ONodeAttr(name = "userId")
     private Long id;
     /**
      * 部门ID
@@ -66,6 +70,8 @@ public class SysUserBo extends BoBaseEntity {
     /**
      * 手机号码
      */
+    @JsonProperty("phoneNumber")
+    @ONodeAttr(name = "phoneNumber")
     private String phonenumber;
     /**
      * 用户性别（0男 1女 2未知）

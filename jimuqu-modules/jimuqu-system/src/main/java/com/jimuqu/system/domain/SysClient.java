@@ -63,6 +63,16 @@ public class SysClient extends BaseEntity {
     @AutoColumn(comment = "设备类型", length = 255)
     private String deviceType;
     /**
+     * 允许访问路径
+     */
+    @AutoColumn(comment = "允许访问路径", length = 2000)
+    private String accessPath;
+    /**
+     * IP白名单
+     */
+    @AutoColumn(comment = "IP白名单", length = 2000)
+    private String ipWhitelist;
+    /**
      * token活跃超时时间
      */
     @AutoColumn(comment = "token活跃超时时间", defaultValue = "-1")

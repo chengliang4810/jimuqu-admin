@@ -32,10 +32,10 @@ public class NoRepeatSubmitCheckerImpl implements NoRepeatSubmitChecker {
         // 唯一值（没有消息头则使用请求地址）
         String submitKey = StrUtil.trimToEmpty(ctx.header(SaManager.getConfig().getTokenName()));
 
-        submitKey = SecureUtil.md5(submitKey + ":" + submitHash);
+        submitKey = SecureUtil.md5(submitKey + ":" + submitHash + ":" + requestBody(ctx));
 
         // 唯一标识（指定key + url + 消息头）
-        String cacheRepeatKey = GlobalConstants.REPEAT_SUBMIT_KEY + ctx.url() + submitKey;
+        String cacheRepeatKey = GlobalConstants.REPEAT_SUBMIT_KEY + ctx.method() + ":" + ctx.url() + submitKey;
         String value = cacheService.get(cacheRepeatKey, String.class);
 
         // 存在相同请求
@@ -44,6 +44,15 @@ public class NoRepeatSubmitCheckerImpl implements NoRepeatSubmitChecker {
             return true;
         }
         return false;
+    }
+
+    private String requestBody(Context ctx) {
+        try {
+            return StrUtil.trimToEmpty(ctx.body());
+        } catch (Exception e) {
+            log.warn("读取请求体失败，防重复提交校验退回框架摘要: {}", e.getMessage());
+            return "";
+        }
     }
 
 }

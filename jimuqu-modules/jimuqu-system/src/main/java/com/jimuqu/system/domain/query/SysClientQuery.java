@@ -56,6 +56,16 @@ public class SysClientQuery implements Serializable, ObjectConditionLifeCycle {
     @Condition(value = EQ)
     private String deviceType;
     /**
+     * 允许访问路径
+     */
+    @Condition(value = LIKE)
+    private String accessPath;
+    /**
+     * IP白名单
+     */
+    @Condition(value = LIKE)
+    private String ipWhitelist;
+    /**
      * token活跃超时时间
      */
     @Condition(value = EQ)

@@ -3,89 +3,106 @@ package com.jimuqu.system.mapper;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.mybatis.core.mapper.BaseMapperPlus;
-import com.jimuqu.system.domain.*;
+import com.jimuqu.system.domain.SysMenu;
+import com.jimuqu.system.domain.SysRole;
+import com.jimuqu.system.domain.SysRoleMenu;
+import com.jimuqu.system.domain.SysUserRole;
+import com.jimuqu.system.domain.query.SysMenuQuery;
 import com.jimuqu.system.domain.vo.SysMenuVo;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
- * 菜单权限数据层
+ * 菜单权限数据层。
+ *
  * @author chengliang4810
- * @since 2025-06-06
  */
 @Mapper
 public interface SysMenuMapper extends BaseMapperPlus<SysMenu, SysMenuVo> {
 
-    /**
-     * 根据用户所有权限
-     *
-     * @return 权限列表
-     */
-    List<String> selectMenuPerms();
-
-
-    /**
-     * 根据用户ID查询权限
-     *
-     * @param userId 用户ID
-     * @return 权限列表
-     */
-    List<String> selectMenuPermsByUserId(Long userId);
-
-    /**
-     * 根据角色ID查询权限
-     *
-     * @param roleId 角色ID
-     * @return 权限列表
-     */
-    List<String> selectMenuPermsByRoleId(Long roleId);
-
-    /**
-     * 根据用户ID查询菜单
-     *
-     * @return 菜单列表
-     */
     default List<SysMenu> selectMenuAll() {
         return QueryChain.of(this)
-                .from(SysMenu.class)
                 .in(SysMenu::getMenuType, UserConstants.TYPE_DIR, UserConstants.TYPE_MENU)
                 .eq(SysMenu::getStatus, UserConstants.MENU_NORMAL)
                 .orderBy(SysMenu::getParentId, SysMenu::getOrderNum)
                 .list();
     }
 
-    /**
-     * 根据用户ID查询菜单
-     *
-     * @param userId 用户ID
-     * @return 菜单列表
-     */
-    default List<SysMenu> selectMenuByUserId(Long userId){
+    default List<SysMenu> selectMenuByUserId(Long userId) {
         return QueryChain.of(this)
                 .selectDistinct()
                 .select(SysMenu.class)
-                .from(SysMenu.class)
                 .leftJoin(SysMenu::getId, SysRoleMenu::getMenuId)
                 .leftJoin(SysRoleMenu::getRoleId, SysUserRole::getRoleId)
-                .leftJoin(SysRole::getId, SysUserRole::getRoleId)
-                .leftJoin(SysUserRole::getUserId, SysUser::getId)
+                .leftJoin(SysRoleMenu::getRoleId, SysRole::getId)
+                .eq(SysUserRole::getUserId, userId)
                 .in(SysMenu::getMenuType, UserConstants.TYPE_DIR, UserConstants.TYPE_MENU)
                 .eq(SysMenu::getStatus, UserConstants.MENU_NORMAL)
                 .eq(SysRole::getStatus, UserConstants.ROLE_NORMAL)
-                .eq(SysUser::getId, userId)
+                .eq(SysRole::getDelFlag, "0")
                 .orderBy(SysMenu::getParentId, SysMenu::getOrderNum)
                 .list();
     }
 
-    /**
-     * 根据角色ID查询菜单树信息
-     *
-     * @param roleId            角色ID
-     * @param menuCheckStrictly 菜单树选择项是否关联显示
-     * @return 选中菜单列表
-     */
-    List<Long> selectMenuListByRoleId(@Param("roleId") Long roleId, @Param("menuCheckStrictly") boolean menuCheckStrictly);
+    default List<SysMenuVo> selectMenuListByUserId(Long userId, SysMenuQuery query) {
+        return QueryChain.of(this)
+                .selectDistinct()
+                .select(SysMenu.class)
+                .leftJoin(SysMenu::getId, SysRoleMenu::getMenuId)
+                .leftJoin(SysRoleMenu::getRoleId, SysUserRole::getRoleId)
+                .leftJoin(SysRoleMenu::getRoleId, SysRole::getId)
+                .eq(SysUserRole::getUserId, userId)
+                .eq(SysRole::getStatus, UserConstants.ROLE_NORMAL)
+                .eq(SysRole::getDelFlag, "0")
+                .where(query)
+                .orderBy(SysMenu::getParentId, SysMenu::getOrderNum)
+                .returnType(SysMenuVo.class)
+                .list();
+    }
 
+    default List<String> selectMenuPermsByUserId(Long userId) {
+        return QueryChain.of(this)
+                .selectDistinct()
+                .select(SysMenu::getPerms)
+                .leftJoin(SysMenu::getId, SysRoleMenu::getMenuId)
+                .leftJoin(SysRoleMenu::getRoleId, SysUserRole::getRoleId)
+                .leftJoin(SysRoleMenu::getRoleId, SysRole::getId)
+                .eq(SysUserRole::getUserId, userId)
+                .eq(SysMenu::getStatus, UserConstants.MENU_NORMAL)
+                .eq(SysRole::getStatus, UserConstants.ROLE_NORMAL)
+                .eq(SysRole::getDelFlag, "0")
+                .returnType(String.class)
+                .list();
+    }
+
+    default List<String> selectMenuPermsByRoleId(Long roleId) {
+        return QueryChain.of(this)
+                .selectDistinct()
+                .select(SysMenu::getPerms)
+                .leftJoin(SysMenu::getId, SysRoleMenu::getMenuId)
+                .eq(SysRoleMenu::getRoleId, roleId)
+                .eq(SysMenu::getStatus, UserConstants.MENU_NORMAL)
+                .returnType(String.class)
+                .list();
+    }
+
+    default List<Long> selectMenuListByRoleId(Long roleId, boolean menuCheckStrictly) {
+        List<SysMenu> selected = QueryChain.of(this)
+                .select(SysMenu::getId, SysMenu::getParentId)
+                .leftJoin(SysMenu::getId, SysRoleMenu::getMenuId)
+                .eq(SysRoleMenu::getRoleId, roleId)
+                .orderBy(SysMenu::getParentId, SysMenu::getOrderNum)
+                .list();
+        Set<Long> selectedParentIds = new HashSet<>();
+        if (menuCheckStrictly) {
+            selected.stream().map(SysMenu::getParentId).forEach(selectedParentIds::add);
+        }
+        return selected.stream()
+                .map(SysMenu::getId)
+                .filter(id -> !selectedParentIds.contains(id))
+                .toList();
+    }
 }

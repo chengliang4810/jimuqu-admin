@@ -28,7 +28,6 @@ solon.config.add: "./app.yml"
 # 批量加载内部配置
 solon.config.load:
   - "config/*.yml"
-  - "jimuqu-ai.yml"
 
 # 记录器级别的配置示例
 solon.logging.logger:
@@ -89,14 +88,9 @@ auto-table:
   auto-build-database: true
   # update(默认)：系统启动时，会自动判断哪些表是新建的，哪些字段要新增修改，哪些索引/约束要新增删除等。
   mode: update
-  # 初始化数据配置
+  # 初始化数据由 Java/Xbatis 幂等事务服务写入，不加载 SQL 脚本。
   init-data:
-    # 是否开启初始化数据功能
-    enable: true
-    # 初始化数据文件名，默认是_init_.sql
-    default-init-file-name: jimuqu.sql
-    # 初始化数据文件路径
-    base-path: classpath:sql/{dialect}
+    enable: false
   # 记录表信息维护过程中执行的SQL
   recordSql:
     enable: true
@@ -111,7 +105,7 @@ auto-table:
 # OSS配置
 dromara:
   x-file-storage: #文件存储配置
-    default-platform: local-plus #默认使用的存储平台
+    default-platform: default # 默认使用的平台标识，对应下方 platform
     thumbnail-suffix: ".min.jpg" #缩略图后缀，例如【.min.jpg】【.png】
     enable-multipart-file-wrapper: false #是否启用多文件包装器
     enable-http-servlet-request-file-wrapper: false
@@ -141,22 +135,10 @@ dromara:
 #        #        domain: ?? # 访问域名，注意“/”结尾，例如：http://minio.abc.com/abc/
 #        base-path: dept/ # 基础路径
 
-gen:
-  # 作者
-  author: chengliang4810
-  # 默认生成包路径 system 需改成自己的模块名称 如 system monitor tool
-  packageName: com.jimuqu.system
-  # 自动去除表前缀，默认是false
-  autoRemovePre: false
-  # 表前缀（生成类名不会包含表前缀，多个用逗号分隔）
-  tablePrefix: sys_
-  # 使用的模版 vue
-  platform: vue
-
 --- # 默认/推荐使用sse推送
 sse:
   enabled: true
-  path: /resource/sse
+  path: /resource/message
   # 是否开启心跳，使用CDN情况下后端无消息会自动断开连接
   heartbeat: false
   # 心跳间隔 10S

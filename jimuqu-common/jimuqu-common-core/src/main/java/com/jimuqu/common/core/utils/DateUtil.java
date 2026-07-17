@@ -12,7 +12,7 @@ import java.util.Date;
 /**
  * 时间工具类
  *
- * @author ruoyi
+ * @author jimuqu
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DateUtil {

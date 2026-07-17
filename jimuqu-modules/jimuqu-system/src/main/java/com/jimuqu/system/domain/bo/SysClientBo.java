@@ -10,6 +10,8 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.noear.solon.validation.annotation.*;
 
+import java.util.List;
+
 /**
  * 授权管理对象 sys_client业务对象 sys_client
  *
@@ -30,7 +32,6 @@ public class SysClientBo extends BoBaseEntity {
     /**
      * 客户端id
      */
-    @NotBlank(message = "客户端id不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String clientId;
     /**
      * 客户端key
@@ -45,27 +46,40 @@ public class SysClientBo extends BoBaseEntity {
     /**
      * 授权类型
      */
-    @NotBlank(message = "授权类型不能为空", groups = { AddGroup.class, UpdateGroup.class })
+    private List<String> grantTypeList;
+
     private String grantType;
     /**
      * 设备类型
      */
-    @NotBlank(message = "设备类型不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String deviceType;
+    /**
+     * 允许访问路径
+     */
+    private String accessPath;
+    /**
+     * 允许访问路径列表
+     */
+    private List<String> accessPathList;
+    /**
+     * IP白名单
+     */
+    private String ipWhitelist;
+    /**
+     * IP白名单列表
+     */
+    private List<String> ipWhitelistList;
     /**
      * token活跃超时时间
      */
-    @NotNull(message = "token活跃超时时间不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private Long activeTimeout;
     /**
      * token固定超时时间
      */
-    @NotNull(message = "token固定超时时间不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private Long timeout;
     /**
      * 状态（0正常 1停用）
      */
-    @NotBlank(message = "状态（0正常 1停用）不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String status;
 
 }

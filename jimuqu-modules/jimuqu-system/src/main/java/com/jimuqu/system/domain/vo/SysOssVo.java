@@ -1,0 +1,29 @@
+package com.jimuqu.system.domain.vo;
+
+import lombok.Data;
+import lombok.experimental.Accessors;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Date;
+
+/**
+ * Bell OSS 文件视图。
+ */
+@Data
+@Accessors(chain = true)
+public class SysOssVo implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    private String ossId;
+    private String fileName;
+    private String originalName;
+    private String fileSuffix;
+    private String url;
+    private Date createTime;
+    private Long createBy;
+    private String createByName;
+    private String service;
+}

@@ -5,10 +5,7 @@ mybatis.jimuqu:
 #    - "com.jimuqu.**.domain.domain"
   mappers:       #支持包名 或 类名（大写开头 或 *）或 xml（.xml结尾）；支持目录 ** 或 * 占位符
     - "com.jimuqu.**.mapper.*Mapper"
-    - "classpath:mapper/**/*.xml"
   configuration: #扩展配置
     mapperVerifyEnabled: false #如果为 true，则要求所有 mapper 有 @Mapper 主解
     mapUnderscoreToCamelCase: true
     autoMappingBehavior: full #自动映射策略（NONE/PARTIAL/FULL）
-  interceptors: #配置拦截器
-    - "com.jimuqu.common.mybatis.interceptor.MybatisDataPermissionInterceptor"

@@ -1,6 +1,9 @@
 package com.jimuqu.system.runner;
 
+import com.jimuqu.system.service.SystemSeedService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.noear.solon.annotation.Component;
 import org.noear.solon.core.bean.LifecycleBean;
 
 /**
@@ -9,16 +12,16 @@ import org.noear.solon.core.bean.LifecycleBean;
  * @author Lion Li,chengliang4810
  */
 @Slf4j
-
+@Component
+@RequiredArgsConstructor
 public class SystemApplicationRunner implements LifecycleBean {
 
-//    @Inject
-//    private ISysOssConfigService ossConfigService;
-//
-//    @Override
-//    public void start() {
-//        ossConfigService.init();
-//        log.info("初始化OSS配置成功");
-//    }
+    private final SystemSeedService systemSeedService;
+
+    @Override
+    public void start() {
+        systemSeedService.initialize();
+        log.info("系统基础数据初始化完成");
+    }
 
 }

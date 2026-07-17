@@ -37,6 +37,7 @@ public class SysRegisterService {
     private CacheService cacheService;
     @Inject
     private SysUserMapper userMapper;
+    @Inject
     private CaptchaProperties captchaProperties;
 
     /**
@@ -48,7 +49,7 @@ public class SysRegisterService {
         // 校验用户类型是否存在
         String userType = UserType.getUserType(registerBody.getUserType()).getUserType();
 
-        boolean captchaEnabled = captchaProperties.getEnable();
+        boolean captchaEnabled = Boolean.TRUE.equals(captchaProperties.getEnable());
         // 验证码开关
         if (captchaEnabled) {
             validateCaptcha(username, registerBody.getCode(), registerBody.getUuid());
@@ -61,9 +62,7 @@ public class SysRegisterService {
 
 
         boolean exist = userMapper.exists(Where.create()
-                        .eq(SysUser::getUserName, sysUser.getUserName())
-                        .ne(SysUser::getId, sysUser.getId())
-        );
+                .eq(SysUser::getUserName, sysUser.getUserName()));
         if (exist) {
             throw new UserException("保存用户 {} 失败，注册账号已存在", username);
         }
@@ -108,8 +107,6 @@ public class SysRegisterService {
         logininforEvent.setUsername(username);
         logininforEvent.setStatus(status);
         logininforEvent.setMessage(message);
-        // TODO 待定Request参数
-        // logininforEvent.setRequest(ServletUtils.getRequest());
         EventBus.publish(logininforEvent);
     }
 

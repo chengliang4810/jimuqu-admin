@@ -3,7 +3,7 @@ package com.jimuqu.common.log.enums;
 /**
  * 业务操作类型
  *
- * @author ruoyi
+ * @author jimuqu
  */
 public enum BusinessType {
     /**

@@ -1,5 +1,6 @@
 package com.jimuqu.system.domain.vo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import cn.xbatis.db.annotations.Ignores;
 import cn.xbatis.db.annotations.ResultEntity;
 import com.jimuqu.system.domain.SysDept;
@@ -31,6 +32,7 @@ public class SysDeptVo implements Serializable {
     /**
      * 主键
      */
+    @JsonProperty("deptId")
     private Long id;
     /**
      * 父部门id

@@ -5,8 +5,10 @@ import com.jimuqu.common.core.sensitive.annotation.Sensitive;
 import com.jimuqu.common.core.sensitive.enums.SensitiveType;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.noear.snack4.annotation.ONodeAttr;
 
 import java.lang.reflect.Array;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.time.temporal.TemporalAccessor;
@@ -125,7 +127,7 @@ public class SensitiveUtil {
                     } else {
                         fieldValue = desensitizeObject(fieldValue, visited);
                     }
-                    result.put(field.getName(), fieldValue);
+                    result.put(serializedName(field), fieldValue);
                 } catch (IllegalAccessException ignored) {
                     // 已设置 accessible，极端安全策略下读不到字段时跳过该字段。
                 }
@@ -137,7 +139,52 @@ public class SensitiveUtil {
 
     private static boolean shouldSkip(Field field) {
         int modifiers = field.getModifiers();
-        return Modifier.isStatic(modifiers) || Modifier.isTransient(modifiers) || field.isSynthetic();
+        return Modifier.isStatic(modifiers)
+                || Modifier.isTransient(modifiers)
+                || field.isSynthetic()
+                || hasAnnotation(field, "com.fasterxml.jackson.annotation.JsonIgnore")
+                || hasIgnoredNodeAttr(field);
+    }
+
+    private static String serializedName(Field field) {
+        ONodeAttr nodeAttr = field.getAnnotation(ONodeAttr.class);
+        if (nodeAttr != null && !nodeAttr.name().isBlank()) {
+            return nodeAttr.name();
+        }
+        String jsonProperty = annotationStringValue(
+                field, "com.fasterxml.jackson.annotation.JsonProperty", "value");
+        if (jsonProperty != null && !jsonProperty.isBlank()) {
+            return jsonProperty;
+        }
+        return field.getName();
+    }
+
+    private static boolean hasIgnoredNodeAttr(Field field) {
+        ONodeAttr nodeAttr = field.getAnnotation(ONodeAttr.class);
+        return nodeAttr != null && nodeAttr.ignore();
+    }
+
+    private static boolean hasAnnotation(Field field, String annotationType) {
+        for (Annotation annotation : field.getDeclaredAnnotations()) {
+            if (annotation.annotationType().getName().equals(annotationType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String annotationStringValue(Field field, String annotationType, String attribute) {
+        for (Annotation annotation : field.getDeclaredAnnotations()) {
+            if (!annotation.annotationType().getName().equals(annotationType)) {
+                continue;
+            }
+            try {
+                return String.valueOf(annotation.annotationType().getMethod(attribute).invoke(annotation));
+            } catch (ReflectiveOperationException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private static boolean isSimpleValue(Class<?> type) {

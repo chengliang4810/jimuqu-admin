@@ -1,5 +1,6 @@
 package com.jimuqu.system.domain.bo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
 import com.jimuqu.common.mybatis.core.entity.BoBaseEntity;
@@ -9,6 +10,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.noear.solon.validation.annotation.*;
+import org.noear.snack4.annotation.ONodeAttr;
 
 /**
  * 参数配置业务对象 sys_config
@@ -26,6 +28,8 @@ public class SysConfigBo extends BoBaseEntity {
      * 参数主键
      */
     @NotNull(message = "参数主键不能为空", groups = { UpdateGroup.class })
+    @JsonProperty("configId")
+    @ONodeAttr(name = "configId")
     private Long id;
     /**
      * 参数名称

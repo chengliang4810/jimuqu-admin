@@ -73,7 +73,7 @@ public class EmailAuthStrategy implements AuthStrategyService {
 
         LoginVo loginVo = new LoginVo();
         loginVo.setAccessToken(StpUtil.getTokenValue());
-        loginVo.setExpireIn(StpUtil.getTokenTimeout());
+        loginVo.setExpireIn(Math.toIntExact(StpUtil.getTokenTimeout()));
         loginVo.setClientId(client.getClientId());
         return loginVo;
     }

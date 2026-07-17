@@ -125,6 +125,11 @@ public interface SysMenuService {
     boolean checkMenuExistRole(Long menuId);
 
     /**
+     * 查询菜单集合是否已分配给角色。
+     */
+    boolean checkMenuExistRole(List<Long> menuIds);
+
+    /**
      * 新增菜单权限
      *
      * @param bo 菜单权限业务对象

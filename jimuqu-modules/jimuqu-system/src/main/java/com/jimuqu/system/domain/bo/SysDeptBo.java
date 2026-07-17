@@ -1,5 +1,6 @@
 package com.jimuqu.system.domain.bo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
 import com.jimuqu.common.mybatis.core.entity.BoBaseEntity;
@@ -9,6 +10,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.noear.solon.validation.annotation.*;
+import org.noear.snack4.annotation.ONodeAttr;
 
 /**
  * 部门业务对象 sys_dept
@@ -26,6 +28,8 @@ public class SysDeptBo extends BoBaseEntity {
      * 主键
      */
     @NotNull(message = "主键不能为空", groups = { UpdateGroup.class })
+    @JsonProperty("deptId")
+    @ONodeAttr(name = "deptId")
     private Long id;
     /**
      * 父部门id

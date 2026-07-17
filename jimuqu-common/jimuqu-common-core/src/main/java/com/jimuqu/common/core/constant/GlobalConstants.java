@@ -10,7 +10,7 @@ public interface GlobalConstants {
     /**
      * 管理员角色权限
      */
-    String SUPER_ADMIN_ROLE_KEY = "admin";
+    String SUPER_ADMIN_ROLE_KEY = "superadmin";
 
     /**
      * 全局 redis key (业务无关的key)

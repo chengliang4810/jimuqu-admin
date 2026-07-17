@@ -3,10 +3,11 @@ package com.jimuqu.common.mybatis.core;
 import cn.xbatis.page.IPager;
 import cn.xbatis.page.PageUtil;
 import cn.xbatis.page.PagerField;
+import com.jimuqu.common.core.domain.PageResult;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import cn.hutool.v7.core.collection.ListUtil;
 
 import java.util.List;
 
@@ -20,8 +21,9 @@ import java.util.List;
  */
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @Accessors(chain = true)
-public class Page<T> implements IPager<T> {
+public class Page<T> extends PageResult<T> implements IPager<T> {
 
     /**
      * 页码
@@ -35,17 +37,8 @@ public class Page<T> implements IPager<T> {
      * 是否执行count查询
      */
     private transient Boolean executeCount = true;
-    /**
-     * 数据列表
-     */
-    private List<T> items = ListUtil.zero();
-    /**
-     * 数据总条数
-     */
-    private Integer total = 0;
-
-    public Page(List<T> items) {
-        this.setItems(items);
+    public Page(List<T> rows) {
+        this.setRows(rows);
     }
 
     public Page(int pageSize) {
@@ -62,19 +55,23 @@ public class Page<T> implements IPager<T> {
     }
 
     public static <T> Page<T> of(int total) {
-        return new Page<T>().setTotal(total);
+        Page<T> page = new Page<>();
+        page.setTotal(total);
+        return page;
     }
 
     public static <T> Page<T> of(int number, int size) {
         return new Page<T>(number, size);
     }
 
-    public static <T> Page<T> of(List<T> items) {
-        return new Page<T>(items);
+    public static <T> Page<T> of(List<T> rows) {
+        return new Page<T>(rows);
     }
 
-    public static <T> Page<T> of(List<T> items, Integer total) {
-        return new Page<T>(items).setTotal(total);
+    public static <T> Page<T> of(List<T> rows, Integer total) {
+        Page<T> page = new Page<>(rows);
+        page.setTotal(total);
+        return page;
     }
 
     public Integer getOffset() {
@@ -90,7 +87,7 @@ public class Page<T> implements IPager<T> {
         }
         if (PagerField.RESULTS == field) {
             //设置List结果
-            this.setItems((List<T>) value);
+            this.setRows((List<T>) value);
             return;
         }
         throw new RuntimeException("not support field: " + field);
@@ -112,7 +109,7 @@ public class Page<T> implements IPager<T> {
         }
         if (PagerField.RESULTS == field) {
             //返回每页条数 ,getSize改成你自己的方法或字段
-            return (V) this.getItems();
+            return (V) this.getRows();
         }
         throw new RuntimeException("not support field: " + field);
     }

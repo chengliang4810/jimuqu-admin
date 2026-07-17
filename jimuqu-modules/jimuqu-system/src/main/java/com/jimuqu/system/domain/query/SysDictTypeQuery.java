@@ -43,7 +43,7 @@ public class SysDictTypeQuery implements Serializable, ObjectConditionLifeCycle 
     /**
      * 字典类型 L 列表 T 树
      */
-    @Condition(value = EQ)
+    @Condition(value = EQ, property = "dictKey")
     private String dictType;
     /**
      * 备注

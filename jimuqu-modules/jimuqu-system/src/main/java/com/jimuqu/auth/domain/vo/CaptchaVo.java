@@ -1,6 +1,7 @@
 package com.jimuqu.auth.domain.vo;
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * 验证码信息
@@ -8,6 +9,7 @@ import lombok.Data;
  * @author Michelle.Chung
  */
 @Data
+@Accessors(chain = true)
 public class CaptchaVo {
 
     /**

@@ -1,0 +1,45 @@
+# Test infrastructure values are injected by script/test-fullstack.ps1.
+server.port: ${JIMU_TEST_SERVER_PORT}
+solon.threads.virtual.enabled: false
+
+solon.dataSources.jimuqu!:
+  class: "org.noear.solon.data.dynamicds.DynamicDataSource"
+  strict: true
+  default: "master"
+  master:
+    dataSourceClassName: "com.zaxxer.hikari.HikariDataSource"
+    driverClassName: com.p6spy.engine.spy.P6SpyDriver
+    jdbcUrl: jdbc:p6spy:mysql://${JIMU_TEST_MYSQL_HOST}:${JIMU_TEST_MYSQL_PORT}/${JIMU_TEST_MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&autoReconnect=false&rewriteBatchedStatements=true
+    username: ${JIMU_TEST_MYSQL_USER}
+    password: ${JIMU_TEST_MYSQL_PASSWORD}
+
+jimuqu.cache:
+  driverType: "redis"
+  server: "${JIMU_TEST_REDIS_HOST}:${JIMU_TEST_REDIS_PORT}"
+  db: ${JIMU_TEST_REDIS_DB}
+  keyHeader: ${JIMU_TEST_REDIS_PREFIX}
+
+jimuqu.ratelimit.enabled: false
+
+auto-table:
+  enable: true
+  auto-build-database: false
+  auto-drop-column: false
+  auto-drop-index: false
+  recordSql:
+    enable: false
+
+dromara:
+  x-file-storage:
+    default-platform: default
+    thumbnail-suffix: ".min.jpg"
+    enable-multipart-file-wrapper: false
+    enable-http-servlet-request-file-wrapper: false
+    local-plus:
+      - platform: default
+        enable-storage: true
+        enable-access: true
+        domain: ${JIMU_TEST_OSS_DOMAIN}
+        base-path: local-plus/
+        path-patterns: /file/
+        storage-path: "${JIMU_TEST_OSS_PATH}/"

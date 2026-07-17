@@ -5,6 +5,7 @@ import com.jimuqu.common.core.checker.Assert;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
+import com.jimuqu.common.excel.utils.ExcelUtil;
 import com.jimuqu.common.log.annotation.Log;
 import com.jimuqu.common.log.enums.BusinessType;
 import com.jimuqu.common.mybatis.core.Page;
@@ -15,6 +16,7 @@ import com.jimuqu.system.domain.bo.SysRoleBo;
 import com.jimuqu.system.domain.bo.SysUserBo;
 import com.jimuqu.system.domain.query.SysDeptQuery;
 import com.jimuqu.system.domain.query.SysRoleQuery;
+import com.jimuqu.system.domain.query.SysUserQuery;
 import com.jimuqu.system.domain.vo.DeptTreeSelectVo;
 import com.jimuqu.system.domain.vo.SysRoleVo;
 import com.jimuqu.system.domain.vo.SysUserVo;
@@ -22,21 +24,27 @@ import com.jimuqu.system.service.SysDeptService;
 import com.jimuqu.system.service.SysRoleService;
 import com.jimuqu.system.service.SysUserService;
 import lombok.RequiredArgsConstructor;
-import org.noear.solon.annotation.*;
+import org.noear.solon.annotation.Controller;
+import org.noear.solon.annotation.Body;
+import org.noear.solon.annotation.Delete;
+import org.noear.solon.annotation.Get;
+import org.noear.solon.annotation.Mapping;
+import org.noear.solon.annotation.Post;
+import org.noear.solon.annotation.Put;
+import org.noear.solon.core.handle.DownloadedFile;
 import org.noear.solon.validation.annotation.NoRepeatSubmit;
 import org.noear.solon.validation.annotation.NotEmpty;
 import org.noear.solon.validation.annotation.NotNull;
 import org.noear.solon.validation.annotation.Validated;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
- * 角色信息 Controller
+ * 角色信息 Controller。
  *
  * @author chengliang4810
- * @since 2025-06-05
  */
-@Post
 @Controller
 @RequiredArgsConstructor
 @Mapping("/system/role")
@@ -44,184 +52,158 @@ public class SysRoleController extends BaseController {
 
     private final SysUserService userService;
     private final SysDeptService deptService;
-    private final SysRoleService sysRoleService;
+    private final SysRoleService roleService;
 
-    /**
-     * 查询角色信息列表
-     */
     @Get
     @Mapping("/list")
     @SaCheckPermission("system:role:list")
     public Page<SysRoleVo> list(SysRoleQuery query, PageQuery pageQuery) {
-        return sysRoleService.queryPageList(query, pageQuery);
+        return roleService.queryPageList(query, pageQuery);
     }
 
-    /**
-     * 获取角色信息详细信息
-     *
-     * @param roleId 角色信息主键
-     */
+    @Post
+    @Mapping("/export")
+    @SaCheckPermission("system:role:export")
+    @Log(title = "角色管理", businessType = BusinessType.EXPORT)
+    public DownloadedFile export(SysRoleQuery query) {
+        return ExcelUtil.exportExcel(roleService.queryList(query), "角色数据", SysRoleVo.class);
+    }
+
     @Get
     @Mapping("/{roleId}")
     @SaCheckPermission("system:role:query")
-    public SysRoleVo getInfo(@NotNull(message = "角色信息主键不能为空") Long roleId) {
-        sysRoleService.checkRoleDataScope(roleId);
-        return sysRoleService.queryById(roleId);
+    public SysRoleVo getInfo(@NotNull(message = "角色ID不能为空") Long roleId) {
+        roleService.checkRoleDataScope(roleId);
+        return roleService.queryById(roleId);
     }
 
-    /**
-     * 获取角色选择框列表
-     */
-    @SaCheckPermission("system:role:query")
     @Get
     @Mapping("/optionselect")
-    public R<List<SysRoleVo>> optionselect() {
-        return R.ok(sysRoleService.selectRoleAll());
+    @SaCheckPermission("system:role:query")
+    public R<List<SysRoleVo>> optionselect(Long[] roleIds) {
+        return R.ok(roleService.selectRoleByIds(roleIds == null ? null : Arrays.asList(roleIds)));
     }
 
-    /**
-     * 查询已分配用户角色列表
-     */
-    @SaCheckPermission("system:role:list")
     @Get
     @Mapping("/authUser/allocatedList")
-    public Page<SysUserVo> allocatedList(SysUserBo user, PageQuery pageQuery) {
+    @SaCheckPermission("system:role:list")
+    public Page<SysUserVo> allocatedList(SysUserQuery user, PageQuery pageQuery) {
         return userService.selectAllocatedList(user, pageQuery);
     }
 
-    /**
-     * 查询未分配用户角色列表
-     */
-    @SaCheckPermission("system:role:list")
     @Get
     @Mapping("/authUser/unallocatedList")
-    public Page<SysUserVo> unallocatedList(SysUserBo user, PageQuery pageQuery) {
+    @SaCheckPermission("system:role:list")
+    public Page<SysUserVo> unallocatedList(SysUserQuery user, PageQuery pageQuery) {
         return userService.selectUnallocatedList(user, pageQuery);
     }
 
-    /**
-     * 新增角色信息
-     */
-    @Mapping("/add")
     @NoRepeatSubmit
+    @Post
+    @Mapping
     @SaCheckPermission("system:role:add")
-    @Log(title = "新增角色信息", businessType = BusinessType.ADD)
-    public R<Long> add(@Validated(AddGroup.class) SysRoleBo role) {
-        sysRoleService.checkRoleAllowed(role);
-        if (!sysRoleService.checkRoleNameUnique(role)) {
+    @Log(title = "角色管理", businessType = BusinessType.ADD)
+    public R<Void> add(@Validated(AddGroup.class) SysRoleBo role) {
+        roleService.checkRoleAllowed(role);
+        if (!roleService.checkRoleNameUnique(role)) {
             return R.fail("新增角色'" + role.getRoleName() + "'失败，角色名称已存在");
-        } else if (!sysRoleService.checkRoleKeyUnique(role)) {
+        }
+        if (!roleService.checkRoleKeyUnique(role)) {
             return R.fail("新增角色'" + role.getRoleName() + "'失败，角色权限已存在");
         }
-        boolean result = sysRoleService.insertByBo(role);
-        Assert.isTrue(result, "新增角色信息失败");
-        return R.ok(role.getId());
+        return toAjax(roleService.insertByBo(role));
     }
 
-    /**
-     * 更新角色信息
-     */
+    @Put
+    @Mapping
     @NoRepeatSubmit
-    @Mapping("/update")
-    @SaCheckPermission("system:role:update")
-    @Log(title = "更新角色信息", businessType = BusinessType.UPDATE)
-    public R<Void> edit(@Validated(UpdateGroup.class) SysRoleBo role) {
-        sysRoleService.checkRoleAllowed(role);
-        sysRoleService.checkRoleDataScope(role.getId());
-        if (!sysRoleService.checkRoleNameUnique(role)) {
+    @SaCheckPermission("system:role:edit")
+    @Log(title = "角色管理", businessType = BusinessType.UPDATE)
+    public R<Void> edit(@Body @Validated(UpdateGroup.class) SysRoleBo role) {
+        roleService.checkRoleAllowed(role);
+        roleService.checkRoleDataScope(role.getId());
+        if (!roleService.checkRoleNameUnique(role)) {
             return R.fail("修改角色'" + role.getRoleName() + "'失败，角色名称已存在");
-        } else if (!sysRoleService.checkRoleKeyUnique(role)) {
+        }
+        if (!roleService.checkRoleKeyUnique(role)) {
             return R.fail("修改角色'" + role.getRoleName() + "'失败，角色权限已存在");
         }
-
-        if (sysRoleService.updateByBo(role)) {
-            sysRoleService.cleanOnlineUserByRole(role.getId());
+        if (roleService.updateByBo(role)) {
+            roleService.cleanOnlineUserByRole(role.getId());
             return R.ok();
         }
         return R.fail("修改角色'" + role.getRoleName() + "'失败，请联系管理员");
     }
 
-    /**
-     * 取消授权用户
-     */
-    @Mapping("/authUser/cancel")
+    @Put
+    @Mapping("/permission")
+    @NoRepeatSubmit
     @SaCheckPermission("system:role:edit")
-    @Log(title = "角色管理", businessType = BusinessType.GRANT)
-    public R<Void> cancelAuthUser(SysUserRole userRole) {
-        return toAjax(sysRoleService.deleteAuthUser(userRole));
+    @Log(title = "角色管理", businessType = BusinessType.UPDATE)
+    public R<Void> editPermission(@Body SysRoleBo role) {
+        roleService.checkRoleAllowed(role);
+        roleService.checkRoleDataScope(role.getId());
+        return toAjax(roleService.updateRolePermission(role));
     }
 
-    /**
-     * 修改保存数据权限
-     */
+    @Put
     @Mapping("/dataScope")
     @SaCheckPermission("system:role:edit")
     @Log(title = "角色管理", businessType = BusinessType.UPDATE)
-    public R<Void> dataScope(SysRoleBo role) {
-        sysRoleService.checkRoleAllowed(role);
-        sysRoleService.checkRoleDataScope(role.getId());
-        return toAjax(sysRoleService.authDataScope(role));
+    public R<Void> dataScope(@Body SysRoleBo role) {
+        roleService.checkRoleAllowed(role);
+        roleService.checkRoleDataScope(role.getId());
+        return toAjax(roleService.authDataScope(role));
     }
 
-    /**
-     * 状态修改
-     */
+    @Put
     @Mapping("/changeStatus")
     @SaCheckPermission("system:role:edit")
     @Log(title = "角色管理", businessType = BusinessType.UPDATE)
-    public R<Void> changeStatus(SysRoleBo role) {
-        sysRoleService.checkRoleAllowed(role);
-        sysRoleService.checkRoleDataScope(role.getId());
-        return toAjax(sysRoleService.updateRoleStatus(role.getId(), role.getStatus()));
+    public R<Void> changeStatus(@Body SysRoleBo role) {
+        roleService.checkRoleAllowed(role);
+        roleService.checkRoleDataScope(role.getId());
+        return toAjax(roleService.updateRoleStatus(role.getId(), role.getStatus()));
     }
 
-    /**
-     * 批量取消授权用户
-     *
-     * @param roleId  角色ID
-     * @param userIds 用户ID串
-     */
+    @Put
+    @Mapping("/authUser/cancel")
+    @SaCheckPermission("system:role:edit")
+    @Log(title = "角色管理", businessType = BusinessType.GRANT)
+    public R<Void> cancelAuthUser(@Body SysUserRole userRole) {
+        return toAjax(roleService.deleteAuthUser(userRole));
+    }
+
+    @Put
     @Mapping("/authUser/cancelAll")
     @SaCheckPermission("system:role:edit")
     @Log(title = "角色管理", businessType = BusinessType.GRANT)
     public R<Void> cancelAuthUserAll(Long roleId, Long[] userIds) {
-        return toAjax(sysRoleService.deleteAuthUsers(roleId, userIds));
+        return toAjax(roleService.deleteAuthUsers(roleId, userIds));
     }
 
-    /**
-     * 批量选择用户授权
-     *
-     * @param roleId  角色ID
-     * @param userIds 用户ID串
-     */
+    @Put
     @Mapping("/authUser/selectAll")
     @SaCheckPermission("system:role:edit")
     @Log(title = "角色管理", businessType = BusinessType.GRANT)
     public R<Void> selectAuthUserAll(Long roleId, Long[] userIds) {
-        sysRoleService.checkRoleDataScope(roleId);
-        return toAjax(sysRoleService.insertAuthUsers(roleId, userIds));
+        roleService.checkRoleDataScope(roleId);
+        return toAjax(roleService.insertAuthUsers(roleId, userIds));
     }
 
-    /**
-     * 删除角色信息
-     */
-    @Mapping("/delete/{ids}")
-    @SaCheckPermission("system:role:delete")
-    @Log(title = "删除角色信息", businessType = BusinessType.DELETE)
-    public Integer delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
-        Integer num = sysRoleService.deleteByIds(ids);
-        Assert.gtZero(num, "删除角色信息失败");
-        return num;
+    @Delete
+    @Mapping("/{roleIds}")
+    @SaCheckPermission("system:role:remove")
+    @Log(title = "角色管理", businessType = BusinessType.DELETE)
+    public R<Void> delete(@NotEmpty(message = "角色ID不能为空") List<Long> roleIds) {
+        Integer num = roleService.deleteByIds(roleIds);
+        Assert.gtZero(num, "删除角色失败");
+        return R.ok();
     }
 
-    /**
-     * 获取对应角色部门树列表
-     *
-     * @param roleId 角色ID
-     */
     @Get
+    @Mapping("/deptTree/{roleId}")
     @SaCheckPermission("system:role:list")
-    @Mapping(value = "/dept/tree/{roleId}")
     public R<DeptTreeSelectVo> roleDeptTreeSelect(Long roleId) {
         DeptTreeSelectVo selectVo = new DeptTreeSelectVo();
         selectVo.setCheckedKeys(deptService.selectDeptListByRoleId(roleId));

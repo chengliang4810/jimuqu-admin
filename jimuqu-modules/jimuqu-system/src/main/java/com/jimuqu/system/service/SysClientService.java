@@ -77,6 +77,16 @@ public interface SysClientService {
     boolean updateUserStatus(Long id, String status);
 
     /**
+     * 按客户端标识修改状态
+     */
+    boolean updateClientStatus(String clientId, String status);
+
+    /**
+     * 校验客户端 key 唯一性
+     */
+    boolean checkClientKeyUnique(SysClientBo bo);
+
+    /**
      * 批量删除代码生成模板信息
      *
      * @param ids 授权管理对象 sys_client主键列表

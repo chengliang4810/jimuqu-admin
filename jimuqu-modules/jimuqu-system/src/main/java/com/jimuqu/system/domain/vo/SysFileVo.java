@@ -9,6 +9,7 @@ import lombok.experimental.FieldNameConstants;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 文件记录视图对象
@@ -24,6 +25,9 @@ public class SysFileVo implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
+
+    private Long createBy;
+    private Date createTime;
 
     /**
      * 文件id

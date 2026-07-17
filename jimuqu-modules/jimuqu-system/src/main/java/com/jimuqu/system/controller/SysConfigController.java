@@ -2,6 +2,8 @@ package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.jimuqu.common.core.checker.Assert;
+import com.jimuqu.common.core.domain.R;
+import com.jimuqu.common.excel.utils.ExcelUtil;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
 import com.jimuqu.common.log.annotation.Log;
@@ -15,9 +17,13 @@ import com.jimuqu.system.domain.query.SysConfigQuery;
 import com.jimuqu.system.service.SysConfigService;
 import lombok.RequiredArgsConstructor;
 import org.noear.solon.annotation.Controller;
+import org.noear.solon.annotation.Body;
+import org.noear.solon.annotation.Delete;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Mapping;
 import org.noear.solon.annotation.Post;
+import org.noear.solon.annotation.Put;
+import org.noear.solon.core.handle.DownloadedFile;
 import org.noear.solon.validation.annotation.NoRepeatSubmit;
 import org.noear.solon.validation.annotation.NotEmpty;
 import org.noear.solon.validation.annotation.NotNull;
@@ -31,7 +37,6 @@ import java.util.List;
  * @author chengliang4810
  * @since 2025-05-27
  */
-@Post
 @Controller
 @RequiredArgsConstructor
 @Mapping("/system/config")
@@ -64,11 +69,12 @@ public class SysConfigController extends BaseController {
     /**
      * 新增参数配置
      */
-    @Mapping("/add")
+    @Post
+    @Mapping
     @NoRepeatSubmit
     @SaCheckPermission("system:config:add")
     @Log(title = "新增参数配置", businessType = BusinessType.ADD)
-    public Long add(@Validated(AddGroup.class) SysConfigBo bo) {
+    public Long add(@Body @Validated(AddGroup.class) SysConfigBo bo) {
         boolean result = sysConfigService.insertByBo(bo);
         Assert.isTrue(result, "新增参数配置失败");
         return bo.getId();
@@ -78,10 +84,11 @@ public class SysConfigController extends BaseController {
      * 更新参数配置
      */
     @NoRepeatSubmit
-    @Mapping("/update")
-    @SaCheckPermission("system:config:update")
+    @Put
+    @Mapping
+    @SaCheckPermission("system:config:edit")
     @Log(title = "更新参数配置", businessType = BusinessType.UPDATE)
-    public void edit(@Validated(UpdateGroup.class) SysConfigBo bo) {
+    public void edit(@Body @Validated(UpdateGroup.class) SysConfigBo bo) {
         boolean result = sysConfigService.updateByBo(bo);
         Assert.isTrue(result, "更新参数配置失败");
     }
@@ -89,13 +96,40 @@ public class SysConfigController extends BaseController {
     /**
      * 删除参数配置
      */
-    @Mapping("/delete/{ids}")
-    @SaCheckPermission("system:config:delete")
+    @Delete
+    @Mapping("/{ids}")
+    @SaCheckPermission("system:config:remove")
     @Log(title = "删除参数配置", businessType = BusinessType.DELETE)
     public Integer delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
         Integer num = sysConfigService.deleteByIds(ids);
         Assert.gtZero(num, "删除参数配置失败");
         return num;
+    }
+
+    @Get
+    @Mapping("/configKey/{configKey}")
+    public R<String> getByKey(String configKey) {
+        SysConfigQuery query = new SysConfigQuery();
+        query.setConfigKey(configKey);
+        List<SysConfigVo> configs = sysConfigService.queryList(query);
+        if (configs.isEmpty()) {
+            return R.fail("参数不存在");
+        }
+        return R.ok("操作成功", configs.get(0).getConfigValue());
+    }
+
+    @Post
+    @Mapping("/export")
+    @SaCheckPermission("system:config:export")
+    public DownloadedFile export(SysConfigQuery query) {
+        return ExcelUtil.exportExcel(sysConfigService.queryList(query), "参数数据", SysConfigVo.class);
+    }
+
+    @Delete
+    @Mapping("/refreshCache")
+    @SaCheckPermission("system:config:remove")
+    public R<Void> refreshCache() {
+        return R.ok();
     }
 
 }

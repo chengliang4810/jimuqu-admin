@@ -3,6 +3,7 @@ package com.jimuqu.common.core.domain.model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.noear.solon.validation.annotation.NotBlank;
+import org.noear.snack4.annotation.ONodeAttr;
 
 /**
  * 短信登录对象
@@ -18,6 +19,7 @@ public class SmsLoginBody extends LoginBody {
      * 手机号
      */
     @NotBlank(message = "{user.phonenumber.not.blank}")
+    @ONodeAttr(name = "phoneNumber")
     private String phonenumber;
 
     /**

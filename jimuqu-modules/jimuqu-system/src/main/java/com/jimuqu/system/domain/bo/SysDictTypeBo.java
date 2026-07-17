@@ -30,7 +30,6 @@ public class SysDictTypeBo extends BoBaseEntity {
     /**
      * 字典key
      */
-    @NotBlank(message = "字典key不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String dictKey;
     /**
      * 字典名称
@@ -40,6 +39,7 @@ public class SysDictTypeBo extends BoBaseEntity {
     /**
      * 字典类型 L 列表 T 树
      */
+    @NotBlank(message = "字典类型不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String dictType;
     /**
      * 系统内置（Y是 N否）

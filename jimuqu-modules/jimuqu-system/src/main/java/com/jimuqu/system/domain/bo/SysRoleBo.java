@@ -1,5 +1,6 @@
 package com.jimuqu.system.domain.bo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
@@ -11,6 +12,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.noear.solon.validation.annotation.*;
+import org.noear.snack4.annotation.ONodeAttr;
 
 /**
  * 角色信息业务对象 sys_role
@@ -29,6 +31,8 @@ public class SysRoleBo extends BoBaseEntity {
      * 角色ID
      */
     @NotNull(message = "角色ID不能为空", groups = { UpdateGroup.class })
+    @JsonProperty("roleId")
+    @ONodeAttr(name = "roleId")
     private Long id;
     /**
      * 角色名称

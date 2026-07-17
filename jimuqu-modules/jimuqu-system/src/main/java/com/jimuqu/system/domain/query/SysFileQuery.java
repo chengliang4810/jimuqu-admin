@@ -3,6 +3,7 @@ package com.jimuqu.system.domain.query;
 import cn.xbatis.core.sql.ObjectConditionLifeCycle;
 import cn.xbatis.db.annotations.Condition;
 import cn.xbatis.db.annotations.ConditionTarget;
+import com.jimuqu.common.core.utils.DateUtil;
 import com.jimuqu.system.domain.SysFile;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -11,6 +12,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import static cn.xbatis.db.annotations.Condition.Type.*;
 
@@ -26,6 +29,9 @@ public class SysFileQuery implements Serializable, ObjectConditionLifeCycle {
 
     @Serial
     private static final long serialVersionUID = 1L;
+
+    @Condition(IGNORE)
+    private Map<String, Object> params = new HashMap<>();
 
     /**
      * 文件id
@@ -48,10 +54,20 @@ public class SysFileQuery implements Serializable, ObjectConditionLifeCycle {
     @Condition(value = LIKE)
     private String filename;
     /**
+     * Bell 文件名参数
+     */
+    @Condition(value = LIKE, property = "filename")
+    private String fileName;
+    /**
      * 原始文件名
      */
     @Condition(value = LIKE)
     private String originalFilename;
+    /**
+     * Bell 原始文件名参数
+     */
+    @Condition(value = LIKE, property = "originalFilename")
+    private String originalName;
     /**
      * 基础存储路径
      */
@@ -68,6 +84,11 @@ public class SysFileQuery implements Serializable, ObjectConditionLifeCycle {
     @Condition(value = EQ)
     private String ext;
     /**
+     * Bell 文件后缀参数
+     */
+    @Condition(value = EQ, property = "ext")
+    private String fileSuffix;
+    /**
      * MIME类型
      */
     @Condition(value = EQ)
@@ -77,6 +98,11 @@ public class SysFileQuery implements Serializable, ObjectConditionLifeCycle {
      */
     @Condition(value = EQ)
     private String platform;
+    /**
+     * Bell 存储服务参数
+     */
+    @Condition(value = EQ, property = "platform")
+    private String service;
     /**
      * 缩略图访问路径
      */
@@ -169,7 +195,13 @@ public class SysFileQuery implements Serializable, ObjectConditionLifeCycle {
      */
     @Override
     public void beforeBuildCondition() {
-        
+        Object beginTime = getParams().get("beginTime");
+        Object endTime = getParams().get("endTime");
+        if (beginTime != null && endTime != null) {
+            createTime = List.of(
+                    DateUtil.dateTime(DateUtil.YYYY_MM_DD_HH_MM_SS, beginTime.toString()),
+                    DateUtil.dateTime(DateUtil.YYYY_MM_DD_HH_MM_SS, endTime.toString()));
+        }
     }
 
 }

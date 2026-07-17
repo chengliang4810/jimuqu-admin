@@ -2,6 +2,7 @@ package com.jimuqu.common.websocket.handler;
 
 import cn.hutool.v7.core.util.ObjUtil;
 import com.jimuqu.common.core.domain.model.LoginUser;
+import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.common.websocket.holder.WebSocketSessionHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -44,13 +45,21 @@ public class WebSocketHandler implements WebSocketListener {
     @Override
     public void onMessage(WebSocket socket, String text) throws IOException {
         // 心跳
-        if ("ping".equals( text)){
-            socket.send("pong");
+        if ("ping".equals(text) || isJsonPing(text)) {
+            socket.send("{\"type\":\"pong\"}");
             return;
         }
 
         // 客户端的消息
         socket.send("我收到了：" + text);
+    }
+
+    private boolean isJsonPing(String text) {
+        try {
+            return "ping".equals(JsonUtil.toMap(text).getStr("type"));
+        } catch (RuntimeException ignored) {
+            return false;
+        }
     }
 
     @Override

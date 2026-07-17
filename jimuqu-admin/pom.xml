@@ -39,17 +39,6 @@
             <artifactId>jimuqu-system</artifactId>
         </dependency>
 
-        <!-- 代码生成模块 -->
-        <dependency>
-            <groupId>com.jimuqu</groupId>
-            <artifactId>jimuqu-generator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.jimuqu</groupId>
-            <artifactId>jimuqu-ai</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.noear</groupId>
             <artifactId>solon-test</artifactId>

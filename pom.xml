@@ -43,10 +43,6 @@
         <autotable.version>2.5.15</autotable.version>
         <!-- ORM 框架 -->
         <xbatis.version>1.10.1</xbatis.version>
-        <anyline.version>8.7.3-20251206</anyline.version>
-        <!-- 代码生成模板引擎 -->
-        <velocity.version>2.4.1</velocity.version>
-        <beetl.version>3.19.0.RELEASE</beetl.version>
         <!-- 权限认证框架 -->
         <sa-token.version>1.45.0</sa-token.version>
         <!-- 文件上传 -->
@@ -202,14 +198,6 @@
                 <version>${therapi-javadoc.version}</version>
             </dependency>
 
-            <!-- 代码生成依赖 -->
-            <!-- velocity代码生成使用模板 -->
-            <dependency>
-                <groupId>org.apache.velocity</groupId>
-                <artifactId>velocity-engine-core</artifactId>
-                <version>${velocity.version}</version>
-            </dependency>
-
             <!-- 文件存储 -->
             <dependency>
                 <groupId>org.dromara.x-file-storage</groupId>
@@ -229,18 +217,6 @@
                 <version>${revision}</version>
             </dependency>
 
-            <!-- 代码生成模块 -->
-            <dependency>
-                <groupId>com.jimuqu</groupId>
-                <artifactId>jimuqu-generator</artifactId>
-                <version>${revision}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.jimuqu</groupId>
-                <artifactId>jimuqu-ai</artifactId>
-                <version>${revision}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 

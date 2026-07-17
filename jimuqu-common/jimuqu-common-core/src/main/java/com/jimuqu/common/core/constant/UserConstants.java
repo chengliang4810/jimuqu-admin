@@ -3,7 +3,7 @@ package com.jimuqu.common.core.constant;
 /**
  * 用户常量信息
  *
- * @author ruoyi
+ * @author jimuqu
  */
 public interface UserConstants {
 

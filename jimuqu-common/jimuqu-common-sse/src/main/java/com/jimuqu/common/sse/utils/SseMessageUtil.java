@@ -1,6 +1,8 @@
 package com.jimuqu.common.sse.utils;
 
+import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.sse.core.SseEmitterManager;
+import com.jimuqu.common.sse.domain.SseMessagePayload;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +31,7 @@ public class SseMessageUtil {
      * @param message 要发送的消息内容
      */
     public static void sendMessage(Long userId, String message) {
-        if (!isEnable()) {
-            return;
-        }
-        MANAGER.sendMessage(userId, message);
+        sendPayload(userId, SseMessagePayload.message(message));
     }
 
     /**
@@ -41,10 +40,32 @@ public class SseMessageUtil {
      * @param message 要发送的消息内容
      */
     public static void sendMessage(String message) {
+        sendPayload(SseMessagePayload.message(message));
+    }
+
+    /**
+     * 向指定的 SSE 会话发送结构化消息。
+     *
+     * @param userId 目标用户 ID
+     * @param payload Bell 消息负载
+     */
+    public static void sendPayload(Long userId, Object payload) {
         if (!isEnable()) {
             return;
         }
-        MANAGER.sendMessage(message);
+        MANAGER.sendMessage(userId, JsonUtil.toString(payload));
+    }
+
+    /**
+     * 向本机所有 SSE 会话发送结构化消息。
+     *
+     * @param payload Bell 消息负载
+     */
+    public static void sendPayload(Object payload) {
+        if (!isEnable()) {
+            return;
+        }
+        MANAGER.sendMessage(JsonUtil.toString(payload));
     }
 
 //    /**

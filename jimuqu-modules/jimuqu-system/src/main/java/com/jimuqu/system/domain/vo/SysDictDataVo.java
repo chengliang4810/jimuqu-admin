@@ -6,6 +6,7 @@ import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
+import org.noear.snack4.annotation.ONodeAttr;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -28,6 +29,7 @@ public class SysDictDataVo implements Serializable {
     /**
      * 字典ID
      */
+    @ONodeAttr(name = "dictCode")
     private Long id;
     /**
      * 父级ID
@@ -48,6 +50,7 @@ public class SysDictDataVo implements Serializable {
     /**
      * 字典类型
      */
+    @ONodeAttr(name = "dictType")
     private String dictTypeKey;
     /**
      * 样式属性（其他样式扩展）

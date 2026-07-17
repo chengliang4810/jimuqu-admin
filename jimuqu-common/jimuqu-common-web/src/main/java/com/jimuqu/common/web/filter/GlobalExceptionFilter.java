@@ -31,10 +31,12 @@ public class GlobalExceptionFilter implements Filter {
         }
         // 参数验证异常
         catch (ValidatorException e) {
-            ctx.render(R.fail(e.getCode(), e.getMessage()));
+            ctx.status(400);
+            ctx.render(R.fail(400, e.getMessage()));
         }
         // 权限异常
         catch (AuthException e) {
+            drainRequestBody(ctx);
             String realIp = ctx.realIp();
             // 权限认证异常
             log.warn("权限异常: {}, 请求路径: {}, 请求地址: {}, 请求IP: {}", e.getMessage(), ctx.path(), AddressUtil.getRealAddressByIP(realIp), realIp);
@@ -44,10 +46,29 @@ public class GlobalExceptionFilter implements Filter {
         }
         // 其他异常
         catch (Throwable e) {
+            String exceptionName = e.getClass().getSimpleName();
+            if ("NotLoginException".equals(exceptionName)) {
+                ctx.status(401);
+                ctx.render(R.fail(401, e.getMessage()));
+                return;
+            }
+            if ("NotPermissionException".equals(exceptionName) || "NotRoleException".equals(exceptionName)) {
+                ctx.status(403);
+                ctx.render(R.fail(403, e.getMessage()));
+                return;
+            }
             String realIp = ctx.realIp();
             log.error("系统异常: {}, 请求路径: {}, 请求地址: {}, 请求IP: {}", e.getMessage(), ctx.path(), AddressUtil.getRealAddressByIP(realIp), realIp, e);
             e.printStackTrace();
             ctx.render(R.fail(500, e.getMessage()));
+        }
+    }
+
+    private void drainRequestBody(Context ctx) {
+        try {
+            ctx.body();
+        } catch (Exception e) {
+            log.debug("读取未授权请求体失败: {}", e.getMessage());
         }
     }
 

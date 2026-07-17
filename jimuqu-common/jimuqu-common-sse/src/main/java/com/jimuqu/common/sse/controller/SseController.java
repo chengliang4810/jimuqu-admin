@@ -1,10 +1,10 @@
 package com.jimuqu.common.sse.controller;
 
-import cn.dev33.satoken.annotation.SaIgnore;
 import cn.dev33.satoken.stp.StpUtil;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.common.sse.core.SseEmitterManager;
+import com.jimuqu.common.sse.utils.SseMessageUtil;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.annotation.Mapping;
@@ -41,7 +41,6 @@ public class SseController {
      * 关闭 SSE 连接
      */
     @Get
-    @SaIgnore
     @Mapping(value = "close")
     public R<Void> close() {
         String tokenValue = StpUtil.getTokenValue();
@@ -59,7 +58,7 @@ public class SseController {
     @Get
     @Mapping(value = "send")
     public R<Void> send(Long userId, String msg) {
-        sseEmitterManager.sendMessage(userId, msg);
+        SseMessageUtil.sendMessage(userId, msg);
         return R.ok();
     }
 
@@ -71,7 +70,7 @@ public class SseController {
     @Get
     @Mapping(value = "sendAll")
     public R<Void> send(String msg) {
-        sseEmitterManager.sendMessage(msg);
+        SseMessageUtil.sendMessage(msg);
         return R.ok();
     }
 

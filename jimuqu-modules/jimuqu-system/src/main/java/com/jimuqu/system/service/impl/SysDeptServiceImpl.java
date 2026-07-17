@@ -7,13 +7,17 @@ import com.jimuqu.common.core.utils.StreamUtil;
 import com.jimuqu.common.core.utils.TreeBuildUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
+import com.jimuqu.common.mybatis.model.DataScopeRule;
+import com.jimuqu.common.mybatis.service.ISysDataScopeService;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.SysDept;
+import com.jimuqu.system.domain.SysRole;
 import com.jimuqu.system.domain.SysUser;
 import com.jimuqu.system.domain.bo.SysDeptBo;
 import com.jimuqu.system.domain.query.SysDeptQuery;
 import com.jimuqu.system.domain.vo.SysDeptVo;
 import com.jimuqu.system.mapper.SysDeptMapper;
+import com.jimuqu.system.mapper.SysRoleMapper;
 import com.jimuqu.system.mapper.SysUserMapper;
 import com.jimuqu.system.service.SysDeptService;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +45,9 @@ import java.util.List;
 public class SysDeptServiceImpl implements SysDeptService {
 
     private final SysDeptMapper sysDeptMapper;
+    private final SysRoleMapper sysRoleMapper;
     private final SysUserMapper sysUserMapper;
+    private final ISysDataScopeService dataScopeService;
 
     /**
      * 查询部门
@@ -87,6 +93,17 @@ public class SysDeptServiceImpl implements SysDeptService {
             deptList.add(belongDeptId);
             if (CollUtil.isNotEmpty(deptList)) {
                 sysDeptQueryChain.in(SysDept::getId, deptList);
+            }
+        }
+
+        if (!LoginHelper.isSuperAdmin()) {
+            DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
+            if (!rule.allAccess()) {
+                if (rule.departmentIds().isEmpty()) {
+                    sysDeptQueryChain.eq(SysDept::getId, -1L);
+                } else {
+                    sysDeptQueryChain.in(SysDept::getId, rule.departmentIds());
+                }
             }
         }
 
@@ -172,7 +189,11 @@ public class SysDeptServiceImpl implements SysDeptService {
      */
     @Override
     public List<Long> selectDeptListByRoleId(Long roleId) {
-        return List.of();
+        SysRole role = sysRoleMapper.getById(roleId);
+        if (role == null) {
+            throw new ServiceException("角色不存在");
+        }
+        return sysDeptMapper.selectDeptListByRoleId(roleId, Boolean.TRUE.equals(role.getDeptCheckStrictly()));
     }
 
     /**
@@ -240,7 +261,7 @@ public class SysDeptServiceImpl implements SysDeptService {
         if (LoginHelper.isSuperAdmin()) {
             return;
         }
-        if (sysDeptMapper.countDeptById(deptId) == 0) {
+        if (!dataScopeService.checkUserDataScope(LoginHelper.getUserId(), deptId)) {
             throw new ServiceException("没有权限访问部门数据！");
         }
     }

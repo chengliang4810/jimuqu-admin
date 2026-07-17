@@ -143,7 +143,10 @@ public class LogAspect implements RouterInterceptor {
             setRequestValue(joinPoint, operLog, log.excludeParamNames());
         }
         // 是否需要保存response，参数和值
-        if (!(jsonResult instanceof DownloadedFile) && log.isSaveResponseData() && ObjUtil.isNotNull(jsonResult)) {
+        if (!(jsonResult instanceof DownloadedFile)
+                && !(jsonResult instanceof Throwable)
+                && log.isSaveResponseData()
+                && ObjUtil.isNotNull(jsonResult)) {
             operLog.setJsonResult(StringUtil.substring(JsonUtil.toString(jsonResult), 0, 2000));
         }
     }

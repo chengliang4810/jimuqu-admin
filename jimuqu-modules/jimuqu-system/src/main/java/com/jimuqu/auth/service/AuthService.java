@@ -33,7 +33,7 @@ public class AuthService {
         String tokenValue = StpUtil.getTokenValue();
         long tokenTimeout = StpUtil.getTokenTimeout();
 
-        return new LoginVo().setAccessToken(tokenValue).setExpireIn(tokenTimeout);
+        return new LoginVo().setAccessToken(tokenValue).setExpireIn(Math.toIntExact(tokenTimeout));
     }
 
 }

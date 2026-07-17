@@ -4,6 +4,8 @@ import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.system.domain.query.SysFileQuery;
 import com.jimuqu.system.domain.vo.SysFileVo;
+import com.jimuqu.system.domain.vo.SysOssVo;
+import org.noear.solon.core.handle.DownloadedFile;
 
 import java.util.Collection;
 import java.util.List;
@@ -48,4 +50,12 @@ public interface SysFileService {
      * @return {@link Integer } 删除成功条数
      */
     Integer deleteByIds(Collection<String> ids);
+
+    Page<SysOssVo> queryOssPageList(SysFileQuery query, PageQuery pageQuery);
+
+    List<SysOssVo> queryOssByIds(Collection<String> ids);
+
+    DownloadedFile download(String id);
+
+    boolean deleteOssByIds(Collection<String> ids);
 }

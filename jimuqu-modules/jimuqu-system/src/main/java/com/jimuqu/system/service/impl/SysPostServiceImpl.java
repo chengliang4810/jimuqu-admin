@@ -5,6 +5,9 @@ import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
+import com.jimuqu.common.mybatis.model.DataScopeRule;
+import com.jimuqu.common.mybatis.service.ISysDataScopeService;
+import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.SysPost;
 import com.jimuqu.system.domain.SysUserPost;
 import com.jimuqu.system.domain.bo.SysPostBo;
@@ -12,6 +15,7 @@ import com.jimuqu.system.domain.query.SysPostQuery;
 import com.jimuqu.system.domain.vo.SysPostVo;
 import com.jimuqu.system.mapper.SysDeptMapper;
 import com.jimuqu.system.mapper.SysPostMapper;
+import com.jimuqu.system.mapper.SysUserPostMapper;
 import com.jimuqu.system.service.SysPostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +41,8 @@ public class SysPostServiceImpl implements SysPostService {
 
     private final SysDeptMapper sysDeptMapper;
     private final SysPostMapper sysPostMapper;
+    private final SysUserPostMapper sysUserPostMapper;
+    private final ISysDataScopeService dataScopeService;
 
     /**
      * 查询岗位信息
@@ -80,6 +86,16 @@ public class SysPostServiceImpl implements SysPostService {
             List<Long> deptIds = sysDeptMapper.selectListByParentId(query.getBelongDeptId());
             deptIds.add(query.getBelongDeptId());
             queryChain.in(SysPost::getDeptId, deptIds);
+        }
+        if (!LoginHelper.isSuperAdmin()) {
+            DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
+            if (!rule.allAccess()) {
+                if (rule.departmentIds().isEmpty()) {
+                    queryChain.eq(SysPost::getPostId, -1L);
+                } else {
+                    queryChain.in(SysPost::getDeptId, rule.departmentIds());
+                }
+            }
         }
         return queryChain;
     }
@@ -131,6 +147,17 @@ public class SysPostServiceImpl implements SysPostService {
                 .orElse(ListUtil.zero());
     }
 
+    @Override
+    public List<SysPostVo> selectPostByIds(Collection<Long> postIds) {
+        return QueryChain.of(sysPostMapper)
+                .select(SysPost::getPostId, SysPost::getPostName, SysPost::getPostCode)
+                .eq(SysPost::getStatus, "0")
+                .in(postIds != null && !postIds.isEmpty(), SysPost::getPostId, postIds)
+                .orderBy(SysPost::getPostSort, SysPost::getPostId)
+                .returnType(SysPostVo.class)
+                .list();
+    }
+
     /**
      * 校验岗位名称
      *
@@ -139,7 +166,7 @@ public class SysPostServiceImpl implements SysPostService {
      */
     @Override
     public boolean checkPostNameUnique(SysPostBo post) {
-        boolean exists = sysPostMapper.exists(Where.create(SysPost.class)
+        boolean exists = sysPostMapper.exists(Where.create()
                 .eq(SysPost::getPostName, post.getPostName())
                 .ne(ObjUtil.isNotNull(post.getPostId()), SysPost::getPostId, post.getPostId()));
         return !exists;
@@ -153,7 +180,7 @@ public class SysPostServiceImpl implements SysPostService {
      */
     @Override
     public boolean checkPostCodeUnique(SysPostBo post) {
-        boolean exists = sysPostMapper.exists(Where.create(SysPost.class)
+        boolean exists = sysPostMapper.exists(Where.create()
                 .eq(SysPost::getPostCode, post.getPostCode())
                 .ne(ObjUtil.isNotNull(post.getPostId()), SysPost::getPostId, post.getPostId()));
         return !exists;
@@ -167,7 +194,13 @@ public class SysPostServiceImpl implements SysPostService {
      */
     @Override
     public int countUserPostById(Long postId) {
-        return sysPostMapper.count(Where.create(SysUserPost.class)
-                .eq(SysUserPost::getPostId, postId));
+        return Math.toIntExact(QueryChain.of(sysUserPostMapper)
+                .eq(SysUserPost::getPostId, postId)
+                .count());
+    }
+
+    @Override
+    public long countPostByDeptId(Long deptId) {
+        return QueryChain.of(sysPostMapper).eq(SysPost::getDeptId, deptId).count();
     }
 }

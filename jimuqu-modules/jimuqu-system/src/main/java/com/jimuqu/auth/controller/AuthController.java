@@ -1,6 +1,7 @@
 package com.jimuqu.auth.controller;
 
 import cn.dev33.satoken.annotation.SaIgnore;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.v7.core.util.ObjUtil;
 import com.jimuqu.auth.domain.vo.LoginVo;
 import com.jimuqu.auth.service.AuthStrategy;
@@ -20,6 +21,7 @@ import com.jimuqu.common.social.utils.SocialUtils;
 import com.jimuqu.common.sse.utils.SseMessageUtil;
 import com.jimuqu.system.domain.SysClient;
 import com.jimuqu.system.service.SysClientService;
+import com.jimuqu.system.service.SysSocialService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.zhyd.oauth.model.AuthResponse;
@@ -29,6 +31,8 @@ import me.zhyd.oauth.utils.AuthStateUtils;
 import org.noear.solon.annotation.*;
 import org.noear.solon.core.util.RunUtil;
 import org.noear.solon.validation.ValidUtils;
+
+import java.util.Set;
 
 /**
  * 认证
@@ -46,6 +50,7 @@ public class AuthController {
     private final SysClientService clientService;
     private final SocialProperties socialProperties;
     private final SysRegisterService registerService;
+    private final SysSocialService socialService;
 
     /**
      * 登录方法
@@ -103,17 +108,18 @@ public class AuthController {
      */
     @Post
     @Mapping("/social/callback" )
-    public R<Void> socialCallback(SocialLoginBody loginBody) {
+    public R<Void> socialCallback(@Body SocialLoginBody loginBody) {
+        StpUtil.checkLogin();
         // 获取第三方登录信息
         AuthResponse<AuthUser> response = SocialUtils.loginAuth(
                 loginBody.getSource(), loginBody.getSocialCode(),
                 loginBody.getSocialState(), socialProperties);
-        AuthUser authUserData = response.getData();
         // 判断授权响应是否成功
         if (!response.ok()) {
             return R.fail(response.getMsg());
         }
-        // loginService.socialRegister(authUserData);
+        AuthUser authUserData = response.getData();
+        socialService.bind(LoginHelper.getUserId(), authUserData);
         return R.ok();
     }
 
@@ -125,9 +131,20 @@ public class AuthController {
     @Delete
     @Mapping(value = "/unlock/{socialId}" )
     public R<Void> unlockSocial(Long socialId) {
-        // Boolean rows = socialUserService.deleteWithValidById(socialId);
-        // return rows ? R.ok() : R.fail("取消授权失败" );
-        return R.ok();
+        StpUtil.checkLogin();
+        return socialService.deleteByIdForUser(socialId, LoginHelper.getUserId())
+                ? R.ok()
+                : R.fail("取消授权失败");
+    }
+
+    /**
+     * 获取当前登录用户的前端权限码。
+     */
+    @Get
+    @Mapping("/codes")
+    public R<Set<String>> codes() {
+        StpUtil.checkLogin();
+        return R.ok(LoginHelper.getLoginUser().getMenuPermission());
     }
 
     /**
@@ -145,7 +162,7 @@ public class AuthController {
      */
     @Post
     @Mapping("/register" )
-    public R<Void> register(RegisterBody user) {
+    public R<Void> register(@Body RegisterBody user) {
 //        if (!configService.selectRegisterEnabled()) {
 //            return R.fail("当前系统没有开启注册功能！" );
 //        }

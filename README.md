@@ -1,7 +1,6 @@
-# 🎉 Jimuqu Admin - 基于 Solon 的轻量级管理系统
+# Jimuqu Admin
 
-### ✨ 介绍
-**jimuqu-admin** 是基于 **Solon** 的轻量级管理系统框架。
+Jimuqu Admin 是基于 Java 17、Solon 3、Xbatis、AutoTable 与 Sa-Token 的企业管理后台。
 
 > ❤️ 项目代码、文档均**开源免费可商用**，保留开源协议文件即可  
 > 💡 活到老写到老 • 为兴趣而开源 • 为学习而开源 • 为技术共享而开源
@@ -23,11 +22,8 @@
 - [X] ip2region进行升级支持ipv6
 - [X] idempotent 幂等功能
 - [X] 集成fesod(FastExcel)导入导出功能
-- [X] 在线定时任务管理功能
-- [X] 定时任务结合FastExcel定时导出报表
 - [X] encrypt API接口数据加解密模块
 - [X] sensitive 脱敏模块
-- [X] 在线插件管理功能，支持插件开发
 - [ ] 无侵入式基于注释内容生成接口文档
 - [ ] 前端H5/Uniapp开发
 - [ ] AI大模型接入
@@ -73,7 +69,6 @@
 | **📂 文件管理**   | 文件展示/上传/下载/删除                                                  |
 | **⚙️ 文件配置管理** | 动态管理文件上传/下载配置                                                |
 | **👀 在线用户管理** | 监控在线用户并支持强制踢出                                               |
-| **⏱️ 定时任务**   | 任务管理（增删改）、日志管理、执行器监控                                 |
 | **🔌 系统接口**   | 自动生成API文档                                                          |
 
 ---
@@ -111,8 +106,11 @@
 
 ---
 
-### 交流群
+## 许可证
 
-> 请备注：加群、积木区、积木等字样
+本项目使用 [MIT License](LICENSE)。第三方项目的版权与许可声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
-![qrcode.jpg](docs/images/qrcode.jpg)
+## 上游项目声明
+
+- [Bell-Plus](https://gitee.com/dapppp/bell-plus)，前端迁移基线为 `main@c1a99e5d9f568936d8e3fbcf37d302d5ca3127de`，MIT License；Bell-Plus 基于 Vue Vben Admin。
+- [RuoYi-Vue-Plus](https://gitee.com/dromara/RuoYi-Vue-Plus/tree/6.X/)，后端行为参考基线为 `6.X@da5f30cae2deb174a1ba37a2ad41ff1ba42c9f38`，MIT License。本项目仅参考其接口行为，后端实现仍使用 Solon/Xbatis。

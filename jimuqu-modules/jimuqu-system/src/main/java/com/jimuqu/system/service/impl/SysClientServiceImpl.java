@@ -1,7 +1,9 @@
 package com.jimuqu.system.service.impl;
 
+import cn.hutool.v7.crypto.SecureUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.utils.MapstructUtil;
+import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.system.domain.SysClient;
@@ -29,6 +31,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SysClientServiceImpl implements SysClientService {
 
+    private static final String CLIENT_RULE_SEPARATOR_REGEX = "[,;\\r\\n]+";
+
     private final SysClientMapper sysClientMapper;
 
     /**
@@ -36,7 +40,7 @@ public class SysClientServiceImpl implements SysClientService {
      */
     @Override
     public SysClientVo queryById(Long id) {
-        return sysClientMapper.getVoById(id);
+        return fillRuleFields(sysClientMapper.getVoById(id));
     }
 
     /**
@@ -54,9 +58,10 @@ public class SysClientServiceImpl implements SysClientService {
      */
     @Override
     public Page<SysClientVo> queryPageList(SysClientQuery query, PageQuery pageQuery) {
-        return buildQueryChain(query)
-                .returnType(SysClientVo.class)
-                .paging(pageQuery.build());
+        Page<SysClient> entityPage = buildQueryChain(query).paging(pageQuery.build());
+        List<SysClientVo> rows = MapstructUtil.convert(entityPage.getRows(), SysClientVo.class);
+        rows.forEach(this::fillRuleFields);
+        return Page.of(rows, entityPage.getTotal());
     }
 
     /**
@@ -64,8 +69,9 @@ public class SysClientServiceImpl implements SysClientService {
      */
     @Override
     public List<SysClientVo> queryList(SysClientQuery query) {
-        QueryChain<SysClient> queryChain = buildQueryChain(query);
-        return queryChain.returnType(SysClientVo.class).list();
+        List<SysClientVo> list = MapstructUtil.convert(buildQueryChain(query).list(), SysClientVo.class);
+        list.forEach(this::fillRuleFields);
+        return list;
     }
 
     /**
@@ -85,6 +91,19 @@ public class SysClientServiceImpl implements SysClientService {
     @Override
     public Boolean insertByBo(SysClientBo bo) {
         SysClient sysClient = MapstructUtil.convert(bo, SysClient.class);
+        sysClient.setGrantType(resolveList(bo.getGrantType(), bo.getGrantTypeList(), false));
+        sysClient.setAccessPath(resolveList(bo.getAccessPath(), bo.getAccessPathList(), true));
+        sysClient.setIpWhitelist(resolveList(bo.getIpWhitelist(), bo.getIpWhitelistList(), false));
+        sysClient.setClientId(SecureUtil.md5(bo.getClientKey() + bo.getClientSecret()));
+        if (sysClient.getActiveTimeout() == null) {
+            sysClient.setActiveTimeout(-1L);
+        }
+        if (sysClient.getTimeout() == null) {
+            sysClient.setTimeout(604800L);
+        }
+        if (StringUtil.isBlank(sysClient.getStatus())) {
+            sysClient.setStatus("0");
+        }
         boolean flag = sysClientMapper.save(sysClient) > 0;
         bo.setId(sysClient.getId());
         return flag;
@@ -96,6 +115,9 @@ public class SysClientServiceImpl implements SysClientService {
     @Override
     public Boolean updateByBo(SysClientBo bo) {
         SysClient sysClient = MapstructUtil.convert(bo, SysClient.class);
+        sysClient.setGrantType(resolveList(bo.getGrantType(), bo.getGrantTypeList(), false));
+        sysClient.setAccessPath(resolveList(bo.getAccessPath(), bo.getAccessPathList(), true));
+        sysClient.setIpWhitelist(resolveList(bo.getIpWhitelist(), bo.getIpWhitelistList(), false));
         return sysClientMapper.update(sysClient) > 0;
     }
 
@@ -110,11 +132,68 @@ public class SysClientServiceImpl implements SysClientService {
         return sysClientMapper.update(new SysClient().setId(id).setStatus(status)) > 0;
     }
 
+    @Override
+    public boolean updateClientStatus(String clientId, String status) {
+        return sysClientMapper.update(new SysClient().setStatus(status),
+                where -> where.eq(SysClient::getClientId, clientId)) > 0;
+    }
+
+    @Override
+    public boolean checkClientKeyUnique(SysClientBo bo) {
+        return !QueryChain.of(sysClientMapper)
+                .where(where -> where.eq(SysClient::getClientKey, bo.getClientKey())
+                        .ne(bo.getId() != null, SysClient::getId, bo.getId()))
+                .exists();
+    }
+
     /**
      * 批量删除授权管理对象 sys_client
      */
     @Override
     public Integer deleteByIds(Collection<Long> ids) {
         return sysClientMapper.deleteByIds(ids);
+    }
+
+    private SysClientVo fillRuleFields(SysClientVo vo) {
+        if (vo == null) {
+            return null;
+        }
+        vo.setGrantTypeList(parseList(vo.getGrantType(), false));
+        vo.setAccessPathList(parseList(vo.getAccessPath(), true));
+        vo.setIpWhitelistList(parseList(vo.getIpWhitelist(), false));
+        return vo;
+    }
+
+    private String resolveList(String rawValue, List<String> listValue, boolean normalizePath) {
+        List<String> values = rawValue != null
+                ? StringUtil.str2List(rawValue, CLIENT_RULE_SEPARATOR_REGEX, true, true)
+                : listValue;
+        if (values == null) {
+            return null;
+        }
+        return String.join(",", values.stream()
+                .map(value -> normalizePath ? normalizePath(value) : StringUtil.trim(value))
+                .filter(StringUtil::isNotBlank)
+                .distinct()
+                .toList());
+    }
+
+    private List<String> parseList(String value, boolean normalizePath) {
+        return StringUtil.str2List(value, CLIENT_RULE_SEPARATOR_REGEX, true, true).stream()
+                .map(item -> normalizePath ? normalizePath(item) : item)
+                .filter(StringUtil::isNotBlank)
+                .distinct()
+                .toList();
+    }
+
+    private String normalizePath(String path) {
+        String value = StringUtil.trim(path);
+        if (StringUtil.isBlank(value)) {
+            return null;
+        }
+        if ("*".equals(value) || "/**".equals(value)) {
+            return "/**";
+        }
+        return value.startsWith("/") ? value : "/" + value;
     }
 }

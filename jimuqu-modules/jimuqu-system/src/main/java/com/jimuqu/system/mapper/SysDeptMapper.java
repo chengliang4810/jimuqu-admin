@@ -4,11 +4,13 @@ import cn.xbatis.core.sql.executor.Where;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.mybatis.core.mapper.BaseMapperPlus;
 import com.jimuqu.system.domain.SysDept;
+import com.jimuqu.system.domain.SysRoleDept;
 import com.jimuqu.system.domain.vo.SysDeptVo;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 部门数据层
@@ -41,16 +43,19 @@ public interface SysDeptMapper extends BaseMapperPlus<SysDept, SysDeptVo> {
      */
 
     default List<SysDeptVo> selectDeptList(Where queryWrapper) {
-//        return selectListByQueryAs(queryWrapper, SysDeptVo.class, DataPermission.of(
-//                DataColumn.of("deptName", "dept_id")
-//        ));
-        return null;
+        return QueryChain.of(this, queryWrapper)
+                .where(queryWrapper)
+                .orderBy(SysDept::getAncestors, SysDept::getParentId, SysDept::getOrderNum, SysDept::getId)
+                .returnType(SysDeptVo.class)
+                .list();
     }
 
     default SysDeptVo selectDeptById(Long deptId) {
-//        QueryWrapper queryWrapper = QueryWrapper.create().where(SYS_DEPT.DEPT_ID.eq(deptId));
-//        return selectOneByQueryAs(queryWrapper, SysDeptVo.class, DataColumn.of("deptName", "dept_id"));
-        return null;
+        return QueryChain.of(this)
+                .eq(SysDept::getId, deptId)
+                .eq(SysDept::getDelFlag, "0")
+                .returnType(SysDeptVo.class)
+                .get();
     }
 
 
@@ -61,7 +66,24 @@ public interface SysDeptMapper extends BaseMapperPlus<SysDept, SysDeptVo> {
      * @param deptCheckStrictly 部门树选择项是否关联显示
      * @return 选中部门列表
      */
-    List<Long> selectDeptListByRoleId(@Param("roleId") Long roleId, @Param("deptCheckStrictly") boolean deptCheckStrictly);
+    default List<Long> selectDeptListByRoleId(Long roleId, boolean deptCheckStrictly) {
+        List<SysDept> selected = QueryChain.of(this)
+                .select(SysDept::getId, SysDept::getParentId)
+                .leftJoin(SysDept::getId, SysRoleDept::getDeptId)
+                .eq(SysRoleDept::getRoleId, roleId)
+                .orderBy(SysDept::getParentId, SysDept::getOrderNum)
+                .list();
+        Set<Long> selectedParentIds = new HashSet<>();
+        if (deptCheckStrictly) {
+            selected.stream()
+                    .map(SysDept::getParentId)
+                    .forEach(selectedParentIds::add);
+        }
+        return selected.stream()
+                .map(SysDept::getId)
+                .filter(id -> !selectedParentIds.contains(id))
+                .toList();
+    }
 
     /**
      * 统计部门数
@@ -69,6 +91,6 @@ public interface SysDeptMapper extends BaseMapperPlus<SysDept, SysDeptVo> {
      * @return 结果
      */
     default int countDeptById(Long deptId){
-        return this.count(Where.create().eq(SysDept::getDelFlag, 0).eq(SysDept::getId, deptId));
+        return this.count(Where.create().eq(SysDept::getDelFlag, "0").eq(SysDept::getId, deptId));
     }
 }

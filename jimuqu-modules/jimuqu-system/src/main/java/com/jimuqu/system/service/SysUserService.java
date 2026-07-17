@@ -3,6 +3,7 @@ package com.jimuqu.system.service;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.system.domain.bo.SysUserBo;
+import com.jimuqu.system.domain.vo.SysUserImportVo;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.domain.query.SysUserQuery;
 
@@ -63,7 +64,7 @@ public interface SysUserService {
      * @param user 用户信息
      * @return 用户信息集合信息
      */
-    Page<SysUserVo> selectAllocatedList(SysUserBo user, PageQuery pageQuery);
+    Page<SysUserVo> selectAllocatedList(SysUserQuery user, PageQuery pageQuery);
 
     /**
      * 根据条件分页查询未分配用户角色列表
@@ -71,7 +72,7 @@ public interface SysUserService {
      * @param user 用户信息
      * @return 用户信息集合信息
      */
-    Page<SysUserVo> selectUnallocatedList(SysUserBo user, PageQuery pageQuery);
+    Page<SysUserVo> selectUnallocatedList(SysUserQuery user, PageQuery pageQuery);
 
     /**
      * 查询用户信息分页列表
@@ -113,6 +114,15 @@ public interface SysUserService {
      * @return 结果
      */
     boolean registerUser(SysUserBo bo);
+
+    /**
+     * 导入用户数据。任一行失败时整批回滚。
+     *
+     * @param users 导入行
+     * @param updateSupport 是否覆盖已存在用户
+     * @return 导入结果消息
+     */
+    String importUsers(List<SysUserImportVo> users, boolean updateSupport);
 
     /**
      * 用户授权角色

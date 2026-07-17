@@ -3,7 +3,6 @@ package com.jimuqu.auth.service.impl;
 import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.stp.parameter.SaLoginParameter;
-import cn.xbatis.core.sql.executor.Where;
 import com.jimuqu.auth.domain.vo.LoginVo;
 import com.jimuqu.auth.service.AuthStrategy;
 import com.jimuqu.auth.service.AuthStrategyService;
@@ -20,14 +19,15 @@ import com.jimuqu.common.core.exception.user.UserException;
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.satoken.utils.LoginHelper;
+import com.jimuqu.common.web.config.properties.CaptchaProperties;
 import com.jimuqu.system.domain.SysClient;
-import com.jimuqu.system.domain.SysUser;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.mapper.SysUserMapper;
 import lombok.extern.slf4j.Slf4j;
 import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
+import org.noear.solon.core.handle.Context;
 import org.noear.solon.data.cache.CacheService;
 import org.noear.solon.validation.ValidUtils;
 
@@ -48,6 +48,8 @@ public class PasswordAuthStrategy implements AuthStrategyService {
     private SysLoginService loginService;
     @Inject
     private SysUserMapper userMapper;
+    @Inject
+    private CaptchaProperties captchaProperties;
 
     @Override
     public LoginVo login(String body, SysClient client) {
@@ -58,11 +60,9 @@ public class PasswordAuthStrategy implements AuthStrategyService {
         String code = loginBody.getCode();
         String uuid = loginBody.getUuid();
 
-//        String captchaEnabled = configService.getConfigValue("system_captcha_enable" );
-//        // TODO 验证码开关
-//        if ("on".equals(captchaEnabled)) {
-//            validateCaptcha(username, code, uuid);
-//        }
+        if (Boolean.TRUE.equals(captchaProperties.getEnable())) {
+            validateCaptcha(username, code, uuid);
+        }
 
         SysUserVo user = loadUserByUsername(username);
         loginService.checkLogin(LoginType.PASSWORD, username, () -> !BCrypt.checkpw(password, user.getPassword()));
@@ -70,20 +70,17 @@ public class PasswordAuthStrategy implements AuthStrategyService {
         LoginUser loginUser = loginService.buildLoginUser(user);
         loginUser.setClientKey(client.getClientKey());
         loginUser.setDeviceType(client.getDeviceType());
-        SaLoginParameter model = new SaLoginParameter();
-        model.setDeviceType(client.getDeviceType());
-        // 自定义分配 不同用户体系 不同 token 授权时间 不设置默认走全局 yml 配置
-        // 例如: 后台用户30分钟过期 app用户1天过期
-        model.setTimeout(client.getTimeout());
-        model.setActiveTimeout(client.getActiveTimeout());
-        model.setExtra(LoginHelper.CLIENT_KEY, client.getClientId());
+        SaLoginParameter model = AuthStrategy.buildLoginParameter(client);
         // 生成token
         LoginHelper.login(loginUser, model);
 
         LoginVo loginVo = new LoginVo();
         loginVo.setAccessToken(StpUtil.getTokenValue());
-        loginVo.setExpireIn(StpUtil.getTokenTimeout());
+        loginVo.setExpireIn(Math.toIntExact(StpUtil.getTokenTimeout()));
         loginVo.setClientId(client.getClientId());
+        Context context = Context.current();
+        loginService.recordLoginInfo(user.getId(), context == null ? "" : context.realIp());
+        loginService.recordLogininfor(username, Constants.LOGIN_SUCCESS, "登录成功");
         return loginVo;
     }
 
@@ -102,14 +99,14 @@ public class PasswordAuthStrategy implements AuthStrategyService {
             loginService.recordLogininfor(username, Constants.LOGIN_FAIL, "验证码过期" );
             throw new CaptchaExpireException();
         }
-        if (!code.equalsIgnoreCase(captcha)) {
+        if (code == null || !code.equalsIgnoreCase(captcha)) {
             loginService.recordLogininfor(username, Constants.LOGIN_FAIL, "验证码错误" );
             throw new CaptchaException();
         }
     }
 
     private SysUserVo loadUserByUsername(String username) {
-        SysUser user = userMapper.get(Where.create().eq(SysUser::getUserName, username), SysUser::getUserName, SysUser::getStatus);
+        SysUserVo user = userMapper.selectUserByUserName(username);
         if (ObjUtil.isNull(user)) {
             log.info("登录用户：{} 不存在.", username);
             throw new UserException("user.not.exists", username);
@@ -117,7 +114,7 @@ public class PasswordAuthStrategy implements AuthStrategyService {
             log.info("登录用户：{} 已被停用.", username);
             throw new UserException("user.blocked", username);
         }
-        return userMapper.selectUserByUserName(username);
+        return user;
     }
 
 }

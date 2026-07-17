@@ -1,5 +1,6 @@
 package com.jimuqu.system.domain.vo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import cn.xbatis.db.annotations.Ignore;
 import cn.xbatis.db.annotations.ResultEntity;
 import com.jimuqu.common.core.constant.UserConstants;
@@ -31,6 +32,7 @@ public class SysRoleVo implements Serializable {
     /**
      * 角色ID
      */
+    @JsonProperty("roleId")
     private Long id;
     /**
      * 角色名称

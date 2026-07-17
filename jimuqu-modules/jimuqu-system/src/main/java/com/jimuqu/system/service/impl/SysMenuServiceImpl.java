@@ -2,11 +2,14 @@ package com.jimuqu.system.service.impl;
 
 import cn.hutool.v7.core.collection.CollUtil;
 import cn.hutool.v7.core.collection.ListUtil;
+import cn.hutool.v7.core.text.StrUtil;
 import cn.hutool.v7.core.tree.MapTree;
 import cn.hutool.v7.core.util.ObjUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.constant.UserConstants;
+import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.MapstructUtil;
+import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.core.utils.StreamUtil;
 import com.jimuqu.common.core.utils.TreeBuildUtil;
 import com.jimuqu.common.satoken.utils.LoginHelper;
@@ -22,15 +25,17 @@ import com.jimuqu.system.mapper.SysMenuMapper;
 import com.jimuqu.system.mapper.SysRoleMapper;
 import com.jimuqu.system.mapper.SysRoleMenuMapper;
 import com.jimuqu.system.service.SysMenuService;
-import jodd.util.StringUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 
@@ -62,8 +67,10 @@ public class SysMenuServiceImpl implements SysMenuService {
      */
     @Override
     public List<SysMenuVo> queryList(SysMenuQuery query, Long userId) {
-        QueryChain<SysMenu> queryChain = buildQueryChain(query);
-        return queryChain.returnType(SysMenuVo.class).list();
+        if (LoginHelper.isSuperAdmin(userId)) {
+            return buildQueryChain(query).returnType(SysMenuVo.class).list();
+        }
+        return sysMenuMapper.selectMenuListByUserId(userId, query);
     }
 
     /**
@@ -71,12 +78,18 @@ public class SysMenuServiceImpl implements SysMenuService {
      */
     @Override
     public List<SysMenuVo> queryListForTreeSelect(SysMenuQuery query, Long userId) {
-        QueryChain<SysMenu> queryChain = QueryChain.of(sysMenuMapper)
-                .forSearch(true)
-                .where(query)
-                .eq(SysMenu::getStatus, UserConstants.MENU_NORMAL)
-                .orderBy(SysMenu::getParentId, SysMenu::getOrderNum);
-        return queryChain.returnType(SysMenuVo.class).list();
+        if (LoginHelper.isSuperAdmin(userId)) {
+            return QueryChain.of(sysMenuMapper)
+                    .forSearch(true)
+                    .where(query)
+                    .eq(SysMenu::getStatus, UserConstants.MENU_NORMAL)
+                    .orderBy(SysMenu::getParentId, SysMenu::getOrderNum)
+                    .returnType(SysMenuVo.class)
+                    .list();
+        }
+        return sysMenuMapper.selectMenuListByUserId(userId, query).stream()
+                .filter(menu -> UserConstants.MENU_NORMAL.equals(menu.getStatus()))
+                .toList();
     }
 
     /**
@@ -134,7 +147,7 @@ public class SysMenuServiceImpl implements SysMenuService {
      */
     @Override
     public List<SysMenuVo> queryList(Long userId) {
-        return List.of();
+        return queryList(new SysMenuQuery(), userId);
     }
 
     /**
@@ -145,7 +158,7 @@ public class SysMenuServiceImpl implements SysMenuService {
      */
     @Override
     public Set<String> queryMenuPermsByUserId(Long userId) {
-        return Set.of();
+        return splitPermissions(sysMenuMapper.selectMenuPermsByUserId(userId));
     }
 
     /**
@@ -156,7 +169,7 @@ public class SysMenuServiceImpl implements SysMenuService {
      */
     @Override
     public Set<String> queryMenuPermsByRoleId(Long roleId) {
-        return Set.of();
+        return splitPermissions(sysMenuMapper.selectMenuPermsByRoleId(roleId));
     }
 
     /**
@@ -184,7 +197,10 @@ public class SysMenuServiceImpl implements SysMenuService {
      */
     @Override
     public List<SysMenu> queryMenuByUserId(Long userId) {
-        return List.of();
+        if (LoginHelper.isSuperAdmin(userId)) {
+            return sysMenuMapper.selectMenuAll();
+        }
+        return sysMenuMapper.selectMenuByUserId(userId);
     }
 
     /**
@@ -196,7 +212,10 @@ public class SysMenuServiceImpl implements SysMenuService {
     @Override
     public List<Long> queryMenuListByRoleId(Long roleId) {
         SysRole role = roleMapper.getById(roleId);
-        return sysMenuMapper.selectMenuListByRoleId(roleId, role.getMenuCheckStrictly());
+        if (role == null) {
+            throw new ServiceException("角色不存在");
+        }
+        return sysMenuMapper.selectMenuListByRoleId(roleId, Boolean.TRUE.equals(role.getMenuCheckStrictly()));
     }
 
     /**
@@ -227,7 +246,7 @@ public class SysMenuServiceImpl implements SysMenuService {
                 RouterVo children = new RouterVo();
                 children.setPath(menu.getPath());
                 children.setComponent(menu.getComponent());
-                children.setName(StringUtil.capitalize(menu.getPath()));
+                children.setName(StrUtil.upperFirst(menu.getPath()));
                 children.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), StringUtil.equals("1", menu.getIsCache()), menu.getPath()));
                 children.setQuery(menu.getQueryParam());
                 childrenList.add(children);
@@ -240,7 +259,7 @@ public class SysMenuServiceImpl implements SysMenuService {
                 String routerPath = SysMenu.innerLinkReplaceEach(menu.getPath());
                 children.setPath(routerPath);
                 children.setComponent(UserConstants.INNER_LINK);
-                children.setName(StringUtil.capitalize(routerPath));
+                children.setName(StrUtil.upperFirst(routerPath));
                 children.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), menu.getPath()));
                 childrenList.add(children);
                 router.setChildren(childrenList);
@@ -305,6 +324,12 @@ public class SysMenuServiceImpl implements SysMenuService {
         return sysRoleMenuMapper.exists(where -> where.eq(SysRoleMenu::getMenuId, menuId));
     }
 
+    @Override
+    public boolean checkMenuExistRole(List<Long> menuIds) {
+        return CollUtil.isNotEmpty(menuIds)
+                && sysRoleMenuMapper.exists(where -> where.in(SysRoleMenu::getMenuId, menuIds));
+    }
+
     /**
      * 校验菜单名称是否唯一
      *
@@ -331,7 +356,7 @@ public class SysMenuServiceImpl implements SysMenuService {
         List<SysMenu> returnList = new ArrayList<>();
         for (SysMenu t : list) {
             // 一、根据传入的某个父节点ID,遍历该父节点的所有子节点
-            if (t.getParentId() == parentId) {
+            if (Objects.equals(t.getParentId(), (long) parentId)) {
                 recursionFn(list, t);
                 returnList.add(t);
             }
@@ -352,5 +377,18 @@ public class SysMenuServiceImpl implements SysMenuService {
                 recursionFn(list, tChild);
             }
         }
+    }
+
+    private Set<String> splitPermissions(List<String> values) {
+        if (CollUtil.isEmpty(values)) {
+            return Collections.emptySet();
+        }
+        Set<String> permissions = new HashSet<>();
+        for (String value : values) {
+            if (StringUtil.isNotBlank(value)) {
+                permissions.addAll(StringUtil.splitList(value.trim()));
+            }
+        }
+        return permissions;
     }
 }

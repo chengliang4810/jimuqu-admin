@@ -16,7 +16,7 @@ public class CacheListInfoVo {
 
     private Properties info;
 
-    private Long dbSize;
+    private Integer dbSize;
 
     private List<Map<String, String>> commandStats;
 
