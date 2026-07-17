@@ -69,18 +69,18 @@ public class HealthAuthUserHttpContractTest {
         HttpApiTestSupport.Response invalidEmail = http.get("/resource/email/code?email=invalid");
         HttpApiTestSupport.Response invalidPhone = http.get("/resource/sms/code?phoneNumber=invalid");
         HttpApiTestSupport.Response unsupportedBinding = http.get("/auth/binding/not-configured");
-        HttpApiTestSupport.Response invalidClient = http.postJson("/auth/login", Map.of(
+        HttpApiTestSupport.Response invalidClient = http.postEncryptedJson("/auth/login", http.withCaptcha(Map.of(
                 "clientId", "invalid-client",
                 "grantType", "password",
                 "username", HttpApiTestSupport.ADMIN_USERNAME,
                 "password", HttpApiTestSupport.DEFAULT_PASSWORD
-        ));
-        HttpApiTestSupport.Response disabledUser = http.postJson("/auth/login", Map.of(
+        )));
+        HttpApiTestSupport.Response disabledUser = http.postEncryptedJson("/auth/login", http.withCaptcha(Map.of(
                 "clientId", HttpApiTestSupport.PC_CLIENT_ID,
                 "grantType", "password",
                 "username", "disabled_user",
                 "password", HttpApiTestSupport.DEFAULT_PASSWORD
-        ));
+        )));
         HttpApiTestSupport.Response unauthenticatedCodes = http.get("/auth/codes");
         HttpApiTestSupport.Response unauthenticatedCallback = http.postJson("/auth/social/callback", Map.of(
                 "source", "not-configured",
@@ -88,13 +88,13 @@ public class HealthAuthUserHttpContractTest {
                 "socialState", "invalid"
         ));
         HttpApiTestSupport.Response unauthenticatedUnlock = http.delete("/auth/unlock/999999");
-        HttpApiTestSupport.Response disabledRegister = http.postJson("/auth/register", Map.of(
+        HttpApiTestSupport.Response disabledRegister = http.postEncryptedJson("/auth/register", http.withCaptcha(Map.of(
                 "clientId", HttpApiTestSupport.PC_CLIENT_ID,
                 "grantType", "password",
                 "username", registeredUsername,
                 "password", "Register123!",
                 "userType", "pc_user"
-        ));
+        )));
 
         captcha.expectStatus(200).expectSuccess();
         assertInstanceOf(Boolean.class, captcha.dataObject().get("captchaEnabled"));
@@ -113,12 +113,12 @@ public class HealthAuthUserHttpContractTest {
     @Test
     @Order(2)
     void loginRegisterAndAuthenticatedAuthContracts() {
-        HttpApiTestSupport.Response login = http.postJson("/auth/login", Map.of(
+        HttpApiTestSupport.Response login = http.postEncryptedJson("/auth/login", http.withCaptcha(Map.of(
                 "clientId", HttpApiTestSupport.PC_CLIENT_ID,
                 "grantType", "password",
                 "username", HttpApiTestSupport.ADMIN_USERNAME,
                 "password", HttpApiTestSupport.DEFAULT_PASSWORD
-        ));
+        )));
         login.expectStatus(200).expectSuccess();
         Object expireIn = login.dataObject().get("expire_in");
         assertInstanceOf(Number.class, expireIn, "expire_in 必须是 JSON Number");
@@ -143,20 +143,20 @@ public class HealthAuthUserHttpContractTest {
         ), adminToken).expectSuccess();
         HttpApiTestSupport.Response register;
         try {
-            http.postJson("/auth/register", Map.of(
+            http.postEncryptedJson("/auth/register", http.withCaptcha(Map.of(
                     "clientId", HttpApiTestSupport.PC_CLIENT_ID,
                     "grantType", "password",
                     "username", "x",
                     "password", "",
                     "userType", "pc_user"
-            )).expectCode(500);
-            register = http.postJson("/auth/register", Map.of(
+            ))).expectCode(500);
+            register = http.postEncryptedJson("/auth/register", http.withCaptcha(Map.of(
                     "clientId", HttpApiTestSupport.PC_CLIENT_ID,
                     "grantType", "password",
                     "username", registeredUsername,
                     "password", "Register123!",
                     "userType", "pc_user"
-            ));
+            )));
         } finally {
             http.putJson("/system/config/updateByKey", Map.of(
                     "configKey", "sys.account.registerUser",
@@ -268,7 +268,7 @@ public class HealthAuthUserHttpContractTest {
                 "roleIds", List.of(5),
                 "postIds", List.of()
         ), adminToken);
-        HttpApiTestSupport.Response resetPassword = http.putJson("/system/user/resetPwd", Map.of(
+        HttpApiTestSupport.Response resetPassword = http.putEncryptedJson("/system/user/resetPwd", Map.of(
                 "userId", createdUserId,
                 "password", "Reset123!"
         ), adminToken);
@@ -286,11 +286,11 @@ public class HealthAuthUserHttpContractTest {
                 "phoneNumber", "13800000001",
                 "sex", "0"
         ), adminToken);
-        HttpApiTestSupport.Response updatePassword = http.putJson("/system/user/profile/updatePwd", Map.of(
+        HttpApiTestSupport.Response updatePassword = http.putEncryptedJson("/system/user/profile/updatePwd", Map.of(
                 "oldPassword", HttpApiTestSupport.DEFAULT_PASSWORD,
                 "newPassword", "Temporary123!"
         ), adminToken);
-        HttpApiTestSupport.Response restorePassword = http.putJson("/system/user/profile/updatePwd", Map.of(
+        HttpApiTestSupport.Response restorePassword = http.putEncryptedJson("/system/user/profile/updatePwd", Map.of(
                 "oldPassword", "Temporary123!",
                 "newPassword", HttpApiTestSupport.DEFAULT_PASSWORD
         ), adminToken);

@@ -2,8 +2,10 @@ package com.jimuqu.test.http;
 
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.core.encrypt.utils.ApiCryptoUtil;
+import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.test.coverage.RuntimeRouteCoverage;
 import org.noear.solon.Solon;
+import org.noear.solon.data.cache.CacheService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -125,6 +127,18 @@ public final class HttpApiTestSupport {
         return request("PUT", path, jsonBody(body), "application/json", token);
     }
 
+    public Response postEncryptedJson(String path, Object body) {
+        return postEncryptedJson(path, body, null);
+    }
+
+    public Response postEncryptedJson(String path, Object body, String token) {
+        return encryptedJsonRequest("POST", path, body, token);
+    }
+
+    public Response putEncryptedJson(String path, Object body, String token) {
+        return encryptedJsonRequest("PUT", path, body, token);
+    }
+
     public Response postForm(String path, Map<String, ?> form) {
         return postForm(path, form, null);
     }
@@ -188,25 +202,52 @@ public final class HttpApiTestSupport {
     }
 
     public String login(String username, String password) {
-        String json = JsonUtil.toString(Map.of(
+        Map<String, Object> payload = new LinkedHashMap<>(Map.of(
                 "clientId", PC_CLIENT_ID,
                 "grantType", "password",
                 "username", username,
                 "password", password
         ));
+        payload.putAll(captchaAnswer());
+        Response response = postEncryptedJson("/auth/login", payload).expectSuccess();
+        return response.dataString("access_token");
+    }
+
+    public Map<String, Object> withCaptcha(Map<String, ?> body) {
+        Map<String, Object> payload = new LinkedHashMap<>(body);
+        payload.putAll(captchaAnswer());
+        return payload;
+    }
+
+    private Response encryptedJsonRequest(String method, String path, Object body, String token) {
+        String json = jsonBody(body);
         try {
             String aesKey = ApiCryptoUtil.randomAesKey();
             String encryptedKey = ApiCryptoUtil.encryptByRsa(
                     Base64.getEncoder().encodeToString(aesKey.getBytes(StandardCharsets.UTF_8)), requestPublicKey());
-            Response response = sendRequest("POST", "/auth/login",
+            return sendRequest(method, path,
                     HttpRequest.BodyPublishers.ofString(ApiCryptoUtil.encryptByAes(json, aesKey),
                             StandardCharsets.UTF_8),
-                    "application/json", null,
-                    Map.of(Solon.cfg().get("api-decrypt.headerFlag", "encrypt-key"), encryptedKey)).expectSuccess();
-            return response.dataString("access_token");
+                    "application/json", token,
+                    Map.of(Solon.cfg().get("api-decrypt.headerFlag", "encrypt-key"), encryptedKey));
         } catch (Exception exception) {
-            throw new IllegalStateException("无法构造 Bell 加密登录请求", exception);
+            throw new IllegalStateException("无法构造 Bell 加密请求: " + method + " " + path, exception);
         }
+    }
+
+    private Map<String, Object> captchaAnswer() {
+        Response response = get("/auth/code").expectSuccess();
+        Map<String, Object> data = response.dataObject();
+        if (!Boolean.TRUE.equals(data.get("captchaEnabled"))) {
+            return Map.of();
+        }
+        String uuid = String.valueOf(data.get("uuid"));
+        CacheService cacheService = Solon.context().getBean(CacheService.class);
+        String answer = cacheService.get(GlobalConstants.CAPTCHA_CODE_KEY + uuid, String.class);
+        if (answer == null || answer.isBlank()) {
+            throw new IllegalStateException("测试验证码未写入隔离缓存: " + uuid);
+        }
+        return Map.of("uuid", uuid, "code", answer);
     }
 
     private static String requestPublicKey() {
