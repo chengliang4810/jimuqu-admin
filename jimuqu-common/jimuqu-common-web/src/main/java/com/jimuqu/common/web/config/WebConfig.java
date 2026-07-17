@@ -6,6 +6,9 @@ import org.noear.solon.Solon;
 import org.noear.solon.serialization.snack4.Snack4StringSerializer;
 import org.noear.solon.web.cors.CrossInterceptor;
 import com.jimuqu.common.web.sensitive.SensitiveJsonRender;
+import com.jimuqu.common.core.xss.Xss;
+import com.jimuqu.common.core.xss.XssValidator;
+import org.noear.solon.validation.ValidatorManager;
 
 /**
  * web 通用配置
@@ -15,6 +18,11 @@ import com.jimuqu.common.web.sensitive.SensitiveJsonRender;
  */
 @Configuration
 public class WebConfig {
+
+    @Bean
+    public void xssValidator() {
+        ValidatorManager.register(Xss.class, XssValidator.INSTANCE);
+    }
 
     /**
      * 跨域配置
