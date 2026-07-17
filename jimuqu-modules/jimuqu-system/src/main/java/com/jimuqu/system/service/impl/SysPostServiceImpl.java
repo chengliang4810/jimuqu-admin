@@ -3,6 +3,7 @@ package com.jimuqu.system.service.impl;
 import cn.xbatis.core.sql.executor.Where;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.utils.MapstructUtil;
+import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.common.mybatis.model.DataScopeRule;
@@ -125,6 +126,11 @@ public class SysPostServiceImpl implements SysPostService {
      */
     @Override
     public Integer deleteByIds(Collection<Long> ids) {
+        for (SysPost post : QueryChain.of(sysPostMapper).in(SysPost::getPostId, ids).list()) {
+            if (countUserPostById(post.getPostId()) > 0) {
+                throw new ServiceException(post.getPostName() + "已分配，不能删除");
+            }
+        }
         return sysPostMapper.deleteByIds(ids);
     }
 

@@ -247,6 +247,9 @@ public class RbacHttpContractTest {
                 postPayload(1L, 103L, "admin", "管理员", "1"), adminToken).expectEnvelope();
         assertNotEquals(200, assignedPost.code(), "已分配用户的岗位不得停用");
         assertTrue(String.valueOf(assignedPost.json().get("msg")).contains("不能禁用"));
+        HttpApiTestSupport.Response assignedDelete = api.delete("/system/post/1", adminToken).expectEnvelope();
+        assertNotEquals(200, assignedDelete.code(), "已分配用户的岗位不得删除");
+        assertTrue(String.valueOf(assignedDelete.json().get("msg")).contains("不能删除"));
     }
 
     private Map<String, Object> rolePayload(String name, String key, List<Long> menuIds) {
