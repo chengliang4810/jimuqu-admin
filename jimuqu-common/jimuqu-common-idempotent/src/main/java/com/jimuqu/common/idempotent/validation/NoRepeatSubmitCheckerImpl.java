@@ -8,10 +8,12 @@ import com.jimuqu.common.core.constant.GlobalConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
+import org.noear.solon.annotation.Init;
 import org.noear.solon.core.handle.Context;
 import org.noear.solon.data.cache.CacheService;
 import org.noear.solon.validation.annotation.NoRepeatSubmit;
 import org.noear.solon.validation.annotation.NoRepeatSubmitChecker;
+import org.noear.solon.validation.ValidatorManager;
 
 /**
  * 重复提交检查器
@@ -25,6 +27,11 @@ public class NoRepeatSubmitCheckerImpl implements NoRepeatSubmitChecker {
 
     @Inject
     private CacheService cacheService;
+
+    @Init
+    public void register() {
+        ValidatorManager.setNoRepeatSubmitChecker(this);
+    }
 
     @Override
     public boolean check(NoRepeatSubmit anno, Context ctx, String submitHash, int limitSeconds) {
