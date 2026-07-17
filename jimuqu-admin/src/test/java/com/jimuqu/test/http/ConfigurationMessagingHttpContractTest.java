@@ -11,10 +11,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.noear.solon.test.SolonTest;
 
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -248,7 +246,7 @@ public class ConfigurationMessagingHttpContractTest {
     void exchangesWebSocketMessages() throws Exception {
         int port = Integer.parseInt(System.getenv("JIMU_TEST_SERVER_PORT"));
         URI uri = URI.create("ws://127.0.0.1:" + port + "/resource/websocket?clientid=http-contract&Authorization="
-                + URLEncoder.encode("Bearer " + adminToken, StandardCharsets.UTF_8));
+                + "Bearer%20" + adminToken);
         LinkedBlockingQueue<String> messages = new LinkedBlockingQueue<>();
         CompletableFuture<Void> closed = new CompletableFuture<>();
         WebSocket.Listener listener = new WebSocket.Listener() {
