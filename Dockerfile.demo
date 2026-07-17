@@ -1,0 +1,26 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 LC_ALL=C.UTF-8 \
+    SERVER_PORT=5320 \
+    JIMU_DB_HOST=127.0.0.1 JIMU_DB_PORT=3306 JIMU_DB_NAME=jimuqu_db \
+    JIMU_DB_USER=jimuqu JIMU_DB_PASSWORD=P@ssw0rd \
+    JIMU_REDIS_HOST=127.0.0.1 JIMU_REDIS_PORT=6379 JIMU_REDIS_DB=0 \
+    JIMU_REDIS_PASSWORD=P@ssw0rd \
+    JIMU_OSS_DOMAIN=http://localhost/file/ JIMU_OSS_PATH=/var/lib/jimuqu/uploads
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      openjdk-17-jre-headless nginx mysql-server redis-server supervisor \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/jimuqu
+COPY jimuqu-admin/target/jimuqu-admin.jar app.jar
+COPY frontend-dist/ /var/www/html/
+COPY script/docker/demo-entrypoint.sh /usr/local/bin/demo-entrypoint.sh
+COPY script/docker/demo-supervisord.conf /etc/supervisor/conf.d/jimuqu.conf
+COPY script/docker/demo-nginx.conf /etc/nginx/sites-enabled/default
+RUN chmod +x /usr/local/bin/demo-entrypoint.sh \
+    && mkdir -p /var/lib/jimuqu/uploads /var/log/jimuqu
+
+EXPOSE 80
+ENTRYPOINT ["/usr/local/bin/demo-entrypoint.sh"]

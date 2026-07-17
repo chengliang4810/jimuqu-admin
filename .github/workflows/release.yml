@@ -37,6 +37,19 @@ jobs:
           cd release
           sha256sum * > SHA256SUMS
 
+      - name: Build frontend bundle
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          git clone --depth 1 --branch "$TAG" https://github.com/chengliang4810/jimuqu-admin-ui.git frontend-src
+          corepack enable
+          corepack prepare pnpm@11.2.2 --activate
+          cd frontend-src
+          pnpm install --frozen-lockfile
+          pnpm build
+          cd ..
+          cp -R frontend-src/dist frontend-dist
+
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/login-action@v3
@@ -49,6 +62,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: Dockerfile.demo
           push: true
           tags: |
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}

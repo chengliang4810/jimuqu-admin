@@ -1,0 +1,64 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-P@ssw0rd}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-jimuqu_db}
+      MYSQL_USER: ${MYSQL_USER:-jimuqu}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-P@ssw0rd}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    command: sh -c 'redis-server --appendonly yes --requirepass "$${REDIS_PASSWORD}"'
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-P@ssw0rd}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  backend:
+    image: ghcr.io/chengliang4810/jimuqu-admin:${JIMU_VERSION:-v1.0.0}
+    environment:
+      TZ: Asia/Shanghai
+      SERVER_PORT: 5320
+      JIMU_DB_HOST: mysql
+      JIMU_DB_PORT: 3306
+      JIMU_DB_NAME: ${MYSQL_DATABASE:-jimuqu_db}
+      JIMU_DB_USER: ${MYSQL_USER:-jimuqu}
+      JIMU_DB_PASSWORD: ${MYSQL_PASSWORD:-P@ssw0rd}
+      JIMU_REDIS_HOST: redis
+      JIMU_REDIS_PORT: 6379
+      JIMU_REDIS_DB: 0
+      JIMU_REDIS_PASSWORD: ${REDIS_PASSWORD:-P@ssw0rd}
+      JIMU_OSS_DOMAIN: http://localhost/file/
+      JIMU_OSS_PATH: /jimuqu/server/uploads
+    volumes:
+      - oss-data:/jimuqu/server/uploads
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  frontend:
+    image: ghcr.io/chengliang4810/jimuqu-admin-ui:${JIMU_VERSION:-v1.0.0}
+    ports:
+      - "${JIMU_HTTP_PORT:-80}:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql-data:
+  redis-data:
+  oss-data:

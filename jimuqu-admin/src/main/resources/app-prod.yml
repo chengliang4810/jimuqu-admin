@@ -6,9 +6,9 @@ solon.dataSources.jimuqu!: #数据源（!结尾表示 typed=true）
   master:
     dataSourceClassName: "com.zaxxer.hikari.HikariDataSource"
     driverClassName: com.mysql.cj.jdbc.Driver
-    jdbcUrl: jdbc:mysql://mariadb:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
-    username: jimuqu
-    password: P@ssw0rd
+    jdbcUrl: jdbc:mysql://${JIMU_DB_HOST}:${JIMU_DB_PORT}/${JIMU_DB_NAME}?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
+    username: ${JIMU_DB_USER}
+    password: ${JIMU_DB_PASSWORD}
 #  slave:
 #    dataSourceClassName: "com.zaxxer.hikari.HikariDataSource"
 #    driverClassName: com.mysql.cj.jdbc.Driver
@@ -23,8 +23,15 @@ auto-table:
   mode: validate
 
 #开启redis缓存配置, 自动覆盖 app.yml的配置
-#jimuqu.cache:
-#  driverType: "redis" #驱动类型
-#  server: "localhost:6379"
-#  db: 0 #默认为 0，可不配置
-#  password: jimuqu
+jimuqu.cache:
+  driverType: "redis"
+  server: "${JIMU_REDIS_HOST}:${JIMU_REDIS_PORT}"
+  db: ${JIMU_REDIS_DB}
+  password: ${JIMU_REDIS_PASSWORD}
+
+dromara:
+  x-file-storage:
+    local-plus:
+      - platform: default
+        domain: ${JIMU_OSS_DOMAIN}
+        storage-path: ${JIMU_OSS_PATH}/
