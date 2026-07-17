@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /** 运行时逐路由验证登录与权限拦截，新增受保护接口会自动进入测试分母。 */
 @SolonTest(value = Application.class, env = "test", debug = false)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class HttpAuthorizationCoverageTest {
+public class HttpAuthorizationCoverageTest {
 
     private static final Set<String> MANUALLY_PROTECTED_IGNORED_ROUTES = Set.of(
             "GET /auth/codes", "POST /auth/social/callback", "DELETE /auth/unlock/{socialId}",
