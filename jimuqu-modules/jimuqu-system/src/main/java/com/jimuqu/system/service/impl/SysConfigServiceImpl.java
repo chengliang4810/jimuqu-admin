@@ -1,6 +1,7 @@
 package com.jimuqu.system.service.impl;
 
 import cn.xbatis.core.sql.executor.chain.QueryChain;
+import cn.hutool.v7.core.util.ObjUtil;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
@@ -87,6 +88,26 @@ public class SysConfigServiceImpl implements SysConfigService {
     public Boolean updateByBo(SysConfigBo bo) {
         SysConfig sysConfig = MapstructUtil.convert(bo, SysConfig.class);
         return sysConfigMapper.update(sysConfig) > 0;
+    }
+
+    @Override
+    public Boolean updateByKey(SysConfigBo bo) {
+        SysConfig current = QueryChain.of(sysConfigMapper)
+                .eq(SysConfig::getConfigKey, bo.getConfigKey())
+                .get();
+        if (current == null) {
+            return false;
+        }
+        bo.setId(current.getId());
+        return updateByBo(bo);
+    }
+
+    @Override
+    public boolean checkConfigKeyUnique(SysConfigBo bo) {
+        return !QueryChain.of(sysConfigMapper)
+                .eq(SysConfig::getConfigKey, bo.getConfigKey())
+                .ne(ObjUtil.isNotNull(bo.getId()), SysConfig::getId, bo.getId())
+                .exists();
     }
 
     /**

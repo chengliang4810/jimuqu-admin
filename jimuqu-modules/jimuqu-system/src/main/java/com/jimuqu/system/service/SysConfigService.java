@@ -58,6 +58,10 @@ public interface SysConfigService {
      */
     Boolean updateByBo(SysConfigBo bo);
 
+    Boolean updateByKey(SysConfigBo bo);
+
+    boolean checkConfigKeyUnique(SysConfigBo bo);
+
     /**
      * 批量删除代码生成模板信息
      *

@@ -134,6 +134,16 @@ public class ConfigurationMessagingHttpContractTest {
                 configPayload(configId, configName + "-改", configKey, "v2"), adminToken).expectSuccess();
         assertEquals("v2", api.get("/system/config/configKey/" + configKey, adminToken)
                 .expectSuccess().json().get("data"));
+        api.putJson("/system/config/updateByKey",
+                configPayload(null, configName + "-按键改", configKey, "v3"), adminToken).expectSuccess();
+        assertEquals("v3", api.get("/system/config/configKey/" + configKey, adminToken)
+                .expectSuccess().json().get("data"));
+
+        HttpApiTestSupport.Response duplicate = api.postJson("/system/config",
+                configPayload(null, "重复配置-" + suffix, configKey, "duplicate"), adminToken).expectEnvelope();
+        assertNotEquals(200, duplicate.code(), "重复参数键不得写入");
+        assertEquals(1, rows(api.get("/system/config/list" + HttpApiTestSupport.query(Map.of(
+                "configKey", configKey, "pageNum", 1, "pageSize", 20)), adminToken).expectPage()).size());
         api.postForm("/system/config/export", Map.of("configKey", configKey), adminToken)
                 .expectSpreadsheet();
         api.delete("/system/config/refreshCache", adminToken).expectSuccess();
@@ -146,6 +156,11 @@ public class ConfigurationMessagingHttpContractTest {
         assertNotEquals(200, invalid.code(), "空配置值不得写入");
 
         assertEquals(1L, scalarLong(api.delete("/system/config/" + configId, adminToken).expectSuccess()));
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Object> rows(HttpApiTestSupport.Response response) {
+        return (List<Object>) response.dataObject().get("rows");
     }
 
     @Test
