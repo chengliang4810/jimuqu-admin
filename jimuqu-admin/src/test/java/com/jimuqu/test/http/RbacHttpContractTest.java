@@ -286,7 +286,7 @@ public class RbacHttpContractTest {
 
     private Map<String, Object> deptPayload(String name) {
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("parentId", 100);
+        payload.put("parentId", 0);
         payload.put("deptName", name);
         payload.put("orderNum", 90);
         payload.put("status", "0");

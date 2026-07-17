@@ -126,15 +126,19 @@ public class SysDeptServiceImpl implements SysDeptService {
      */
     @Override
     public Boolean insertByBo(SysDeptBo bo) {
-        SysDept parent = sysDeptMapper.getById(bo.getParentId());
-        if (parent == null) {
-            throw new ServiceException("父部门不存在");
-        }
-        if (!"0".equals(parent.getStatus())) {
-            throw new ServiceException("部门停用，不允许新增");
+        String ancestors = "0";
+        if (!Objects.equals(0L, bo.getParentId())) {
+            SysDept parent = sysDeptMapper.getById(bo.getParentId());
+            if (parent == null) {
+                throw new ServiceException("父部门不存在");
+            }
+            if (!"0".equals(parent.getStatus())) {
+                throw new ServiceException("部门停用，不允许新增");
+            }
+            ancestors = parent.getAncestors() + "," + parent.getId();
         }
         SysDept sysDept = MapstructUtil.convert(bo, SysDept.class);
-        sysDept.setAncestors(parent.getAncestors() + "," + parent.getId());
+        sysDept.setAncestors(ancestors);
         boolean flag = sysDeptMapper.save(sysDept) > 0;
         bo.setId(sysDept.getId());
         return flag;
@@ -153,11 +157,14 @@ public class SysDeptServiceImpl implements SysDeptService {
         }
         if (!Objects.equals(old.getParentId(), bo.getParentId())) {
             checkDeptDataScope(bo.getParentId());
-            SysDept parent = sysDeptMapper.getById(bo.getParentId());
-            if (parent == null) {
-                throw new ServiceException("父部门不存在");
+            String newAncestors = "0";
+            if (!Objects.equals(0L, bo.getParentId())) {
+                SysDept parent = sysDeptMapper.getById(bo.getParentId());
+                if (parent == null) {
+                    throw new ServiceException("父部门不存在");
+                }
+                newAncestors = parent.getAncestors() + "," + parent.getId();
             }
-            String newAncestors = parent.getAncestors() + "," + parent.getId();
             updateChildrenAncestors(bo.getId(), newAncestors, old.getAncestors());
             sysDept.setAncestors(newAncestors);
         } else {
