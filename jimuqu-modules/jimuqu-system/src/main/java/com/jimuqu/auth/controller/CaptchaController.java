@@ -57,7 +57,10 @@ public class CaptchaController extends BaseController {
     @Mapping("/resource/sms/code")
     public R<Void> smsCode(String phoneNumber) {
         checkRate("captcha:sms:" + phoneNumber, 1);
-        if (StringUtil.isBlank(phoneNumber) || !PHONE_PATTERN.matcher(phoneNumber).matches()) {
+        if (StringUtil.isBlank(phoneNumber)) {
+            return R.fail("用户手机号不能为空");
+        }
+        if (!PHONE_PATTERN.matcher(phoneNumber).matches()) {
             return R.fail("请输入正确的手机号！");
         }
         verificationCodeService.sendSms(phoneNumber);
@@ -67,10 +70,13 @@ public class CaptchaController extends BaseController {
     @Get
     @Mapping("/resource/email/code")
     public R<Void> emailCode(String email) {
+        if (StringUtil.isBlank(email)) {
+            return R.fail("邮箱不能为空");
+        }
         if (!emailEnabled()) {
             return R.fail("当前系统没有开启邮箱功能！");
         }
-        if (StringUtil.isBlank(email) || !EMAIL_PATTERN.matcher(email).matches()) {
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
             return R.fail("请输入正确的邮箱地址！");
         }
         checkRate("captcha:email:" + email, 1);
@@ -105,7 +111,7 @@ public class CaptchaController extends BaseController {
                 || Solon.cfg().getBool("mail.enabled", false);
     }
 
-    private void checkRate(String key, int count) {
+    void checkRate(String key, int count) {
         if (!globalRateLimitConfig.isEnabled()) {
             return;
         }
