@@ -27,7 +27,7 @@ public class AuthRedisStateCache implements AuthStateCache {
     @Override
     public void cache(String key, String value) {
         // 授权超时时间 默认三分钟
-        cacheService.store(GlobalConstants.SOCIAL_AUTH_CODE_KEY + key, value, 3 * 1000 * 60);
+        cacheService.store(GlobalConstants.SOCIAL_AUTH_CODE_KEY + key, value, 3 * 60);
     }
 
     /**
