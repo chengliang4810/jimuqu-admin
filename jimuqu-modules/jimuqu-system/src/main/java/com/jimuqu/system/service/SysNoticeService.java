@@ -51,7 +51,7 @@ public class SysNoticeService {
         SysNotice notice = toEntity(bo);
         int rows = noticeMapper.save(notice);
         bo.setNoticeId(notice.getNoticeId());
-        if (rows > 0 && "0".equals(notice.getStatus())) {
+        if (rows > 0) {
             messageService.publishNotice(toMessage(toVo(notice)));
         }
         return rows;
