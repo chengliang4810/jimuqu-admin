@@ -12,6 +12,7 @@ import com.jimuqu.system.domain.bo.SysUserBo;
 import com.jimuqu.system.domain.bo.SysUserPasswordBo;
 import com.jimuqu.system.domain.bo.SysUserProfileBo;
 import com.jimuqu.system.domain.vo.ProfileVo;
+import com.jimuqu.system.domain.vo.ProfileUserVo;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.service.SysUserService;
 import cn.hutool.v7.core.bean.BeanUtil;
@@ -38,7 +39,7 @@ public class SysProfileController extends BaseController {
     public R<ProfileVo> profile() {
         SysUserVo user = userService.queryById(LoginHelper.getUserId());
         ProfileVo profileVo = new ProfileVo();
-        profileVo.setUser(user);
+        profileVo.setUser(BeanUtil.toBean(user, ProfileUserVo.class));
         profileVo.setRoleGroup(userService.selectUserRoleGroup(user.getUserName()));
         profileVo.setPostGroup(userService.selectUserPostGroup(user.getUserName()));
         return R.ok(profileVo);

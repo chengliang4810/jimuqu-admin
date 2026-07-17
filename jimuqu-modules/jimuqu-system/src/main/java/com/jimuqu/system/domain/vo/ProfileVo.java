@@ -13,7 +13,7 @@ public class ProfileVo {
     /**
      * 用户信息
      */
-    private SysUserVo user;
+    private ProfileUserVo user;
 
     /**
      * 用户所属角色组
