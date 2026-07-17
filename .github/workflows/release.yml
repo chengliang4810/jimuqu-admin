@@ -2,8 +2,8 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - dev
 
 permissions:
   contents: write
@@ -22,22 +22,26 @@ jobs:
           java-version: '17'
           cache: maven
 
+      - name: Calculate release version
+        run: echo "RELEASE_VERSION=v$(TZ=Asia/Shanghai date +%Y.%m.%d)-${GITHUB_SHA:0:7}" >> "$GITHUB_ENV"
+
       - name: Build release JAR
         run: mvn clean package -DskipTests
 
       - name: Prepare release assets
-        env:
-          TAG: ${{ github.ref_name }}
         run: |
           mkdir release
-          cp jimuqu-admin/target/jimuqu-admin.jar "release/jimuqu-admin-${TAG}.jar"
-          git archive --format=zip --prefix="jimuqu-admin-${TAG}/" -o "release/jimuqu-admin-${TAG}-source.zip" HEAD
-          git archive --format=tar.gz --prefix="jimuqu-admin-${TAG}/" -o "release/jimuqu-admin-${TAG}-source.tar.gz" HEAD
+          cp jimuqu-admin/target/jimuqu-admin.jar release/jimuqu-admin.jar
+          git archive --format=zip --prefix=jimuqu-admin/ -o release/jimuqu-admin-source.zip HEAD
+          git archive --format=tar.gz --prefix=jimuqu-admin/ -o release/jimuqu-admin-source.tar.gz HEAD
           cd release
           sha256sum * > SHA256SUMS
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_VERSION }}
+          name: ${{ env.RELEASE_VERSION }}
+          target_commitish: dev
           generate_release_notes: true
           files: release/*
