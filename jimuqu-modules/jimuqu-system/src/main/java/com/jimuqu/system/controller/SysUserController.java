@@ -6,6 +6,7 @@ import cn.hutool.v7.core.util.ObjUtil;
 import cn.hutool.v7.core.tree.MapTree;
 import com.jimuqu.common.core.checker.Assert;
 import com.jimuqu.common.core.constant.UserConstants;
+import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.encrypt.annotation.ApiEncrypt;
 import com.jimuqu.common.core.domain.model.LoginUser;
@@ -44,6 +45,7 @@ import org.noear.solon.annotation.Post;
 import org.noear.solon.annotation.Put;
 import org.noear.solon.core.handle.DownloadedFile;
 import org.noear.solon.core.handle.UploadedFile;
+import org.noear.solon.data.cache.CacheService;
 import org.noear.solon.validation.annotation.NoRepeatSubmit;
 import org.noear.solon.validation.annotation.NotEmpty;
 import org.noear.solon.validation.annotation.NotNull;
@@ -67,6 +69,7 @@ public class SysUserController extends BaseController {
     private final SysRoleService roleService;
     private final SysPostService postService;
     private final SysDeptService deptService;
+    private final CacheService cacheService;
 
     /**
      * 查询用户信息列表
@@ -273,6 +276,21 @@ public class SysUserController extends BaseController {
         Assert.isFalse(ids.contains(LoginHelper.getUserId()), "当前用户不能删除");
         Integer num = sysUserService.deleteByIds(ids);
         Assert.gtZero(num, "删除用户信息失败");
+        return R.ok();
+    }
+
+    /** 清除指定用户的密码错误锁定计数。 */
+    @Get
+    @Mapping("/unlock/{userId}")
+    @SaCheckPermission("system:user:edit")
+    @NoRepeatSubmit
+    @Log(title = "用户解锁", businessType = BusinessType.OTHER)
+    public R<Void> unlock(Long userId) {
+        SysUserVo user = sysUserService.queryById(userId);
+        if (user == null) {
+            return R.fail("用户不存在");
+        }
+        cacheService.remove(GlobalConstants.PWD_ERR_CNT_KEY + user.getUserName());
         return R.ok();
     }
 
