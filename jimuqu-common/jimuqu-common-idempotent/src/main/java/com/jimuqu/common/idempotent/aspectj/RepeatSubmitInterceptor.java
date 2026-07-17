@@ -64,7 +64,7 @@ public class RepeatSubmitInterceptor implements RouterInterceptor {
             throw new ServiceException("重复提交间隔时间不能小于'1'秒");
         }
 
-        String nowParams = argsArrayToString(ctx.paramMap(), ctx.body());
+        String nowParams = argsArrayToString(ctx.paramMap(), ctx.bodyNew());
 
         // 请求地址（作为存放cache的key值）
         String url = ctx.url();

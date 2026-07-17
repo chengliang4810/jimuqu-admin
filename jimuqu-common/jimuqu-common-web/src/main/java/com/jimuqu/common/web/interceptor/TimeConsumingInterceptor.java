@@ -44,7 +44,8 @@ public class TimeConsumingInterceptor implements RouterInterceptor {
         // 获取请求参数
         Map<String, List<String>> paramValueMap = ctx.paramMap().toValuesMap();
         // 获取请求体
-        Dict bodyDict = JsonUtil.toMap(ctx.body());
+        String requestBody = ctx.bodyNew();
+        Dict bodyDict = StrUtil.isBlank(requestBody) ? Dict.of() : JsonUtil.toMap(requestBody);
 
         // 移除敏感属性字段
         MapUtil.removeAny(paramValueMap, EXCLUDE_PROPERTIES);

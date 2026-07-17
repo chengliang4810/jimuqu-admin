@@ -55,7 +55,7 @@ public class NoRepeatSubmitCheckerImpl implements NoRepeatSubmitChecker {
 
     private String requestBody(Context ctx) {
         try {
-            return StrUtil.trimToEmpty(ctx.body());
+            return StrUtil.trimToEmpty(ctx.bodyNew());
         } catch (Exception e) {
             log.warn("读取请求体失败，防重复提交校验退回框架摘要: {}", e.getMessage());
             return "";
