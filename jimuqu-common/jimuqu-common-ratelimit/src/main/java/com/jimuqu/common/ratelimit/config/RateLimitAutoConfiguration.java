@@ -6,6 +6,7 @@ import com.jimuqu.common.ratelimit.core.impl.CacheRateLimiter;
 import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Configuration;
 import org.noear.solon.annotation.Inject;
+import org.noear.solon.data.cache.CacheService;
 
 /**
  * 限流自动配置
@@ -39,7 +40,7 @@ public class RateLimitAutoConfiguration {
      * 统一缓存限流器
      */
     @Bean
-    public RateLimiter rateLimiter(RateLimitConfig rateLimitConfig) {
-        return new CacheRateLimiter(rateLimitConfig);
+    public RateLimiter rateLimiter(CacheService cacheService, RateLimitConfig rateLimitConfig) {
+        return new CacheRateLimiter(cacheService, rateLimitConfig);
     }
 }

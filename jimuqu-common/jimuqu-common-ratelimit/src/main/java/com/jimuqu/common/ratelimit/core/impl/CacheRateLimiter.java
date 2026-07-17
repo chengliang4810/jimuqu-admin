@@ -5,23 +5,21 @@ import com.jimuqu.common.ratelimit.core.RateLimiter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.noear.solon.annotation.Component;
-import org.noear.solon.annotation.Inject;
 import org.noear.solon.data.cache.CacheService;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Component
 public class CacheRateLimiter implements RateLimiter {
 
-    @Inject
-    private CacheService cacheService;
+    private final CacheService cacheService;
 
     private final RateLimitConfig globalConfig;
 
-    public CacheRateLimiter(RateLimitConfig globalConfig) {
-        this.globalConfig = globalConfig;
+    public CacheRateLimiter(CacheService cacheService, RateLimitConfig globalConfig) {
+        this.cacheService = Objects.requireNonNull(cacheService, "cacheService");
+        this.globalConfig = Objects.requireNonNull(globalConfig, "globalConfig");
     }
 
     @Override
