@@ -43,6 +43,8 @@ public interface SysDeptService {
      */
     List<SysDeptVo> queryList(SysDeptQuery query);
 
+    List<SysDeptVo> selectByIds(Collection<Long> ids);
+
     /**
      * 查询部门树结构信息
      *

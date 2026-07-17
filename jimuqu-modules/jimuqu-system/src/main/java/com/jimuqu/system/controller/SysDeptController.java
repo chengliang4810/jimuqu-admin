@@ -29,6 +29,7 @@ import org.noear.solon.validation.annotation.NotNull;
 import org.noear.solon.validation.annotation.Validated;
 
 import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -76,6 +77,13 @@ public class SysDeptController extends BaseController {
     public SysDeptVo getInfo(@NotNull(message = "部门ID不能为空") Long deptId) {
         deptService.checkDeptDataScope(deptId);
         return deptService.queryById(deptId);
+    }
+
+    @Get
+    @Mapping("/optionselect")
+    @SaCheckPermission("system:dept:query")
+    public R<List<SysDeptVo>> optionselect(Long[] deptIds) {
+        return R.ok(deptService.selectByIds(deptIds == null ? null : Arrays.asList(deptIds)));
     }
 
     @NoRepeatSubmit

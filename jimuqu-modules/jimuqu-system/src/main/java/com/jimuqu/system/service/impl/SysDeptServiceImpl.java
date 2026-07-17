@@ -27,10 +27,12 @@ import cn.hutool.v7.core.collection.ListUtil;
 import cn.hutool.v7.core.tree.MapTree;
 import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Component;
+import org.noear.solon.data.annotation.Transaction;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -76,6 +78,15 @@ public class SysDeptServiceImpl implements SysDeptService {
         return queryChain.returnType(SysDeptVo.class).list();
     }
 
+    @Override
+    public List<SysDeptVo> selectByIds(Collection<Long> ids) {
+        return QueryChain.of(sysDeptMapper)
+                .eq(SysDept::getStatus, "0")
+                .in(CollUtil.isNotEmpty(ids), SysDept::getId, ids)
+                .orderBy(SysDept::getOrderNum, SysDept::getId)
+                .returnType(SysDeptVo.class).list();
+    }
+
     /**
      * 构建查询条件
      * @param query 查询对象
@@ -115,7 +126,15 @@ public class SysDeptServiceImpl implements SysDeptService {
      */
     @Override
     public Boolean insertByBo(SysDeptBo bo) {
+        SysDept parent = sysDeptMapper.getById(bo.getParentId());
+        if (parent == null) {
+            throw new ServiceException("父部门不存在");
+        }
+        if (!"0".equals(parent.getStatus())) {
+            throw new ServiceException("部门停用，不允许新增");
+        }
         SysDept sysDept = MapstructUtil.convert(bo, SysDept.class);
+        sysDept.setAncestors(parent.getAncestors() + "," + parent.getId());
         boolean flag = sysDeptMapper.save(sysDept) > 0;
         bo.setId(sysDept.getId());
         return flag;
@@ -125,9 +144,45 @@ public class SysDeptServiceImpl implements SysDeptService {
      * 修改部门
      */
     @Override
+    @Transaction
     public Boolean updateByBo(SysDeptBo bo) {
         SysDept sysDept = MapstructUtil.convert(bo, SysDept.class);
-        return sysDeptMapper.update(sysDept) > 0;
+        SysDept old = sysDeptMapper.getById(bo.getId());
+        if (old == null) {
+            throw new ServiceException("部门不存在，无法修改");
+        }
+        if (!Objects.equals(old.getParentId(), bo.getParentId())) {
+            checkDeptDataScope(bo.getParentId());
+            SysDept parent = sysDeptMapper.getById(bo.getParentId());
+            if (parent == null) {
+                throw new ServiceException("父部门不存在");
+            }
+            String newAncestors = parent.getAncestors() + "," + parent.getId();
+            updateChildrenAncestors(bo.getId(), newAncestors, old.getAncestors());
+            sysDept.setAncestors(newAncestors);
+        } else {
+            sysDept.setAncestors(old.getAncestors());
+        }
+        int rows = sysDeptMapper.update(sysDept);
+        if ("0".equals(sysDept.getStatus()) && com.jimuqu.common.core.utils.StringUtil.isNotBlank(sysDept.getAncestors())) {
+            List<Long> parentIds = com.jimuqu.common.core.utils.StringUtil.splitTo(
+                    sysDept.getAncestors(), value -> Long.valueOf(String.valueOf(value)));
+            sysDeptMapper.update(new SysDept().setStatus("0"), where -> where.in(SysDept::getId, parentIds));
+        }
+        return rows > 0;
+    }
+
+    private void updateChildrenAncestors(Long deptId, String newAncestors, String oldAncestors) {
+        List<SysDept> children = QueryChain.of(sysDeptMapper)
+                .and(SysDept::getAncestors, condition -> condition.mysql().findInSet(deptId)).list();
+        for (SysDept child : children) {
+            child.setAncestors(child.getAncestors().replaceFirst(
+                    java.util.regex.Pattern.quote(oldAncestors),
+                    java.util.regex.Matcher.quoteReplacement(newAncestors)));
+        }
+        if (CollUtil.isNotEmpty(children)) {
+            sysDeptMapper.updateBatch(children);
+        }
     }
 
     /**

@@ -200,12 +200,28 @@ public class RbacHttpContractTest {
 
     private void exerciseDeptRoutes(long deptId, String deptName) {
         api.get("/system/dept/tree", adminToken).expectSuccess();
+        api.get("/system/dept/optionselect?deptIds=" + deptId, adminToken).expectSuccess();
         api.get("/system/dept/list/exclude/" + deptId, adminToken).expectSuccess();
         api.get("/system/dept/" + deptId, adminToken).expectSuccess();
 
         Map<String, Object> edit = deptPayload(deptName + "-改");
         edit.put("deptId", deptId);
         api.putJson("/system/dept", edit, adminToken).expectSuccess();
+
+        Map<String, Object> child = deptPayload("HTTP子部门-" + suffix);
+        child.put("parentId", deptId);
+        api.postJson("/system/dept", child, adminToken).expectSuccess();
+        long childId = rowId(api.get("/system/dept/list" + HttpApiTestSupport.query(Map.of(
+                "deptName", "HTTP子部门-" + suffix)), adminToken).expectSuccess().dataList(),
+                "deptName", "HTTP子部门-" + suffix, "deptId", "id");
+        assertTrue(String.valueOf(api.get("/system/dept/" + childId, adminToken).expectSuccess()
+                .dataObject().get("ancestors")).endsWith("," + deptId));
+        api.delete("/system/dept/" + childId, adminToken).expectSuccess();
+
+        Map<String, Object> missingParent = deptPayload("无父部门-" + suffix);
+        missingParent.put("parentId", Long.MAX_VALUE);
+        assertNotEquals(200, api.postJson("/system/dept", missingParent, adminToken)
+                .expectEnvelope().code(), "父部门不存在时不得新增");
 
         HttpApiTestSupport.Response protectedDept = api.delete("/system/dept/100", adminToken)
                 .expectEnvelope();
