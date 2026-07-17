@@ -1,0 +1,7 @@
+.git
+.github
+.idea
+**/target/*
+!jimuqu-admin/target/jimuqu-admin.jar
+db
+runtime
