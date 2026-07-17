@@ -17,6 +17,8 @@ import static com.jimuqu.common.satoken.utils.LoginHelper.LOGIN_USER_KEY;
 @Slf4j
 public class WebSocketHandler implements WebSocketListener {
 
+    private static final String LOGIN_TOKEN_KEY = "loginToken";
+
     @Override
     public void onOpen(WebSocket socket) {
 
@@ -38,7 +40,8 @@ public class WebSocketHandler implements WebSocketListener {
         }
 
         socket.attr(LOGIN_USER_KEY, loginUser);
-        WebSocketSessionHolder.addSession(loginUser.getUserId(), socket);
+        socket.attr(LOGIN_TOKEN_KEY, token);
+        WebSocketSessionHolder.addSession(loginUser.getUserId(), token, socket);
         log.info("[connect] sessionId: {},userId:{},userType:{}", socket.id(), loginUser.getUserId(), loginUser.getUserType());
     }
 
@@ -74,7 +77,7 @@ public class WebSocketHandler implements WebSocketListener {
             log.info("[disconnect] invalid token received. sessionId: {}", socket.id());
             return;
         }
-        WebSocketSessionHolder.removeSession(loginUser.getUserId());
+        WebSocketSessionHolder.removeSession(loginUser.getUserId(), socket.attr(LOGIN_TOKEN_KEY));
         log.info("[disconnect] sessionId: {},userId:{},userType:{}", socket.id(), loginUser.getUserId(), loginUser.getUserType());
     }
 

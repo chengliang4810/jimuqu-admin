@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class WebSocketSessionHolder {
 
-    private static final Map<Long, WebSocket> USER_SESSION_MAP = new ConcurrentHashMap<>();
+    private static final Map<Long, Map<String, WebSocket>> USER_SESSION_MAP = new ConcurrentHashMap<>();
 
     /**
      * 将WebSocket会话添加到用户会话Map中
@@ -25,33 +25,34 @@ public class WebSocketSessionHolder {
      * @param sessionKey 会话键，用于检索会话
      * @param session    要添加的WebSocket会话
      */
-    public static void addSession(Long sessionKey, WebSocket session) {
-        removeSession(sessionKey);
-        USER_SESSION_MAP.put(sessionKey, session);
+    public static void addSession(Long userId, String token, WebSocket session) {
+        USER_SESSION_MAP.computeIfAbsent(userId, ignored -> new ConcurrentHashMap<>()).put(token, session);
     }
 
     /**
-     * 从用户会话Map中移除指定会话键对应的WebSocket会话
+     * 移除用户指定 token 对应的 WebSocket 会话
      *
-     * @param sessionKey 要移除的会话键
+     * @param userId 用户 ID
+     * @param token 登录 token
      */
-    public static void removeSession(Long sessionKey) {
-        WebSocket session = USER_SESSION_MAP.remove(sessionKey);
-        try {
-
-            session.close();
-        } catch (Exception ignored) {
+    public static void removeSession(Long userId, String token) {
+        Map<String, WebSocket> sessions = USER_SESSION_MAP.get(userId);
+        if (sessions != null) {
+            sessions.remove(token);
+            if (sessions.isEmpty()) {
+                USER_SESSION_MAP.remove(userId);
+            }
         }
     }
 
     /**
-     * 根据会话键从用户会话Map中获取WebSocket会话
+     * 获取用户的全部 WebSocket 会话
      *
-     * @param sessionKey 要获取的会话键
-     * @return 与给定会话键对应的WebSocket会话，如果不存在则返回null
+     * @param userId 用户 ID
+     * @return token 与会话的映射
      */
-    public static WebSocket getSessions(Long sessionKey) {
-        return USER_SESSION_MAP.get(sessionKey);
+    public static Map<String, WebSocket> getSessions(Long userId) {
+        return USER_SESSION_MAP.getOrDefault(userId, Map.of());
     }
 
     /**
