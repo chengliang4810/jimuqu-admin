@@ -220,6 +220,7 @@ public class SysUserController extends BaseController {
     @Put
     @Mapping("/resetPwd")
     @ApiEncrypt
+    @NoRepeatSubmit
     @SaCheckPermission("system:user:resetPwd")
     @Log(title = "用户管理", businessType = BusinessType.UPDATE)
     public R<Void> resetPwd(@Body SysUserBo user) {
@@ -234,6 +235,7 @@ public class SysUserController extends BaseController {
      */
     @Put
     @Mapping("/changeStatus")
+    @NoRepeatSubmit
     @SaCheckPermission("system:user:edit")
     @Log(title = "用户管理", businessType = BusinessType.UPDATE)
     public R<Void> changeStatus(@Body SysUserBo user) {
@@ -250,6 +252,7 @@ public class SysUserController extends BaseController {
      */
     @Put
     @Mapping("/authRole")
+    @NoRepeatSubmit
     @SaCheckPermission("system:user:edit")
     @Log(title = "用户管理", businessType = BusinessType.GRANT)
     public R<Void> insertAuthRole(@Body SysUserBo user) {

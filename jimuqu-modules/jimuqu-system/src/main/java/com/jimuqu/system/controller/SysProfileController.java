@@ -16,6 +16,7 @@ import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.service.SysUserService;
 import cn.hutool.v7.core.bean.BeanUtil;
 import org.noear.solon.annotation.*;
+import org.noear.solon.validation.annotation.NoRepeatSubmit;
 
 /**
  * 个人信息 业务处理
@@ -47,6 +48,7 @@ public class SysProfileController extends BaseController {
      * 修改用户
      */
     @Log(title = "个人信息", businessType = BusinessType.UPDATE)
+    @NoRepeatSubmit
     @Put
     @Mapping
     public R<Void> updateProfile(@Body SysUserProfileBo profile) {
@@ -71,6 +73,7 @@ public class SysProfileController extends BaseController {
      * @param bo 新旧密码
      */
     @ApiEncrypt
+    @NoRepeatSubmit
     @Log(title = "个人信息", businessType = BusinessType.UPDATE)
     @Put
     @Mapping("/updatePwd" )
