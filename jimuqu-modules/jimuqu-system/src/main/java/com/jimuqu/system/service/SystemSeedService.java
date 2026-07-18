@@ -32,6 +32,7 @@ import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 使用 Xbatis 幂等写入系统运行所需的最小基础数据。
@@ -271,27 +272,31 @@ public class SystemSeedService {
 
     private void seedMenus() {
         List<MenuSeed> menus = List.of(
-                new MenuSeed(1, 0, "系统管理", 1, "system", "", "M", "system", ""),
-                new MenuSeed(2, 0, "系统监控", 2, "monitor", "", "M", "monitor", ""),
-                new MenuSeed(3, 0, "资源管理", 3, "resource", "", "M", "resource", ""),
-                new MenuSeed(100, 1, "用户管理", 1, "user", "system/user/index", "C", "user", "system:user:list"),
-                new MenuSeed(101, 1, "角色管理", 2, "role", "system/role/index", "C", "peoples", "system:role:list"),
-                new MenuSeed(102, 1, "菜单管理", 3, "menu", "system/menu/index", "C", "tree-table", "system:menu:list"),
-                new MenuSeed(103, 1, "部门管理", 4, "dept", "system/dept/index", "C", "tree", "system:dept:list"),
-                new MenuSeed(104, 1, "岗位管理", 5, "post", "system/post/index", "C", "post", "system:post:list"),
-                new MenuSeed(105, 1, "字典管理", 6, "dict", "system/dict/type/index", "C", "dict", "system:dict:list"),
-                new MenuSeed(106, 1, "参数设置", 7, "config", "system/config/index", "C", "edit", "system:config:list"),
-                new MenuSeed(107, 1, "通知公告", 8, "notice", "system/notice/index", "C", "message", "system:notice:list"),
-                new MenuSeed(108, 1, "客户端管理", 9, "client", "system/client/index", "C", "client", "system:client:list"),
-                new MenuSeed(200, 2, "在线用户", 1, "online", "monitor/online/index", "C", "online", "monitor:online:list"),
-                new MenuSeed(201, 2, "操作日志", 2, "operlog", "monitor/operlog/index", "C", "form", "monitor:operlog:list"),
-                new MenuSeed(202, 2, "登录日志", 3, "loginInfo", "monitor/logininfo/index", "C", "logininfor", "monitor:logininfor:list"),
-                new MenuSeed(203, 2, "缓存监控", 4, "cache", "monitor/cache/index", "C", "redis", "monitor:cache:list"),
-                new MenuSeed(300, 3, "文件管理", 1, "oss", "system/oss/index", "C", "upload", "system:oss:list"),
-                new MenuSeed(301, 3, "存储配置", 2, "oss-config", "system/oss-config/index", "C", "server", "system:ossConfig:list")
+                new MenuSeed(1, 0, "系统管理", 1, "system", "", "M", "eos-icons:system-group", ""),
+                new MenuSeed(2, 0, "系统监控", 2, "monitor", "", "M", "solar:monitor-camera-outline", ""),
+                new MenuSeed(3, 0, "资源管理", 3, "resource", "", "M", "solar:folder-with-files-outline", ""),
+                new MenuSeed(100, 1, "用户管理", 1, "user", "system/user/index", "C", "ant-design:user-outlined", "system:user:list"),
+                new MenuSeed(101, 1, "角色管理", 2, "role", "system/role/index", "C", "eos-icons:role-binding-outlined", "system:role:list"),
+                new MenuSeed(102, 1, "菜单管理", 3, "menu", "system/menu/index", "C", "ic:sharp-menu", "system:menu:list"),
+                new MenuSeed(103, 1, "部门管理", 4, "dept", "system/dept/index", "C", "mingcute:department-line", "system:dept:list"),
+                new MenuSeed(104, 1, "岗位管理", 5, "post", "system/post/index", "C", "icon-park-outline:appointment", "system:post:list"),
+                new MenuSeed(105, 1, "字典管理", 6, "dict", "system/dict/type/index", "C", "fluent-mdl2:dictionary", "system:dict:list"),
+                new MenuSeed(106, 1, "参数设置", 7, "config", "system/config/index", "C", "ant-design:setting-outlined", "system:config:list"),
+                new MenuSeed(107, 1, "通知公告", 8, "notice", "system/notice/index", "C", "fe:notice-push", "system:notice:list"),
+                new MenuSeed(108, 1, "客户端管理", 9, "client", "system/client/index", "C", "material-symbols:logo-dev-outline", "system:client:list"),
+                new MenuSeed(200, 2, "在线用户", 1, "online", "monitor/online/index", "C", "solar:monitor-smartphone-outline", "monitor:online:list"),
+                new MenuSeed(201, 2, "操作日志", 2, "operlog", "monitor/operlog/index", "C", "arcticons:one-hand-operation", "monitor:operlog:list"),
+                new MenuSeed(202, 2, "登录日志", 3, "loginInfo", "monitor/logininfo/index", "C", "streamline:interface-login-dial-pad-finger-password-dial-pad-dot-finger", "monitor:logininfor:list"),
+                new MenuSeed(203, 2, "缓存监控", 4, "cache", "monitor/cache/index", "C", "devicon:redis-wordmark", "monitor:cache:list"),
+                new MenuSeed(300, 3, "文件管理", 1, "oss", "system/oss/index", "C", "solar:folder-with-files-outline", "system:oss:list"),
+                new MenuSeed(301, 3, "存储配置", 2, "oss-config", "system/oss-config/index", "C", "ant-design:setting-outlined", "system:ossConfig:list")
         );
         for (MenuSeed menu : menus) {
-            if (QueryChain.of(menuMapper).eq(SysMenu::getId, menu.id()).exists()) {
+            SysMenu existing = menuMapper.getById(menu.id());
+            if (existing != null) {
+                if (!Objects.equals(existing.getIcon(), menu.icon())) {
+                    menuMapper.update(new SysMenu().setIcon(menu.icon()), where -> where.eq(SysMenu::getId, menu.id()));
+                }
                 continue;
             }
             menuMapper.save(new SysMenu()

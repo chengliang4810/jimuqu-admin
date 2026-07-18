@@ -180,6 +180,10 @@ public class RbacHttpContractTest {
 
     private void exerciseMenuRoutes(long menuId, String menuName, long roleId) {
         HttpApiTestSupport.Response routers = api.get("/system/menu/getRouters", adminToken).expectSuccess();
+        String routerJson = routers.json().toString();
+        assertTrue(routerJson.contains("eos-icons:system-group"));
+        assertTrue(routerJson.contains("solar:monitor-camera-outline"));
+        assertTrue(routerJson.contains("solar:folder-with-files-outline"));
         assertTrue(routers.json().toString().contains("Http-menu-" + suffix + menuId),
                 "动态路由 name 必须包含菜单 ID");
         HttpApiTestSupport.Response detail = api.get("/system/menu/" + menuId, adminToken).expectSuccess();
