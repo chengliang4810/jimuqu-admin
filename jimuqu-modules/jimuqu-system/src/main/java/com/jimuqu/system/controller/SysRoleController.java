@@ -103,7 +103,7 @@ public class SysRoleController extends BaseController {
     @Mapping
     @SaCheckPermission("system:role:add")
     @Log(title = "角色管理", businessType = BusinessType.ADD)
-    public R<Void> add(@Validated(AddGroup.class) SysRoleBo role) {
+    public R<Void> add(@Body @Validated(AddGroup.class) SysRoleBo role) {
         roleService.checkRoleAllowed(role);
         if (!roleService.checkRoleNameUnique(role)) {
             return R.fail("新增角色'" + role.getRoleName() + "'失败，角色名称已存在");

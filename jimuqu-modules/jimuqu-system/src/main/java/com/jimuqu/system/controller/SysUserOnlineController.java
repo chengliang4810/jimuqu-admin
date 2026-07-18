@@ -19,6 +19,7 @@ import org.noear.solon.validation.annotation.NoRepeatSubmit;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Comparator;
 
 /**
  * 在线用户监控。
@@ -34,10 +35,10 @@ public class SysUserOnlineController extends BaseController {
     @Mapping("/list")
     @SaCheckPermission("monitor:online:list")
     public Page<SysUserOnlineVo> list(String ipaddr, String userName) {
-        List<SysUserOnlineVo> rows = listAllOnline().stream()
+        List<SysUserOnlineVo> rows = newestFirst(listAllOnline().stream()
                 .filter(item -> ipaddr == null || ipaddr.isBlank() || Objects.equals(ipaddr, item.getIpaddr()))
                 .filter(item -> userName == null || userName.isBlank() || Objects.equals(userName, item.getUserName()))
-                .toList();
+                .toList());
         return Page.of(rows, rows.size());
     }
 
@@ -48,10 +49,10 @@ public class SysUserOnlineController extends BaseController {
     @Mapping
     public Page<SysUserOnlineVo> currentUserDevices() {
         String loginId = StpUtil.getLoginIdAsString();
-        List<SysUserOnlineVo> rows = StpUtil.getTokenValueListByLoginId(loginId).stream()
+        List<SysUserOnlineVo> rows = newestFirst(StpUtil.getTokenValueListByLoginId(loginId).stream()
                 .map(this::toOnlineVo)
                 .filter(Objects::nonNull)
-                .toList();
+                .toList());
         return Page.of(rows, rows.size());
     }
 
@@ -84,6 +85,13 @@ public class SysUserOnlineController extends BaseController {
 
     static boolean ownsToken(List<String> tokenIds, String tokenId) {
         return tokenIds != null && tokenIds.contains(tokenId);
+    }
+
+    static List<SysUserOnlineVo> newestFirst(List<SysUserOnlineVo> sessions) {
+        return sessions.stream()
+                .sorted(Comparator.comparing(SysUserOnlineVo::getLoginTime,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
     }
 
     private List<SysUserOnlineVo> listAllOnline() {

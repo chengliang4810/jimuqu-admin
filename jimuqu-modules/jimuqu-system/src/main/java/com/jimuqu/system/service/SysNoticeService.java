@@ -15,11 +15,11 @@ import com.jimuqu.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.noear.solon.annotation.Component;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.math.BigDecimal;
 import java.util.stream.Collectors;
 
 /**

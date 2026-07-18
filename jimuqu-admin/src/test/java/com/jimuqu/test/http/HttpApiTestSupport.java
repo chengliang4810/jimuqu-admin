@@ -88,6 +88,7 @@ public final class HttpApiTestSupport {
                 .GET();
         if (token != null && !token.isBlank()) {
             builder.header("Authorization", token.startsWith("Bearer ") ? token : "Bearer " + token);
+            builder.header("clientid", PC_CLIENT_ID);
         }
 
         try {
@@ -180,6 +181,7 @@ public final class HttpApiTestSupport {
         }
         if (token != null && !token.isBlank()) {
             builder.header("Authorization", token.startsWith("Bearer ") ? token : "Bearer " + token);
+            builder.header("clientid", PC_CLIENT_ID);
         }
         headers.forEach(builder::header);
 

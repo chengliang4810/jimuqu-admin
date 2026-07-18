@@ -99,6 +99,9 @@ public interface SysUserService {
      */
     List<SysUserVo> selectUserListByDept(Long deptId);
 
+    /** 按用户ID和部门筛选用户选项。 */
+    List<SysUserVo> selectUserByIds(Collection<Long> userIds, Long deptId);
+
     /**
      * 新增用户信息
      *

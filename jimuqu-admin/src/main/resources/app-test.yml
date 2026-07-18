@@ -28,7 +28,7 @@ jimuqu:
 
 auto-table:
   enable: true
-  auto-build-database: false
+  auto-build-database: true
   auto-drop-column: false
   auto-drop-index: false
   recordSql:

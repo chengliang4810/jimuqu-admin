@@ -39,6 +39,8 @@ public interface AuthStrategy {
         parameter.setTimeout(client.getTimeout());
         parameter.setActiveTimeout(client.getActiveTimeout());
         parameter.setExtra(LoginHelper.CLIENT_KEY, client.getClientId());
+        parameter.setExtra(LoginHelper.CLIENT_ACCESS_PATH_KEY, client.getAccessPath());
+        parameter.setExtra(LoginHelper.CLIENT_IP_WHITELIST_KEY, client.getIpWhitelist());
         return parameter;
     }
 

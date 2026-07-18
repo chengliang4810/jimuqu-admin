@@ -202,6 +202,7 @@ public class HealthAuthUserHttpContractTest {
         HttpApiTestSupport.Response authRole = http.get("/system/user/authRole/2", adminToken);
         HttpApiTestSupport.Response unlock = http.get("/system/user/unlock/2", adminToken);
         HttpApiTestSupport.Response deptTree = http.get("/system/user/deptTree", adminToken);
+        HttpApiTestSupport.Response optionselect = http.get("/system/user/optionselect", adminToken);
         HttpApiTestSupport.Response profile = http.get("/system/user/profile", adminToken);
         HttpApiTestSupport.Response social = http.get("/system/social/list", adminToken);
 
@@ -223,6 +224,10 @@ public class HealthAuthUserHttpContractTest {
         unlock.expectStatus(200).expectSuccess();
         deptTree.expectStatus(200).expectSuccess();
         assertFalse(deptTree.dataList().isEmpty(), "部门树不能为空");
+        optionselect.expectStatus(200).expectSuccess();
+        assertTrue(optionselect.dataList().stream().anyMatch(item -> item instanceof Map<?, ?> map
+                        && "admin".equals(String.valueOf(map.get("userName")))),
+                "用户候选列表必须包含管理员");
         profile.expectStatus(200).expectSuccess();
         assertEquals("admin", object(profile.dataObject().get("user")).get("userName"));
         social.expectStatus(200).expectSuccess();

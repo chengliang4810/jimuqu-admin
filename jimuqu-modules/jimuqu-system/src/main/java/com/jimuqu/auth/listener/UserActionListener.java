@@ -5,7 +5,9 @@ import cn.dev33.satoken.context.model.SaStorage;
 import cn.dev33.satoken.listener.SaTokenListener;
 import cn.dev33.satoken.stp.parameter.SaLoginParameter;
 import com.jimuqu.common.core.domain.model.LoginUser;
+import com.jimuqu.common.core.constant.Constants;
 import com.jimuqu.common.core.utils.ip.AddressUtil;
+import com.jimuqu.auth.service.SysLoginService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import cn.hutool.v7.http.useragent.UserAgent;
@@ -24,6 +26,8 @@ import static com.jimuqu.common.satoken.utils.LoginHelper.LOGIN_USER_KEY;
 @Component
 @RequiredArgsConstructor
 public class UserActionListener implements SaTokenListener {
+
+    private final SysLoginService loginService;
 
     /**
      * 每次登录时触发
@@ -49,6 +53,8 @@ public class UserActionListener implements SaTokenListener {
         loginUser.setLoginLocation(AddressUtil.getRealAddressByIP(ip));
         loginUser.setLoginTime(new Date());
         loginUser.setToken(tokenValue);
+        loginService.recordLoginInfo(loginUser.getUserId(), ip);
+        loginService.recordLogininfor(loginUser.getUsername(), Constants.LOGIN_SUCCESS, "登录成功");
     }
 
     /**

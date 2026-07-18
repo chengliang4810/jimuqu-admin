@@ -144,6 +144,7 @@ public class HttpAuthorizationCoverageTest {
         }
         if (token != null) {
             request.header("Authorization", "Bearer " + token);
+            request.header("clientid", HttpApiTestSupport.PC_CLIENT_ID);
         }
         if (route.encrypted()) {
             String aesKey = ApiCryptoUtil.randomAesKey();

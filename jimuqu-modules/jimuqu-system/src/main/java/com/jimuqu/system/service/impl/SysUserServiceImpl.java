@@ -382,11 +382,13 @@ public class SysUserServiceImpl implements SysUserService {
     @Override
     public Page<SysUserVo> selectAllocatedList(SysUserQuery query, PageQuery pageQuery) {
         List<Long> userIds = roleUserIds(query.getRoleId());
-        Page<SysUserVo> page = QueryChain.of(sysUserMapper)
+        QueryChain<SysUser> queryChain = QueryChain.of(sysUserMapper)
                 .select(SysUser.class)
                 .where(query)
                 .in(!userIds.isEmpty(), SysUser::getId, userIds)
-                .eq(userIds.isEmpty(), SysUser::getId, -1L)
+                .eq(userIds.isEmpty(), SysUser::getId, -1L);
+        applyUserDataScope(queryChain);
+        Page<SysUserVo> page = queryChain
                 .returnType(SysUserVo.class)
                 .paging(pageQuery.build());
         page.getRows().forEach(this::enrichUser);
@@ -403,10 +405,12 @@ public class SysUserServiceImpl implements SysUserService {
     @Override
     public Page<SysUserVo> selectUnallocatedList(SysUserQuery query, PageQuery pageQuery) {
         List<Long> userIds = roleUserIds(query.getRoleId());
-        Page<SysUserVo> page = QueryChain.of(sysUserMapper)
+        QueryChain<SysUser> queryChain = QueryChain.of(sysUserMapper)
                 .select(SysUser.class)
                 .where(query)
-                .notIn(!userIds.isEmpty(), SysUser::getId, userIds)
+                .notIn(!userIds.isEmpty(), SysUser::getId, userIds);
+        applyUserDataScope(queryChain);
+        Page<SysUserVo> page = queryChain
                 .returnType(SysUserVo.class)
                 .paging(pageQuery.build());
         page.getRows().forEach(this::enrichUser);
@@ -439,6 +443,19 @@ public class SysUserServiceImpl implements SysUserService {
                 .eq(SysUser::getDeptId, deptId)
                 .orderBy(SysUser::getId)
                 .returnType(SysUserVo.class).list();
+        users.forEach(this::enrichUser);
+        return users;
+    }
+
+    @Override
+    public List<SysUserVo> selectUserByIds(Collection<Long> userIds, Long deptId) {
+        QueryChain<SysUser> queryChain = QueryChain.of(sysUserMapper)
+                .select(SysUser.class)
+                .in(CollUtil.isNotEmpty(userIds), SysUser::getId, userIds)
+                .eq(ObjUtil.isNotNull(deptId), SysUser::getDeptId, deptId)
+                .orderBy(SysUser::getId);
+        applyUserDataScope(queryChain);
+        List<SysUserVo> users = queryChain.returnType(SysUserVo.class).list();
         users.forEach(this::enrichUser);
         return users;
     }

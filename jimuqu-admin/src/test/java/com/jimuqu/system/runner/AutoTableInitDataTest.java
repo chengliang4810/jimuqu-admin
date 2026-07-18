@@ -16,7 +16,7 @@ class AutoTableInitDataTest {
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("sql/MySQL/jimuqu.sql")) {
             assertNotNull(input);
             String sql = new String(input.readAllBytes(), StandardCharsets.UTF_8);
-            assertEquals(102, CCJSqlParserUtil.parseStatements(sql).getStatements().size());
+            assertEquals(103, CCJSqlParserUtil.parseStatements(sql).getStatements().size());
         }
     }
 }

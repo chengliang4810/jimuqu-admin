@@ -10,8 +10,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ApiCryptoUtilTest {
+
+    @Test
+    void rejectsInvalidRsaConfigurationAtInitialization() {
+        assertThrows(RuntimeException.class,
+                () -> ApiCryptoUtil.validateRsaKeyPair("broken", "broken"));
+    }
 
     @Test
     void decryptBellRsaPkcs1AndAesEcbRequest() throws Exception {

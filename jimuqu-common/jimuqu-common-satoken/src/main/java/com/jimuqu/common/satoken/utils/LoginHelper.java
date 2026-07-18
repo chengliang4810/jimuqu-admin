@@ -35,6 +35,8 @@ public class LoginHelper {
     public static final String USER_KEY = "userId";
     public static final String DEPT_KEY = "deptId";
     public static final String CLIENT_KEY = "clientid";
+    public static final String CLIENT_ACCESS_PATH_KEY = "clientAccessPath";
+    public static final String CLIENT_IP_WHITELIST_KEY = "clientIpWhitelist";
 
     /**
      * 登录系统 基于 设备类型
@@ -49,10 +51,15 @@ public class LoginHelper {
         storage.set(USER_KEY, loginUser.getUserId());
         storage.set(DEPT_KEY, loginUser.getDeptId());
         model = ObjUtil.defaultIfNull(model, new SaLoginParameter());
-        StpUtil.login(loginUser.getLoginId());
+        StpUtil.login(loginUser.getLoginId(), model);
         SaSession tokenSession = StpUtil.getTokenSession();
         tokenSession.updateTimeout(model.getTimeout());
         tokenSession.set(LOGIN_USER_KEY, loginUser);
+        model.getExtraData().forEach((key, value) -> {
+            if (ObjUtil.isNotNull(value)) {
+                tokenSession.set(key, value);
+            }
+        });
     }
 
     /**

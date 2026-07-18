@@ -40,20 +40,22 @@ public class SysMessageService {
         }
     }
 
-    public SysMessageBoxVo queryMessageBox() {
+    public SysMessageBoxVo queryMessageBox(Long userId) {
         SysMessageBoxVo box = new SysMessageBoxVo();
-        box.setSystemList(select("system"));
-        box.setNoticeList(select("notice"));
+        box.setSystemList(select("system", userId));
+        box.setNoticeList(select("notice", userId));
         return box;
     }
 
-    private List<SysMessageVo> select(String category) {
+    private List<SysMessageVo> select(String category, Long userId) {
         Date cutoff = new Date(System.currentTimeMillis() - BOX_DAYS * 24 * 60 * 60 * 1000);
-        return QueryChain.of(mapper)
+        QueryChain<SysMessage> query = QueryChain.of(mapper)
                 .where(where -> where.eq(SysMessage::getCategory, category)
-                        .eq(SysMessage::getSendUserIds, GLOBAL_USER_IDS)
                         .gte(SysMessage::getCreateTime, cutoff))
-                .orderByDesc(SysMessage::getCreateTime, SysMessage::getMessageId)
+                .orderByDesc(SysMessage::getCreateTime, SysMessage::getMessageId);
+        query.andNested(scope -> scope.eq(SysMessage::getSendUserIds, GLOBAL_USER_IDS)
+                .or(SysMessage::getSendUserIds, value -> value.mysql().findInSet(userId)));
+        return query
                 .list().stream().limit(BOX_LIMIT).map(this::toVo).toList();
     }
 

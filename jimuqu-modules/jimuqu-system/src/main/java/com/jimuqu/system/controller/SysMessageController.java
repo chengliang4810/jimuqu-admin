@@ -1,6 +1,7 @@
 package com.jimuqu.system.controller;
 
 import com.jimuqu.common.web.core.BaseController;
+import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.vo.SysMessageBoxVo;
 import com.jimuqu.system.service.SysMessageService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,6 @@ public class SysMessageController extends BaseController {
     @Get
     @Mapping("/box")
     public SysMessageBoxVo box() {
-        return messageService.queryMessageBox();
+        return messageService.queryMessageBox(LoginHelper.getUserId());
     }
 }

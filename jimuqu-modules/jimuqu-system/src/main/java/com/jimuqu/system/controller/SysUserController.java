@@ -125,14 +125,17 @@ public class SysUserController extends BaseController {
         roleBo.setStatus(UserConstants.ROLE_NORMAL);
         List<SysRoleVo> roles = roleService.queryList(roleBo);
         userInfoVo.setRoles(LoginHelper.isSuperAdmin(userId) ? roles : StreamUtil.filter(roles, r -> !r.isSuperAdmin()));
-        userInfoVo.setPosts(postService.queryList(new SysPostQuery().setStatus(UserConstants.POST_NORMAL)));
         if (ObjUtil.isNotNull(userId)) {
             SysUserVo sysUser = sysUserService.queryById(userId);
             List<Long> roleIds = StreamUtil.toList(sysUser.getRoles(), SysRoleVo::getId);
             sysUser.setRoleIds(roleIds);
             userInfoVo.setUser(sysUser);
             userInfoVo.setRoleIds(roleIds);
-            userInfoVo.setPostIds(postService.selectPostListByUserId(userId));
+            if (ObjUtil.isNotNull(sysUser.getDeptId())) {
+                userInfoVo.setPosts(postService.queryList(new SysPostQuery()
+                        .setDeptId(sysUser.getDeptId()).setStatus(UserConstants.POST_NORMAL)));
+                userInfoVo.setPostIds(postService.selectPostListByUserId(userId));
+            }
         }
         return userInfoVo;
     }
@@ -166,12 +169,21 @@ public class SysUserController extends BaseController {
     @Mapping("/authRole/{userId}")
     @SaCheckPermission("system:user:query")
     public R<SysUserInfoVo> authRole(Long userId) {
+        sysUserService.checkUserDataScope(userId);
         SysUserVo user = sysUserService.queryById(userId);
-        List<SysRoleVo> roles = roleService.selectRolesByUserId(userId);
+        List<SysRoleVo> roles = roleService.selectRolesAuthByUserId(userId);
         SysUserInfoVo userInfoVo = new SysUserInfoVo();
         userInfoVo.setUser(user);
         userInfoVo.setRoles(LoginHelper.isSuperAdmin(userId) ? roles : StreamUtil.filter(roles, r -> !r.isSuperAdmin()));
         return R.ok(userInfoVo);
+    }
+
+    @Get
+    @Mapping("/optionselect")
+    @SaCheckPermission("system:user:query")
+    public R<List<SysUserVo>> optionselect(Long[] userIds, Long deptId) {
+        return R.ok(sysUserService.selectUserByIds(
+                userIds == null ? null : List.of(userIds), deptId));
     }
 
     /**

@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
-import org.noear.solon.core.handle.Context;
 import org.noear.solon.data.cache.CacheService;
 import org.noear.solon.validation.ValidUtils;
 
@@ -78,9 +77,6 @@ public class PasswordAuthStrategy implements AuthStrategyService {
         loginVo.setAccessToken(StpUtil.getTokenValue());
         loginVo.setExpireIn(Math.toIntExact(StpUtil.getTokenTimeout()));
         loginVo.setClientId(client.getClientId());
-        Context context = Context.current();
-        loginService.recordLoginInfo(user.getId(), context == null ? "" : context.realIp());
-        loginService.recordLogininfor(username, Constants.LOGIN_SUCCESS, "登录成功");
         return loginVo;
     }
 

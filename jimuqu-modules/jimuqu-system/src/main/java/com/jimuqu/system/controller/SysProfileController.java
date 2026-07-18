@@ -18,6 +18,7 @@ import com.jimuqu.system.service.SysUserService;
 import cn.hutool.v7.core.bean.BeanUtil;
 import org.noear.solon.annotation.*;
 import org.noear.solon.validation.annotation.NoRepeatSubmit;
+import org.noear.solon.validation.ValidUtils;
 
 /**
  * 个人信息 业务处理
@@ -53,6 +54,7 @@ public class SysProfileController extends BaseController {
     @Put
     @Mapping
     public R<Void> updateProfile(@Body SysUserProfileBo profile) {
+        ValidUtils.validateEntity(profile);
         SysUserBo user = BeanUtil.toBean(profile, SysUserBo.class);
         user.setId(LoginHelper.getUserId());
         String username = LoginHelper.getUsername();
@@ -79,6 +81,7 @@ public class SysProfileController extends BaseController {
     @Put
     @Mapping("/updatePwd" )
     public R<Void> updatePwd(@Body SysUserPasswordBo bo) {
+        ValidUtils.validateEntity(bo);
         SysUserVo user = userService.queryById(LoginHelper.getUserId());
         String password = user.getPassword();
         if (!BCrypt.checkpw(bo.getOldPassword(), password)) {

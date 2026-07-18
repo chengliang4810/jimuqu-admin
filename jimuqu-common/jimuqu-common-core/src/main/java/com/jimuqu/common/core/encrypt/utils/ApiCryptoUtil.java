@@ -81,6 +81,15 @@ public class ApiCryptoUtil {
         }
     }
 
+    public static void validateRsaKeyPair(String publicKey, String privateKey) {
+        try {
+            parsePublicKey(publicKey);
+            parsePrivateKey(privateKey);
+        } catch (Exception e) {
+            throw new ServiceException("RSA秘钥配置错误: " + e.getMessage());
+        }
+    }
+
     private static SecretKeySpec aesKey(String key) {
         int length = key == null ? 0 : key.getBytes(StandardCharsets.UTF_8).length;
         if (length != 16 && length != 24 && length != 32) {

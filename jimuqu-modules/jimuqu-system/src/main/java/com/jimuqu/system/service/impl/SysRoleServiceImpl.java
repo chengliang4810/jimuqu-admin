@@ -15,6 +15,8 @@ import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.common.mybatis.enums.DataScopeType;
+import com.jimuqu.common.mybatis.model.DataScopeRule;
+import com.jimuqu.common.mybatis.service.ISysDataScopeService;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.SysRole;
 import com.jimuqu.system.domain.SysRoleDept;
@@ -54,6 +56,7 @@ public class SysRoleServiceImpl implements SysRoleService {
     private final SysRoleMenuMapper roleMenuMapper;
     private final SysRoleDeptMapper roleDeptMapper;
     private final SysUserRoleMapper userRoleMapper;
+    private final ISysDataScopeService dataScopeService;
 
     @Override
     public SysRoleVo queryById(Long id) {
@@ -71,11 +74,32 @@ public class SysRoleServiceImpl implements SysRoleService {
     }
 
     private QueryChain<SysRole> buildQueryChain(SysRoleQuery query) {
-        return QueryChain.of(roleMapper)
+        QueryChain<SysRole> queryChain = QueryChain.of(roleMapper)
                 .forSearch(true)
                 .where(query)
                 .eq(SysRole::getDelFlag, "0")
                 .orderBy(SysRole::getRoleSort, SysRole::getId);
+        applyRoleDataScope(queryChain);
+        return queryChain;
+    }
+
+    private void applyRoleDataScope(QueryChain<SysRole> queryChain) {
+        DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
+        if (rule.allAccess()) {
+            return;
+        }
+        boolean hasDepartments = !rule.departmentIds().isEmpty();
+        boolean hasSelf = rule.selfAccess() && rule.userId() != null;
+        if (hasDepartments && hasSelf) {
+            queryChain.andNested(scope -> scope.in(SysRole::getCreateDept, rule.departmentIds())
+                    .or().eq(SysRole::getCreateBy, rule.userId()));
+        } else if (hasDepartments) {
+            queryChain.in(SysRole::getCreateDept, rule.departmentIds());
+        } else if (hasSelf) {
+            queryChain.eq(SysRole::getCreateBy, rule.userId());
+        } else {
+            queryChain.andNested(scope -> scope.eq(SysRole::getId, 0L).and().ne(SysRole::getId, 0L));
+        }
     }
 
     @Override
@@ -120,6 +144,15 @@ public class SysRoleServiceImpl implements SysRoleService {
     }
 
     @Override
+    public List<SysRoleVo> selectRolesAuthByUserId(Long userId) {
+        Set<Long> assignedRoleIds = roleMapper.selectRolesByUserId(userId).stream()
+                .map(SysRoleVo::getId).collect(java.util.stream.Collectors.toSet());
+        List<SysRoleVo> roles = selectRoleAll();
+        roles.forEach(role -> role.setFlag(assignedRoleIds.contains(role.getId())));
+        return roles;
+    }
+
+    @Override
     public Set<String> selectRolePermissionByUserId(Long userId) {
         Set<String> permissions = new HashSet<>();
         for (SysRoleVo role : roleMapper.selectRolesByUserId(userId)) {
@@ -138,11 +171,13 @@ public class SysRoleServiceImpl implements SysRoleService {
 
     @Override
     public List<SysRoleVo> selectRoleByIds(Collection<Long> roleIds) {
-        return QueryChain.of(roleMapper)
+        QueryChain<SysRole> queryChain = QueryChain.of(roleMapper)
                 .eq(SysRole::getStatus, UserConstants.ROLE_NORMAL)
                 .eq(SysRole::getDelFlag, "0")
                 .in(CollUtil.isNotEmpty(roleIds), SysRole::getId, roleIds)
-                .orderBy(SysRole::getRoleSort, SysRole::getId)
+                .orderBy(SysRole::getRoleSort, SysRole::getId);
+        applyRoleDataScope(queryChain);
+        return queryChain
                 .returnType(SysRoleVo.class)
                 .list();
     }

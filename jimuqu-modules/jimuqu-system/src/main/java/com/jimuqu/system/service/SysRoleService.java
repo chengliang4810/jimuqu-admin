@@ -52,6 +52,9 @@ public interface SysRoleService {
      */
     List<SysRoleVo> selectRolesByUserId(Long userId);
 
+    /** 根据用户ID查询全部可用角色，并标记已授权角色。 */
+    List<SysRoleVo> selectRolesAuthByUserId(Long userId);
+
     /**
      * 根据用户ID查询角色权限
      *

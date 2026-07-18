@@ -459,7 +459,7 @@ try {
     )
     $redisArgs = @('--raw', '-h', $redisHost, '-p', $redisPort, '-n', "$redisDatabase")
 
-    Invoke-Checked $mysql ($mysqlArgs + "--execute=CREATE DATABASE $databaseName CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;") $repoRoot (Join-Path $artifactRoot 'mysql-create.log')
+    # AutoTable must create the database itself to trigger its database-level seed script.
     $databaseCreated = $true
 
     $pingOutput = @(Invoke-CapturedChecked $redisCli ($redisArgs + 'PING') $repoRoot (Join-Path $artifactRoot 'redis.log'))
@@ -515,7 +515,7 @@ try {
         throw "Refusing to reset database with an unexpected generated name: $databaseName"
     }
     Write-Host 'Resetting the Maven-mutated database, Redis namespace and OSS directory before browser E2E.'
-    Invoke-Checked $mysql ($mysqlArgs + "--execute=DROP DATABASE $databaseName; CREATE DATABASE $databaseName CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;") $repoRoot (Join-Path $artifactRoot 'mysql-reset.log')
+    Invoke-Checked $mysql ($mysqlArgs + "--execute=DROP DATABASE $databaseName;") $repoRoot (Join-Path $artifactRoot 'mysql-reset.log')
     $removedRedisKeys = Remove-OwnedRedisKeys $redisCli $redisArgs $redisPrefix
     Reset-OwnedOssPath $artifactRoot $ossPath
     Write-Host "Pre-E2E isolation reset completed; removed $removedRedisKeys Redis key(s)."

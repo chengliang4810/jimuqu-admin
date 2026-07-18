@@ -19,6 +19,7 @@ import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 对象存储配置服务。
@@ -26,6 +27,12 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class SysOssConfigService {
+
+    static final Set<Long> SYSTEM_CONFIG_IDS = Set.of(
+            1761900000000000001L,
+            1761900000000000002L,
+            1761900000000000003L,
+            1761900000000000004L);
 
     private final SysOssConfigMapper mapper;
     private final FileStorageService fileStorageService;
@@ -78,6 +85,7 @@ public class SysOssConfigService {
             disableCurrentDefault();
         }
         SysOssConfig entity = toEntity(bo);
+        clearOptionalFields(entity, bo);
         int rows = mapper.update(entity);
         if (rows > 0) {
             if (old != null && !old.getConfigKey().equals(entity.getConfigKey())) {
@@ -90,6 +98,7 @@ public class SysOssConfigService {
     }
 
     public int delete(List<Long> ids) {
+        Assert.isFalse(ids.stream().anyMatch(SYSTEM_CONFIG_IDS::contains), "系统内置, 不可删除!");
         List<String> configKeys = QueryChain.of(mapper)
                 .select(SysOssConfig::getConfigKey)
                 .where(where -> where.in(SysOssConfig::getOssConfigId, ids))
@@ -181,5 +190,12 @@ public class SysOssConfigService {
                 .setExt1(bo.getExt1())
                 .setRemark(bo.getRemark())
                 .setAccessPolicy(bo.getAccessPolicy());
+    }
+
+    private void clearOptionalFields(SysOssConfig entity, SysOssConfigBo bo) {
+        entity.setPrefix(bo.getPrefix() == null ? "" : bo.getPrefix());
+        entity.setRegion(bo.getRegion() == null ? "" : bo.getRegion());
+        entity.setExt1(bo.getExt1() == null ? "" : bo.getExt1());
+        entity.setRemark(bo.getRemark() == null ? "" : bo.getRemark());
     }
 }
