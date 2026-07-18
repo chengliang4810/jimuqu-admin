@@ -106,9 +106,10 @@ auto-table:
   auto-build-database: true
   # update(默认)：系统启动时，会自动判断哪些表是新建的，哪些字段要新增修改，哪些索引/约束要新增删除等。
   mode: update
-  # 初始化数据由 Java/Xbatis 幂等事务服务写入，不加载 SQL 脚本。
+  # 首次建表后由 AutoTable 自动执行初始化数据脚本。
   init-data:
-    enable: false
+    enable: true
+    base-path: classpath:sql/{dialect}
   # 记录表信息维护过程中执行的SQL
   recordSql:
     enable: true
