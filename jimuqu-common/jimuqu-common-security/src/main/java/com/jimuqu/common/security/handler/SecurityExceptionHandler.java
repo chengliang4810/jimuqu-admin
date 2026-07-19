@@ -21,12 +21,23 @@ public class SecurityExceptionHandler implements SaFilterErrorStrategy {
         if (throwable instanceof NotPermissionException) {
             throw new AuthException(403, "没有访问权限，请联系管理员授权");
         } else if (throwable instanceof NotRoleException) {
-            throw new AuthException(403, "没有角色访问权限，请联系管理员授权");
-        } else if (throwable instanceof NotLoginException) {
-            throw new AuthException(401, "登录认证失败，请重新登录");
-        } else {
-            throw new AuthException(500, throwable.getMessage());
+            throw new AuthException(403, "没有访问权限，请联系管理员授权");
+        } else if (throwable instanceof NotLoginException exception) {
+            String message = switch (exception.getType()) {
+                case NotLoginException.TOKEN_TIMEOUT, NotLoginException.TOKEN_FREEZE ->
+                        "登录已过期，请重新登录";
+                case NotLoginException.BE_REPLACED ->
+                        "当前账号已在其他设备登录，您已被强制下线";
+                case NotLoginException.KICK_OUT ->
+                        "账号已被管理员强制下线";
+                default -> "登录状态异常，请重新登录";
+            };
+            throw new AuthException(401, message);
         }
+        if (throwable instanceof RuntimeException runtimeException) {
+            throw runtimeException;
+        }
+        throw new IllegalStateException("权限校验异常", throwable);
     }
 
 }

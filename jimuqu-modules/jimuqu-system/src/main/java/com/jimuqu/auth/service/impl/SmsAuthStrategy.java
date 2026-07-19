@@ -15,6 +15,7 @@ import com.jimuqu.common.core.enums.UserStatus;
 import com.jimuqu.common.core.exception.user.CaptchaExpireException;
 import com.jimuqu.common.core.exception.user.UserException;
 import com.jimuqu.common.core.utils.JsonUtil;
+import com.jimuqu.common.core.utils.MessageUtils;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.SysClient;
@@ -65,7 +66,7 @@ public class SmsAuthStrategy implements AuthStrategyService {
 
         LoginVo loginVo = new LoginVo();
         loginVo.setAccessToken(StpUtil.getTokenValue());
-        loginVo.setExpireIn(Math.toIntExact(StpUtil.getTokenTimeout()));
+        loginVo.setExpireIn(StpUtil.getTokenTimeout());
         loginVo.setClientId(client.getClientId());
         return loginVo;
     }
@@ -76,7 +77,8 @@ public class SmsAuthStrategy implements AuthStrategyService {
     private boolean validateSmsCode(String phonenumber, String smsCode) {
         String code = cacheService.get(GlobalConstants.CAPTCHA_CODE_KEY + phonenumber, String.class);
         if (StringUtil.isBlank(code)) {
-            loginService.recordLogininfor(phonenumber, Constants.LOGIN_FAIL, "验证码过期" );
+            loginService.recordLogininfor(phonenumber, Constants.LOGIN_FAIL,
+                    MessageUtils.message("user.jcaptcha.expire"));
             throw new CaptchaExpireException();
         }
         return code.equals(smsCode);

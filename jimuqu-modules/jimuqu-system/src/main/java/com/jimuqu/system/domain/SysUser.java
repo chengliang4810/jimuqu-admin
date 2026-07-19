@@ -2,6 +2,7 @@ package com.jimuqu.system.domain;
 
 import cn.xbatis.core.incrementer.IdentifierGeneratorType;
 import cn.xbatis.db.IdAutoType;
+import cn.xbatis.db.annotations.LogicDelete;
 import cn.xbatis.db.annotations.Table;
 import cn.xbatis.db.annotations.TableId;
 import com.jimuqu.common.core.constant.UserConstants;
@@ -13,6 +14,8 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.dromara.autotable.annotation.AutoColumn;
+import org.dromara.autotable.annotation.Index;
+import org.dromara.autotable.annotation.TableIndex;
 
 import java.io.Serial;
 import java.util.Date;
@@ -29,6 +32,7 @@ import java.util.Date;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Table(value = "sys_user")
+@TableIndex(name = "sys_user_create_by", fields = "createBy")
 public class SysUser extends BaseEntity {
 
     @Serial
@@ -44,11 +48,13 @@ public class SysUser extends BaseEntity {
      * 部门ID
      */
     @AutoColumn(comment = "部门ID")
+    @Index(name = "sys_user_dept_id")
     private Long deptId;
     /**
      * 用户账号
      */
     @AutoColumn(comment = "用户账号", length = 30)
+    @Index(name = "sys_user_user_name")
     private String userName;
     /**
      * 用户昵称
@@ -56,9 +62,9 @@ public class SysUser extends BaseEntity {
     @AutoColumn(comment = "用户昵称", length = 30)
     private String nickName;
     /**
-     * 用户类型（pc_user系统用户）
+     * 用户类型（sys_user系统用户）
      */
-    @AutoColumn(comment = "用户类型（pc_user系统用户）", length = 10, defaultValue = "pc_user")
+    @AutoColumn(comment = "用户类型（sys_user系统用户）", length = 10, defaultValue = "sys_user")
     private String userType;
     /**
      * 用户邮箱
@@ -69,6 +75,7 @@ public class SysUser extends BaseEntity {
      * 手机号码
      */
     @AutoColumn(comment = "手机号码", length = 11)
+    @Index(name = "sys_user_phone")
     private String phonenumber;
     /**
      * 用户性别（0男 1女 2未知）
@@ -93,6 +100,7 @@ public class SysUser extends BaseEntity {
     /**
      * 删除标志（0代表存在 1代表删除）
      */
+    @LogicDelete(beforeValue = "0", afterValue = "1")
     @AutoColumn(comment = "删除标志（0代表存在 1代表删除）", length = 1, defaultValue = "0")
     private String delFlag;
     /**

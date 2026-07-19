@@ -8,11 +8,13 @@ import cn.dev33.satoken.stp.parameter.SaLoginParameter;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.domain.model.LoginUser;
 import com.jimuqu.common.core.enums.UserType;
+import cn.hutool.v7.core.convert.ConvertUtil;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import cn.hutool.v7.core.util.ObjUtil;
 
+import java.util.HashMap;
 import java.util.function.Supplier;
 
 /**
@@ -33,7 +35,10 @@ public class LoginHelper {
 
     public static final String LOGIN_USER_KEY = "loginUser";
     public static final String USER_KEY = "userId";
+    public static final String USER_NAME_KEY = "userName";
     public static final String DEPT_KEY = "deptId";
+    public static final String DEPT_NAME_KEY = "deptName";
+    public static final String DEPT_CATEGORY_KEY = "deptCategory";
     public static final String CLIENT_KEY = "clientid";
     public static final String CLIENT_ACCESS_PATH_KEY = "clientAccessPath";
     public static final String CLIENT_IP_WHITELIST_KEY = "clientIpWhitelist";
@@ -51,6 +56,14 @@ public class LoginHelper {
         storage.set(USER_KEY, loginUser.getUserId());
         storage.set(DEPT_KEY, loginUser.getDeptId());
         model = ObjUtil.defaultIfNull(model, new SaLoginParameter());
+        model.setExtraData(model.getExtraData() == null
+                ? new HashMap<>()
+                : new HashMap<>(model.getExtraData()));
+        model.setExtra(USER_KEY, loginUser.getUserId())
+                .setExtra(USER_NAME_KEY, loginUser.getUsername())
+                .setExtra(DEPT_KEY, loginUser.getDeptId())
+                .setExtra(DEPT_NAME_KEY, loginUser.getDeptName())
+                .setExtra(DEPT_CATEGORY_KEY, loginUser.getDeptCategory());
         StpUtil.login(loginUser.getLoginId(), model);
         SaSession tokenSession = StpUtil.getTokenSession();
         tokenSession.updateTimeout(model.getTimeout());
@@ -94,22 +107,35 @@ public class LoginHelper {
      * 获取用户id
      */
     public static Long getUserId() {
-        LoginUser loginUser = getLoginUser();
-        if (ObjUtil.isNull(loginUser)) {
-            return null;
-        }
-        return loginUser.getUserId();
+        return ConvertUtil.toLong(getExtra(USER_KEY));
+    }
+
+    /**
+     * 获取用户ID字符串
+     */
+    public static String getUserIdStr() {
+        return ConvertUtil.toStr(getExtra(USER_KEY));
     }
 
     /**
      * 获取部门ID
      */
     public static Long getDeptId() {
-        LoginUser loginUser = getLoginUser();
-        if (ObjUtil.isNull(loginUser)) {
-            return null;
-        }
-        return loginUser.getDeptId();
+        return ConvertUtil.toLong(getExtra(DEPT_KEY));
+    }
+
+    /**
+     * 获取部门名称
+     */
+    public static String getDeptName() {
+        return ConvertUtil.toStr(getExtra(DEPT_NAME_KEY));
+    }
+
+    /**
+     * 获取部门类别编码
+     */
+    public static String getDeptCategory() {
+        return ConvertUtil.toStr(getExtra(DEPT_CATEGORY_KEY));
     }
 
     /**
@@ -127,7 +153,24 @@ public class LoginHelper {
      * 获取用户账户
      */
     public static String getUsername() {
-        return getLoginUser().getUsername();
+        return ConvertUtil.toStr(getExtra(USER_NAME_KEY));
+    }
+
+    private static Object getExtra(String key) {
+        try {
+            Object extra = StpUtil.getExtra(key);
+            if (ObjUtil.isNotNull(extra)) {
+                return extra;
+            }
+        } catch (Exception ignored) {
+            // 普通 UUID Token 不支持直接读取 extra，继续从 TokenSession 获取。
+        }
+        try {
+            SaSession session = StpUtil.getTokenSession();
+            return ObjUtil.isNull(session) ? null : session.get(key);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     /**
@@ -153,7 +196,7 @@ public class LoginHelper {
     }
 
     public static boolean isLogin() {
-        return getLoginUser() != null;
+        return StpUtil.isLogin();
     }
 
     public static <T> T getStorageIfAbsentSet(String key, Supplier<T> handle) {

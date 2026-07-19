@@ -37,7 +37,7 @@ public class SysOssConfig extends BaseEntity {
     private String endpoint;
     @AutoColumn(comment = "自定义域名", length = 255)
     private String domainUrl;
-    @AutoColumn(comment = "是否https", length = 1, defaultValue = "0")
+    @AutoColumn(comment = "是否https（Y是 N否）", length = 1, defaultValue = "N")
     private String isHttps;
     @AutoColumn(comment = "区域", length = 100)
     private String region;

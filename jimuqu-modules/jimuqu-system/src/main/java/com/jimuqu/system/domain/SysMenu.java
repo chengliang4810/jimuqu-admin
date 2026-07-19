@@ -79,15 +79,15 @@ public class SysMenu extends BaseEntity {
     @AutoColumn(comment = "路由参数", length = 255)
     private String queryParam;
     /**
-     * 是否为外链（0是 1否）
+     * 是否为外链（Y是 N否）
      */
-    @AutoColumn(comment = "是否为外链（0是 1否）", defaultValue = "1")
-    private String isFrame;
+    @AutoColumn(comment = "是否为外链（Y是 N否）", defaultValue = "N")
+    private String isFrame = UserConstants.NO;
     /**
-     * 是否缓存（0缓存 1不缓存）
+     * 是否缓存（Y缓存 N不缓存）
      */
-    @AutoColumn(comment = "是否缓存（0缓存 1不缓存）", defaultValue = "0")
-    private String isCache;
+    @AutoColumn(comment = "是否缓存（Y缓存 N不缓存）", defaultValue = "Y")
+    private String isCache = UserConstants.YES;
     /**
      * 菜单类型（M目录 C菜单 F按钮）
      */
@@ -168,7 +168,7 @@ public class SysMenu extends BaseEntity {
         }
         // 非外链并且是一级目录（类型为目录）
         if (0L == getParentId() && UserConstants.TYPE_DIR.equals(getMenuType())
-                && UserConstants.NO_FRAME.equals(getIsFrame())) {
+                && isNoFrame()) {
             routerPath = "/" + this.path;
         }
         // 非外链并且是一级目录（类型为菜单）
@@ -197,14 +197,19 @@ public class SysMenu extends BaseEntity {
      * 是否为菜单内部跳转
      */
     public boolean isMenuFrame() {
-        return getParentId() == 0L && UserConstants.TYPE_MENU.equals(menuType) && isFrame.equals(UserConstants.NO_FRAME);
+        return getParentId() == 0L && UserConstants.TYPE_MENU.equals(menuType) && isNoFrame();
     }
 
     /**
      * 是否为内链组件
      */
     public boolean isInnerLink() {
-        return isFrame.equals(UserConstants.NO_FRAME) && Validator.isUrl(path);
+        return isNoFrame() && Validator.isUrl(path);
+    }
+
+    /** 新数据使用 Y/N，同时兼容升级前的 0/1 数据。 */
+    private boolean isNoFrame() {
+        return UserConstants.NO.equals(isFrame) || UserConstants.NO_FRAME.equals(isFrame);
     }
 
     /**

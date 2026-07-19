@@ -4,13 +4,17 @@ import cn.dev33.satoken.secure.BCrypt;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.checker.Assert;
 import com.jimuqu.common.core.constant.UserConstants;
+import com.jimuqu.common.core.domain.model.LoginUser;
+import com.jimuqu.common.core.enums.UserType;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.core.utils.StreamUtil;
+import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.common.mybatis.model.DataScopeRule;
+import com.jimuqu.common.mybatis.model.DataScopeWriteRule;
 import com.jimuqu.common.mybatis.service.ISysDataScopeService;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.*;
@@ -19,9 +23,11 @@ import com.jimuqu.system.domain.query.SysUserQuery;
 import com.jimuqu.system.domain.vo.SysDeptVo;
 import com.jimuqu.system.domain.vo.SysPostVo;
 import com.jimuqu.system.domain.vo.SysRoleVo;
+import com.jimuqu.system.domain.vo.SysUserExportVo;
 import com.jimuqu.system.domain.vo.SysUserImportVo;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.mapper.*;
+import com.jimuqu.system.service.SysFileService;
 import com.jimuqu.system.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +35,15 @@ import cn.hutool.v7.core.collection.CollUtil;
 import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
+import org.noear.solon.validation.ValidUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -52,9 +63,10 @@ public class SysUserServiceImpl implements SysUserService {
     private final SysUserPostMapper sysUserPostMapper;
     private final SysUserRoleMapper sysUserRoleMapper;
     private final SysPostMapper sysPostMapper;
-    private final SysFileMapper sysFileMapper;
+    private final SysFileService sysFileService;
     private final SysConfigMapper sysConfigMapper;
     private final ISysDataScopeService dataScopeService;
+    private final SysUserImportRowTransactionExecutor importRowTransactionExecutor;
 
     /**
      * 查询用户信息
@@ -70,7 +82,7 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public Page<SysUserVo> queryPageList(SysUserQuery query, PageQuery pageQuery) {
-        Page<SysUserVo> page = buildQueryChain(query)
+        Page<SysUserVo> page = pageQuery.applyOrder(buildQueryChain(query))
                 .select(SysUser.class, SysDept.class)
                 .leftJoin(SysUser::getDeptId, SysDept::getId)
                 .returnType(SysUserVo.class)
@@ -93,17 +105,49 @@ public class SysUserServiceImpl implements SysUserService {
         return users;
     }
 
+    @Override
+    public List<SysUserExportVo> selectUserExportList(SysUserQuery query) {
+        List<SysUserVo> users = buildQueryChain(query)
+                .select(SysUser.class)
+                .returnType(SysUserVo.class)
+                .list();
+        List<SysUserExportVo> exports = MapstructUtil.convert(users, SysUserExportVo.class);
+        Set<Long> deptIds = StreamUtil.toSet(users, SysUserVo::getDeptId);
+        if (deptIds.isEmpty()) {
+            return exports;
+        }
+
+        Map<Long, SysDept> departments = StreamUtil.toIdentityMap(QueryChain.of(sysDeptMapper)
+                .select(SysDept::getId, SysDept::getLeader)
+                .in(SysDept::getId, deptIds)
+                .list(), SysDept::getId);
+        Set<Long> leaderIds = StreamUtil.toSet(departments.values(), SysDept::getLeader);
+        Map<Long, String> leaderNames = leaderIds.isEmpty() ? Map.of() : StreamUtil.toMap(
+                QueryChain.of(sysUserMapper)
+                        .select(SysUser::getId, SysUser::getUserName)
+                        .in(SysUser::getId, leaderIds)
+                        .list(),
+                SysUser::getId, SysUser::getUserName);
+
+        for (SysUserExportVo export : exports) {
+            SysDept dept = departments.get(export.getDeptId());
+            export.setLeaderName(dept == null ? null : leaderNames.get(dept.getLeader()));
+        }
+        return exports;
+    }
+
     private SysUserVo enrichUser(SysUserVo userVo) {
         if (ObjUtil.isNull(userVo)) {
             return null;
         }
         userVo.setRoles(sysRoleMapper.selectRolesByUserId(userVo.getId()));
         if (ObjUtil.isNotNull(userVo.getDeptId())) {
-            userVo.setDept(sysDeptMapper.getById(userVo.getDeptId(), SysDeptVo.class));
+            SysDeptVo dept = sysDeptMapper.getById(userVo.getDeptId(), SysDeptVo.class);
+            userVo.setDept(dept);
+            userVo.setDeptName(ObjUtil.isNull(dept) ? null : dept.getDeptName());
         }
         if (ObjUtil.isNotNull(userVo.getAvatar())) {
-            SysFile avatar = sysFileMapper.getById(String.valueOf(userVo.getAvatar()));
-            userVo.setAvatarUrl(ObjUtil.isNull(avatar) ? null : avatar.getUrl());
+            userVo.setAvatarUrl(sysFileService.selectUrlByIds(String.valueOf(userVo.getAvatar())));
         }
         return userVo;
     }
@@ -117,7 +161,8 @@ public class SysUserServiceImpl implements SysUserService {
     private QueryChain<SysUser> buildQueryChain(SysUserQuery query) {
         QueryChain<SysUser> queryChain = QueryChain.of(sysUserMapper)
                 .forSearch(true)
-                .where(query);
+                .where(query)
+                .orderBy(SysUser::getId);
 
         if (ObjUtil.isNotNull(query.getDeptId())) {
             List<Long> deptIdList = sysDeptMapper.selectListByParentId(query.getDeptId());
@@ -145,11 +190,11 @@ public class SysUserServiceImpl implements SysUserService {
             queryChain.andNested(scope -> scope
                     .in(SysUser::getDeptId, rule.departmentIds())
                     .or()
-                    .eq(SysUser::getId, rule.userId()));
+                    .eq(SysUser::getCreateBy, rule.userId()));
         } else if (hasDepartments) {
             queryChain.in(SysUser::getDeptId, rule.departmentIds());
         } else if (hasSelf) {
-            queryChain.eq(SysUser::getId, rule.userId());
+            queryChain.eq(SysUser::getCreateBy, rule.userId());
         } else {
             // 使用不可同时成立的 typed 条件保证异常或空范围时拒绝全部数据。
             queryChain.andNested(scope -> scope
@@ -187,7 +232,7 @@ public class SysUserServiceImpl implements SysUserService {
         insertUserPost(bo, true);
         SysUser sysUser = MapstructUtil.convert(bo, SysUser.class);
 
-        int num = sysUserMapper.update(sysUser);
+        int num = updateUserWithDataScope(sysUser);
         Assert.gtZero(num, "更新用户失败");
         return num > 0;
     }
@@ -200,8 +245,24 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public int updateUserProfile(SysUserBo user) {
-        SysUser sysUser = MapstructUtil.convert(user, SysUser.class);
-        return sysUserMapper.update(sysUser);
+        SysUser sysUser = new SysUser()
+                .setId(user.getId())
+                .setNickName(user.getNickName())
+                .setEmail(user.getEmail())
+                .setPhonenumber(user.getPhonenumber())
+                .setSex(user.getSex())
+                .setAvatar(user.getAvatar());
+        return updateUserWithDataScope(sysUser, DataScopeWriteRule.all());
+    }
+
+    /**
+     * 个人中心修改本人密码，不受管理端写数据权限约束。
+     */
+    @Override
+    public boolean resetOwnUserPwd(Long userId, String password) {
+        return updateUserWithDataScope(
+                new SysUser().setId(userId).setPassword(password),
+                DataScopeWriteRule.all()) > 0;
     }
 
     /**
@@ -211,7 +272,10 @@ public class SysUserServiceImpl implements SysUserService {
      * @param clear 清除已存在的关联数据
      */
     private void insertUserPost(SysUserBo user, boolean clear) {
-        List<Long> postIds = user.getPostIds();
+        if (CollUtil.isEmpty(user.getPostIds())) {
+            return;
+        }
+        List<Long> postIds = validatePostIds(user.getPostIds());
         if (clear) {
             // 删除用户与岗位关联
             sysUserPostMapper.delete(where -> where.eq(SysUserPost::getUserId, user.getId()));
@@ -247,21 +311,16 @@ public class SysUserServiceImpl implements SysUserService {
      * @param clear   清除已存在的关联数据
      */
     private void insertUserRole(Long userId, List<Long> roleIds, boolean clear) {
+        if (CollUtil.isEmpty(roleIds)) {
+            return;
+        }
+        List<Long> roleList = validateRoleIds(userId, roleIds);
         if (clear) {
             // 删除用户与角色关联
             sysUserRoleMapper.delete(where -> where.eq(SysUserRole::getUserId, userId));
         }
-        if (CollUtil.isEmpty(roleIds)) {
+        if (roleList.isEmpty()) {
             return;
-        }
-        List<Long> roleList = new ArrayList<>(roleIds);
-        if (!LoginHelper.isSuperAdmin(userId)) {
-            roleList.remove(UserConstants.SUPER_ADMIN_ID);
-        }
-        for (Long roleId : roleList) {
-            if (ObjUtil.isNull(sysRoleMapper.getById(roleId))) {
-                throw new ServiceException("角色不存在或已被删除");
-            }
         }
         // 新增用户与角色管理
         List<SysUserRole> list = StreamUtil.toList(roleList, roleId -> {
@@ -326,16 +385,12 @@ public class SysUserServiceImpl implements SysUserService {
     /**
      * 根据用户ID查询用户所属角色组
      *
-     * @param userName 用户名
+     * @param userId 用户ID
      * @return 结果
      */
     @Override
-    public String selectUserRoleGroup(String userName) {
-        SysUserVo user = selectUserByUserName(userName);
-        if (ObjUtil.isNull(user)) {
-            return "";
-        }
-        List<SysRoleVo> roles = sysRoleMapper.selectRolesByUserId(user.getId());
+    public String selectUserRoleGroup(Long userId) {
+        List<SysRoleVo> roles = sysRoleMapper.selectRolesByUserId(userId);
         return roles.stream()
                 .map(SysRoleVo::getRoleName)
                 .reduce((a, b) -> a + "," + b)
@@ -345,21 +400,16 @@ public class SysUserServiceImpl implements SysUserService {
     /**
      * 根据用户ID查询用户所属岗位组
      *
-     * @param userName 用户名
+     * @param userId 用户ID
      * @return 结果
      */
     @Override
-    public String selectUserPostGroup(String userName) {
-        SysUserVo user = selectUserByUserName(userName);
-        if (ObjUtil.isNull(user)) {
-            return "";
-        }
-
+    public String selectUserPostGroup(Long userId) {
         // 查询用户关联的岗位
         List<SysPostVo> posts = QueryChain.of(sysPostMapper)
                 .select(SysPost.class)
                 .join(SysPost::getPostId, SysUserPost::getPostId)
-                .eq(SysUserPost::getUserId, user.getId())
+                .eq(SysUserPost::getUserId, userId)
                 .eq(SysPost::getStatus, "0")
                 .orderBy(SysPost::getPostSort)
                 .returnType(SysPostVo.class)
@@ -388,7 +438,8 @@ public class SysUserServiceImpl implements SysUserService {
                 .in(!userIds.isEmpty(), SysUser::getId, userIds)
                 .eq(userIds.isEmpty(), SysUser::getId, -1L);
         applyUserDataScope(queryChain);
-        Page<SysUserVo> page = queryChain
+        Page<SysUserVo> page = pageQuery.applyOrder(queryChain)
+                .orderBy(SysUser::getId)
                 .returnType(SysUserVo.class)
                 .paging(pageQuery.build());
         page.getRows().forEach(this::enrichUser);
@@ -410,7 +461,8 @@ public class SysUserServiceImpl implements SysUserService {
                 .where(query)
                 .notIn(!userIds.isEmpty(), SysUser::getId, userIds);
         applyUserDataScope(queryChain);
-        Page<SysUserVo> page = queryChain
+        Page<SysUserVo> page = pageQuery.applyOrder(queryChain)
+                .orderBy(SysUser::getId)
                 .returnType(SysUserVo.class)
                 .paging(pageQuery.build());
         page.getRows().forEach(this::enrichUser);
@@ -453,6 +505,7 @@ public class SysUserServiceImpl implements SysUserService {
                 .select(SysUser.class)
                 .in(CollUtil.isNotEmpty(userIds), SysUser::getId, userIds)
                 .eq(ObjUtil.isNotNull(deptId), SysUser::getDeptId, deptId)
+                .eq(SysUser::getStatus, UserConstants.USER_NORMAL)
                 .orderBy(SysUser::getId);
         applyUserDataScope(queryChain);
         List<SysUserVo> users = queryChain.returnType(SysUserVo.class).list();
@@ -468,14 +521,20 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public boolean registerUser(SysUserBo bo) {
-        return insertByBo(bo);
+        SysUser user = prepareRegistrationUser(MapstructUtil.convert(bo, SysUser.class));
+        return sysUserMapper.save(user) > 0;
+    }
+
+    static SysUser prepareRegistrationUser(SysUser user) {
+        user.setCreateBy(0L);
+        user.setUpdateBy(0L);
+        return user;
     }
 
     @Override
-    @Transaction
     public String importUsers(List<SysUserImportVo> users, boolean updateSupport) {
         if (CollUtil.isEmpty(users)) {
-            return "未读取到用户数据";
+            return "恭喜您，数据已全部导入成功！共 0 条，数据如下：";
         }
 
         String initialPassword = QueryChain.of(sysConfigMapper)
@@ -487,7 +546,12 @@ public class SysUserServiceImpl implements SysUserService {
             throw new ServiceException("用户初始密码参数未配置");
         }
         String encodedPassword = BCrypt.hashpw(initialPassword);
+        return processImportedUsers(users, updateSupport, encodedPassword);
+    }
+
+    String processImportedUsers(List<SysUserImportVo> users, boolean updateSupport, String encodedPassword) {
         List<String> failures = new ArrayList<>();
+        List<String> successes = new ArrayList<>();
         int successCount = 0;
 
         for (int index = 0; index < users.size(); index++) {
@@ -495,23 +559,31 @@ public class SysUserServiceImpl implements SysUserService {
             String userName = StringUtil.trim(imported.getUserName());
             imported.setUserName(userName);
             try {
-                importUser(imported, updateSupport, encodedPassword);
+                boolean[] updated = {false};
+                importRowTransactionExecutor.execute(() ->
+                        updated[0] = importUser(imported, updateSupport, encodedPassword));
                 successCount++;
+                String safeName = StringUtil.cleanHtmlTag(StringUtil.defaultIfBlank(userName, "<空>"));
+                successes.add(StringUtil.format("{}、账号 {} {}成功",
+                        successCount, safeName, updated[0] ? "更新" : "导入"));
             } catch (RuntimeException exception) {
                 String safeName = StringUtil.cleanHtmlTag(StringUtil.defaultIfBlank(userName, "<空>"));
-                failures.add(StringUtil.format("第{}行账号 {} 导入失败：{}",
-                        index + 2, safeName, StringUtil.defaultIfBlank(exception.getMessage(), "未知错误")));
+                failures.add(StringUtil.format("{}、账号 {} 导入失败：{}",
+                        failures.size() + 1, safeName,
+                        StringUtil.defaultIfBlank(exception.getMessage(), "未知错误")));
             }
         }
 
         if (!failures.isEmpty()) {
-            throw new ServiceException("用户导入失败，共 " + failures.size() + " 条：<br/>"
-                    + String.join("<br/>", failures));
+            throw new ServiceException("很抱歉，导入失败！共 " + failures.size()
+                    + " 条数据格式不正确，错误如下：<br/>" + String.join("<br/>", failures));
         }
-        return StringUtil.format("恭喜您，数据已全部导入成功！共 {} 条", successCount);
+        String details = successes.isEmpty() ? "" : "<br/>" + String.join("<br/>", successes);
+        return StringUtil.format("恭喜您，数据已全部导入成功！共 {} 条，数据如下：{}",
+                successCount, details);
     }
 
-    private void importUser(SysUserImportVo imported, boolean updateSupport, String encodedPassword) {
+    boolean importUser(SysUserImportVo imported, boolean updateSupport, String encodedPassword) {
         SysDept dept = sysDeptMapper.getById(imported.getDeptId());
         if (dept == null) {
             throw new ServiceException("部门不存在");
@@ -524,20 +596,20 @@ public class SysUserServiceImpl implements SysUserService {
                 .eq(SysUser::getUserName, imported.getUserName())
                 .get();
         SysUserBo bo = toImportBo(imported);
+        ValidUtils.validateEntity(bo, AddGroup.class);
         if (existing == null) {
             assertImportUnique(bo);
             bo.setPassword(encodedPassword);
             if (!insertByBo(bo)) {
                 throw new ServiceException("新增用户失败");
             }
-            return;
+            return false;
         }
         if (!updateSupport) {
             throw new ServiceException("账号已存在");
         }
 
         checkUserAllowed(existing.getId());
-        checkUserDataScope(existing.getId());
         bo.setId(existing.getId());
         assertImportUnique(bo);
         SysUser update = new SysUser()
@@ -549,9 +621,10 @@ public class SysUserServiceImpl implements SysUserService {
                 .setPhonenumber(bo.getPhonenumber())
                 .setSex(bo.getSex())
                 .setStatus(bo.getStatus());
-        if (sysUserMapper.update(update) <= 0) {
+        if (updateUserWithDataScope(update) <= 0) {
             throw new ServiceException("更新用户失败");
         }
+        return true;
     }
 
     private SysUserBo toImportBo(SysUserImportVo imported) {
@@ -563,9 +636,7 @@ public class SysUserServiceImpl implements SysUserService {
         bo.setPhonenumber(StringUtil.trim(imported.getPhonenumber()));
         bo.setSex(StringUtil.defaultIfBlank(imported.getSex(), "2"));
         bo.setStatus(StringUtil.defaultIfBlank(imported.getStatus(), UserConstants.USER_NORMAL));
-        bo.setUserType("pc_user");
-        bo.setRoleIds(List.of());
-        bo.setPostIds(List.of());
+        bo.setUserType(UserType.SYS_USER.getUserType());
         return bo;
     }
 
@@ -588,12 +659,72 @@ public class SysUserServiceImpl implements SysUserService {
      * @param roleIds 角色组
      */
     @Override
+    @Transaction
     public void insertUserAuth(Long userId, Long[] roleIds) {
         if (ObjUtil.isNull(userId)) {
             return;
         }
-        List<Long> roleList = roleIds == null ? List.of() : List.of(roleIds);
+        List<Long> roleList = roleIds == null ? List.of() : Arrays.asList(roleIds);
         insertUserRole(userId, roleList, true);
+    }
+
+    private List<Long> validateRoleIds(Long userId, List<Long> roleIds) {
+        List<Long> requested = validateDistinctIds(roleIds, "角色");
+        if (requested.isEmpty()) {
+            return requested;
+        }
+        List<Long> assignable = new ArrayList<>(requested);
+        if (!LoginHelper.isSuperAdmin(userId)) {
+            assignable.remove(UserConstants.SUPER_ADMIN_ID);
+            if (assignable.isEmpty()) {
+                throw new ServiceException("不允许为普通用户分配超级管理员角色，请至少选择一个其他角色");
+            }
+        }
+        List<SysRole> roles = QueryChain.of(sysRoleMapper)
+                .in(SysRole::getId, assignable)
+                .eq(SysRole::getDelFlag, "0")
+                .list();
+        if (roles.size() != assignable.size()) {
+            throw new ServiceException("角色不存在或已被删除");
+        }
+        if (!LoginHelper.isSuperAdmin()) {
+            DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
+            if (roles.stream().anyMatch(role -> !rule.permits(role.getCreateBy(), role.getCreateDept()))) {
+                throw new ServiceException("没有权限访问角色的数据");
+            }
+        }
+        return assignable;
+    }
+
+    private List<Long> validatePostIds(List<Long> postIds) {
+        List<Long> requested = validateDistinctIds(postIds, "岗位");
+        if (requested.isEmpty()) {
+            return requested;
+        }
+        List<SysPost> posts = QueryChain.of(sysPostMapper)
+                .in(SysPost::getPostId, requested)
+                .list();
+        if (posts.size() != requested.size()) {
+            throw new ServiceException("岗位不存在或已被删除");
+        }
+        if (!LoginHelper.isSuperAdmin()) {
+            DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
+            if (posts.stream().anyMatch(post -> !rule.permits(post.getCreateBy(), post.getDeptId()))) {
+                throw new ServiceException("没有权限访问岗位的数据");
+            }
+        }
+        return requested;
+    }
+
+    private List<Long> validateDistinctIds(List<Long> ids, String relationName) {
+        if (CollUtil.isEmpty(ids)) {
+            return List.of();
+        }
+        if (ids.stream().anyMatch(java.util.Objects::isNull)
+                || new HashSet<>(ids).size() != ids.size()) {
+            throw new ServiceException(relationName + "ID不能为空或重复");
+        }
+        return List.copyOf(ids);
     }
 
     /**
@@ -605,7 +736,7 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public boolean updateUserStatus(Long userId, String status) {
-        return sysUserMapper.update(new SysUser().setId(userId).setStatus(status)) > 0;
+        return updateUserWithDataScope(new SysUser().setId(userId).setStatus(status)) > 0;
     }
 
     /**
@@ -617,7 +748,7 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public boolean updateUserAvatar(Long userId, Long avatar) {
-        return sysUserMapper.update(new SysUser().setId(userId).setAvatar(avatar)) > 0;
+        return updateUserWithDataScope(new SysUser().setId(userId).setAvatar(avatar)) > 0;
     }
 
     /**
@@ -629,7 +760,7 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public boolean resetUserPwd(Long userId, String password) {
-        return sysUserMapper.update(new SysUser().setId(userId).setPassword(password)) > 0;
+        return updateUserWithDataScope(new SysUser().setId(userId).setPassword(password)) > 0;
     }
 
     /**
@@ -703,8 +834,30 @@ public class SysUserServiceImpl implements SysUserService {
         }
 
         DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
-        if (!rule.permits(targetUser.getId(), targetUser.getDeptId())) {
+        if (!permitsUser(rule, targetUser)) {
             throw new ServiceException("没有权限访问用户数据！");
         }
+    }
+
+    static boolean permitsUser(DataScopeRule rule, SysUser user) {
+        return rule.permits(user.getCreateBy(), user.getDeptId());
+    }
+
+    private int updateUserWithDataScope(SysUser user) {
+        DataScopeWriteRule writeRule = resolveWriteDataScope(LoginHelper.getLoginUser());
+        return updateUserWithDataScope(user, writeRule);
+    }
+
+    DataScopeWriteRule resolveWriteDataScope(LoginUser loginUser) {
+        return loginUser == null
+                ? DataScopeWriteRule.all()
+                : dataScopeService.resolveUserWriteDataScope(loginUser.getUserId());
+    }
+
+    int updateUserWithDataScope(SysUser user, DataScopeWriteRule writeRule) {
+        if (user == null || user.getId() == null) {
+            throw new ServiceException("用户ID不能为空");
+        }
+        return sysUserMapper.updateWithDataScope(user, writeRule);
     }
 }

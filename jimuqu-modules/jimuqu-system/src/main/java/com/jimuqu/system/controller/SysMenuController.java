@@ -7,6 +7,8 @@ import com.jimuqu.common.core.checker.Assert;
 import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.domain.R;
+import com.jimuqu.common.core.exception.ServiceException;
+import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
@@ -21,6 +23,7 @@ import com.jimuqu.system.domain.vo.MenuTreeSelectVo;
 import com.jimuqu.system.domain.vo.RouterVo;
 import com.jimuqu.system.domain.vo.SysMenuVo;
 import com.jimuqu.system.service.SysMenuService;
+import com.jimuqu.system.service.SysRoleService;
 import lombok.RequiredArgsConstructor;
 import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Body;
@@ -35,6 +38,7 @@ import org.noear.solon.validation.annotation.NotNull;
 import org.noear.solon.validation.annotation.Validated;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 菜单权限 Controller。
@@ -47,6 +51,7 @@ import java.util.List;
 public class SysMenuController extends BaseController {
 
     private final SysMenuService menuService;
+    private final SysRoleService roleService;
 
     @Get
     @Mapping("/getRouters")
@@ -83,6 +88,7 @@ public class SysMenuController extends BaseController {
     @Mapping("/roleMenuTreeselect/{roleId}")
     @SaCheckPermission("system:menu:query")
     public R<MenuTreeSelectVo> roleMenuTreeselect(Long roleId) {
+        roleService.checkRoleDataScope(roleId);
         List<SysMenuVo> menus = menuService.queryList(LoginHelper.getUserId());
         MenuTreeSelectVo selectVo = new MenuTreeSelectVo();
         selectVo.setCheckedKeys(menuService.queryMenuListByRoleId(roleId));
@@ -97,14 +103,15 @@ public class SysMenuController extends BaseController {
     @SaCheckRole(GlobalConstants.SUPER_ADMIN_ROLE_KEY)
     @Log(title = "菜单管理", businessType = BusinessType.ADD)
     public R<Void> add(@Body @Validated(AddGroup.class) SysMenuBo menu) {
+        validateQueryParam(menu.getQueryParam());
         if (!menuService.checkMenuNameUnique(menu)) {
             return R.fail("新增菜单'" + menu.getMenuName() + "'失败，菜单名称已存在");
         }
-        if (!menuService.checkRouteConfigUnique(menu)) {
-            return R.fail("新增菜单'" + menu.getMenuName() + "'失败，路由地址或名称已存在");
-        }
-        if (UserConstants.YES_FRAME.equals(menu.getIsFrame()) && !StringUtil.isHttp(menu.getPath())) {
+        if (isFrame(menu.getIsFrame()) && !StringUtil.isHttp(menu.getPath())) {
             return R.fail("新增菜单'" + menu.getMenuName() + "'失败，地址必须以http(s)://开头");
+        }
+        if (!menuService.checkRouteConfigUnique(menu)) {
+            return R.fail("新增菜单'" + menu.getMenuName() + "'失败，路由名称或地址已存在");
         }
         return toAjax(menuService.insertByBo(menu));
     }
@@ -116,17 +123,18 @@ public class SysMenuController extends BaseController {
     @SaCheckRole(GlobalConstants.SUPER_ADMIN_ROLE_KEY)
     @Log(title = "菜单管理", businessType = BusinessType.UPDATE)
     public R<Void> edit(@Body @Validated(UpdateGroup.class) SysMenuBo menu) {
+        validateQueryParam(menu.getQueryParam());
         if (!menuService.checkMenuNameUnique(menu)) {
             return R.fail("修改菜单'" + menu.getMenuName() + "'失败，菜单名称已存在");
         }
-        if (!menuService.checkRouteConfigUnique(menu)) {
-            return R.fail("修改菜单'" + menu.getMenuName() + "'失败，路由地址或名称已存在");
-        }
-        if (UserConstants.YES_FRAME.equals(menu.getIsFrame()) && !StringUtil.isHttp(menu.getPath())) {
+        if (isFrame(menu.getIsFrame()) && !StringUtil.isHttp(menu.getPath())) {
             return R.fail("修改菜单'" + menu.getMenuName() + "'失败，地址必须以http(s)://开头");
         }
         if (menu.getId().equals(menu.getParentId())) {
             return R.fail("修改菜单'" + menu.getMenuName() + "'失败，上级菜单不能选择自己");
+        }
+        if (!menuService.checkRouteConfigUnique(menu)) {
+            return R.fail("修改菜单'" + menu.getMenuName() + "'失败，路由名称或地址已存在");
         }
         return toAjax(menuService.updateByBo(menu));
     }
@@ -155,8 +163,26 @@ public class SysMenuController extends BaseController {
     @Log(title = "菜单管理", businessType = BusinessType.DELETE)
     public R<Void> cascadeDelete(@NotEmpty(message = "菜单ID不能为空") List<Long> menuIds) {
         if (menuService.hasChildByMenuId(menuIds)) {
-            return R.warn("存在未选中的子菜单,不允许删除");
+            return R.warn("存在子菜单,不允许删除");
         }
         return toAjax(menuService.deleteById(menuIds));
+    }
+
+    private static boolean isFrame(String value) {
+        return UserConstants.YES.equals(value) || UserConstants.YES_FRAME.equals(value);
+    }
+
+    static void validateQueryParam(String queryParam) {
+        if (StringUtil.isBlank(queryParam)) {
+            return;
+        }
+        try {
+            if (JsonUtil.toObject(queryParam, Object.class) instanceof Map<?, ?>) {
+                return;
+            }
+        } catch (RuntimeException ignored) {
+            // 统一转换为与上游校验注解一致的业务提示。
+        }
+        throw new ServiceException("路由参数必须符合JSON格式");
     }
 }

@@ -33,6 +33,18 @@ public class SysOperLogQuery implements Serializable, ObjectConditionLifeCycle {
     @Condition(LIKE)
     private String operIp;
     @Condition(EQ)
+    private Long userId;
+    @Condition(EQ)
+    private Long deptId;
+    @Condition(EQ)
+    private String clientKey;
+    @Condition(EQ)
+    private String deviceType;
+    @Condition(LIKE)
+    private String browser;
+    @Condition(LIKE)
+    private String os;
+    @Condition(EQ)
     private Integer businessType;
     @Condition(value = IN, property = "businessType")
     private Integer[] businessTypes;
@@ -43,6 +55,9 @@ public class SysOperLogQuery implements Serializable, ObjectConditionLifeCycle {
 
     @Override
     public void beforeBuildCondition() {
+        if (businessType != null && businessType <= 0) {
+            businessType = null;
+        }
         Object beginTime = getParams().get("beginTime");
         Object endTime = getParams().get("endTime");
         if (beginTime != null && endTime != null) {

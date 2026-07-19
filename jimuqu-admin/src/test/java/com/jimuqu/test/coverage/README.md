@@ -13,7 +13,7 @@ coverage.record("GET", "/system/user/list");
 ```
 
 套件结束调用 `coverage.assertComplete()`。分母来自 `Solon.app().router().findAll()` 中的
-`com.jimuqu` Controller 路由；新接口会自动进入分母。框架自动路由如需排除，必须通过
+`com.jimuqu` Controller 或自定义 Handler 路由；新接口会自动进入分母。框架自动路由如需排除，必须通过
 `snapshotApplicationRoutes` 的显式 `RouteKey` 集合排除，禁止按目录或前缀静默过滤。
 
 该统计只代表 HTTP 操作覆盖率。下载、SSE 和 WebSocket 仍需独立协议断言，不能用普通

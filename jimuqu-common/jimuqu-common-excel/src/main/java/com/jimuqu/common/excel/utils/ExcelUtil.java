@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 /**
  * Excel相关处理
@@ -317,12 +318,15 @@ public class ExcelUtil {
      * @return 解析后值
      */
     public static String convertByExp(String propertyValue, String converterExp, String separator) {
+        if (StringUtil.isBlank(converterExp)) {
+            return "";
+        }
         StringBuilder propertyString = new StringBuilder();
         String[] convertSource = converterExp.split(StringUtil.SEPARATOR);
         for (String item : convertSource) {
-            String[] itemArray = item.split("=");
+            String[] itemArray = parseConverterItem(item);
             if (StringUtil.containsAny(propertyValue, separator)) {
-                for (String value : propertyValue.split(separator)) {
+                for (String value : propertyValue.split(Pattern.quote(separator))) {
                     if (itemArray[0].equals(value)) {
                         propertyString.append(itemArray[1] + separator);
                         break;
@@ -346,12 +350,15 @@ public class ExcelUtil {
      * @return 解析后值
      */
     public static String reverseByExp(String propertyValue, String converterExp, String separator) {
+        if (StringUtil.isBlank(converterExp)) {
+            return "";
+        }
         StringBuilder propertyString = new StringBuilder();
         String[] convertSource = converterExp.split(StringUtil.SEPARATOR);
         for (String item : convertSource) {
-            String[] itemArray = item.split("=");
+            String[] itemArray = parseConverterItem(item);
             if (StringUtil.containsAny(propertyValue, separator)) {
-                for (String value : propertyValue.split(separator)) {
+                for (String value : propertyValue.split(Pattern.quote(separator))) {
                     if (itemArray[1].equals(value)) {
                         propertyString.append(itemArray[0] + separator);
                         break;
@@ -364,6 +371,14 @@ public class ExcelUtil {
             }
         }
         return StringUtil.removeSuffix(propertyString.toString(), separator);
+    }
+
+    private static String[] parseConverterItem(String item) {
+        String[] parts = item.split("=", 2);
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Excel转换表达式格式错误: " + item);
+        }
+        return parts;
     }
 
     /**

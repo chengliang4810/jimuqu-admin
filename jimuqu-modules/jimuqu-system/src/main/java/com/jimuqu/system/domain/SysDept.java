@@ -11,6 +11,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.dromara.autotable.annotation.AutoColumn;
+import org.dromara.autotable.annotation.Index;
 
 import java.io.Serial;
 
@@ -41,6 +42,7 @@ public class SysDept extends BaseEntity {
      * 父部门id
      */
     @AutoColumn(comment = "父部门id")
+    @Index(name = "sys_dept_parent_id")
     private Long parentId;
     /**
      * 祖级列表
@@ -52,6 +54,11 @@ public class SysDept extends BaseEntity {
      */
     @AutoColumn(comment = "部门名称", length = 30)
     private String deptName;
+    /**
+     * 部门类别编码
+     */
+    @AutoColumn(comment = "部门类别编码", length = 100)
+    private String deptCategory;
     /**
      * 显示顺序
      */
@@ -78,9 +85,10 @@ public class SysDept extends BaseEntity {
     @AutoColumn(comment = "部门状态（0正常 1停用）", length = 1, defaultValue = "0")
     private String status;
     /**
-     * 删除标志（0代表存在 2代表删除）
+     * 删除标志（0代表存在 1代表删除）
      */
-    @AutoColumn(comment = "删除标志（0代表存在 2代表删除）", length = 1, defaultValue = "0")
+    @LogicDelete(beforeValue = "0", afterValue = "1")
+    @AutoColumn(comment = "删除标志（0代表存在 1代表删除）", length = 1, defaultValue = "0")
     private String delFlag;
 
 }

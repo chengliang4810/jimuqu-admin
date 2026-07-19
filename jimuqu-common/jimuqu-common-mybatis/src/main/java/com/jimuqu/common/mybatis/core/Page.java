@@ -54,7 +54,7 @@ public class Page<T> extends PageResult<T> implements IPager<T> {
         return new Page<T>(1, 20);
     }
 
-    public static <T> Page<T> of(int total) {
+    public static <T> Page<T> of(long total) {
         Page<T> page = new Page<>();
         page.setTotal(total);
         return page;
@@ -68,7 +68,7 @@ public class Page<T> extends PageResult<T> implements IPager<T> {
         return new Page<T>(rows);
     }
 
-    public static <T> Page<T> of(List<T> rows, Integer total) {
+    public static <T> Page<T> of(List<T> rows, long total) {
         Page<T> page = new Page<>(rows);
         page.setTotal(total);
         return page;
@@ -82,7 +82,7 @@ public class Page<T> extends PageResult<T> implements IPager<T> {
     public <V> void set(PagerField<V> field, V value) {
         if (PagerField.TOTAL == field) {
             //设置总条数
-            this.setTotal((Integer) value);
+            this.setTotal(((Number) value).longValue());
             return;
         }
         if (PagerField.RESULTS == field) {

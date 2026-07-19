@@ -88,6 +88,7 @@ public class SysRoleController extends BaseController {
     @Mapping("/authUser/allocatedList")
     @SaCheckPermission("system:role:list")
     public Page<SysUserVo> allocatedList(SysUserQuery user, PageQuery pageQuery) {
+        roleService.checkRoleDataScope(user.getRoleId());
         return userService.selectAllocatedList(user, pageQuery);
     }
 
@@ -95,6 +96,7 @@ public class SysRoleController extends BaseController {
     @Mapping("/authUser/unallocatedList")
     @SaCheckPermission("system:role:list")
     public Page<SysUserVo> unallocatedList(SysUserQuery user, PageQuery pageQuery) {
+        roleService.checkRoleDataScope(user.getRoleId());
         return userService.selectUnallocatedList(user, pageQuery);
     }
 
@@ -129,7 +131,6 @@ public class SysRoleController extends BaseController {
             return R.fail("修改角色'" + role.getRoleName() + "'失败，角色权限已存在");
         }
         if (roleService.updateByBo(role)) {
-            roleService.cleanOnlineUserByRole(role.getId());
             return R.ok();
         }
         return R.fail("修改角色'" + role.getRoleName() + "'失败，请联系管理员");
@@ -148,6 +149,7 @@ public class SysRoleController extends BaseController {
 
     @Put
     @Mapping("/dataScope")
+    @NoRepeatSubmit
     @SaCheckPermission("system:role:edit")
     @Log(title = "角色管理", businessType = BusinessType.UPDATE)
     public R<Void> dataScope(@Body SysRoleBo role) {
@@ -158,16 +160,21 @@ public class SysRoleController extends BaseController {
 
     @Put
     @Mapping("/changeStatus")
+    @NoRepeatSubmit
     @SaCheckPermission("system:role:edit")
     @Log(title = "角色管理", businessType = BusinessType.UPDATE)
     public R<Void> changeStatus(@Body SysRoleBo role) {
         roleService.checkRoleAllowed(role);
         roleService.checkRoleDataScope(role.getId());
-        return toAjax(roleService.updateRoleStatus(role.getId(), role.getStatus()));
+        if (roleService.updateRoleStatus(role.getId(), role.getStatus())) {
+            return R.ok();
+        }
+        return R.fail("修改角色'" + role.getRoleName() + "'状态失败，请联系管理员");
     }
 
     @Put
     @Mapping("/authUser/cancel")
+    @NoRepeatSubmit
     @SaCheckPermission("system:role:edit")
     @Log(title = "角色管理", businessType = BusinessType.GRANT)
     public R<Void> cancelAuthUser(@Body SysUserRole userRole) {
@@ -176,6 +183,7 @@ public class SysRoleController extends BaseController {
 
     @Put
     @Mapping("/authUser/cancelAll")
+    @NoRepeatSubmit
     @SaCheckPermission("system:role:edit")
     @Log(title = "角色管理", businessType = BusinessType.GRANT)
     public R<Void> cancelAuthUserAll(Long roleId, Long[] userIds) {
@@ -184,6 +192,7 @@ public class SysRoleController extends BaseController {
 
     @Put
     @Mapping("/authUser/selectAll")
+    @NoRepeatSubmit
     @SaCheckPermission("system:role:edit")
     @Log(title = "角色管理", businessType = BusinessType.GRANT)
     public R<Void> selectAuthUserAll(Long roleId, Long[] userIds) {
@@ -205,6 +214,7 @@ public class SysRoleController extends BaseController {
     @Mapping("/deptTree/{roleId}")
     @SaCheckPermission("system:role:list")
     public R<DeptTreeSelectVo> roleDeptTreeSelect(Long roleId) {
+        roleService.checkRoleDataScope(roleId);
         DeptTreeSelectVo selectVo = new DeptTreeSelectVo();
         selectVo.setCheckedKeys(deptService.selectDeptListByRoleId(roleId));
         selectVo.setDepts(deptService.selectDeptTreeList(new SysDeptQuery()));

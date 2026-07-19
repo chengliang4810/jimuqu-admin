@@ -4,6 +4,7 @@ import cn.xbatis.core.sql.ObjectConditionLifeCycle;
 import cn.xbatis.db.annotations.Condition;
 import cn.xbatis.db.annotations.ConditionTarget;
 import cn.xbatis.db.annotations.Ignore;
+import com.jimuqu.common.core.utils.DateUtil;
 import com.jimuqu.system.domain.SysDept;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -12,7 +13,9 @@ import lombok.experimental.FieldNameConstants;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static cn.xbatis.db.annotations.Condition.Type.*;
 
@@ -29,6 +32,9 @@ public class SysDeptQuery implements Serializable, ObjectConditionLifeCycle {
 
     @Serial
     private static final long serialVersionUID = 1L;
+
+    @Condition(IGNORE)
+    private Map<String, Object> params = new HashMap<>();
 
     /**
      * 主键
@@ -55,6 +61,11 @@ public class SysDeptQuery implements Serializable, ObjectConditionLifeCycle {
      */
     @Condition(value = LIKE)
     private String deptName;
+    /**
+     * 部门类别编码
+     */
+    @Condition(value = LIKE)
+    private String deptCategory;
     /**
      * 显示顺序
      */
@@ -97,7 +108,13 @@ public class SysDeptQuery implements Serializable, ObjectConditionLifeCycle {
      */
     @Override
     public void beforeBuildCondition() {
-
+        Object beginTime = params.get("beginTime");
+        Object endTime = params.get("endTime");
+        if (beginTime != null && endTime != null) {
+            createTime = List.of(
+                    DateUtil.dateTime(DateUtil.YYYY_MM_DD_HH_MM_SS, beginTime.toString()),
+                    DateUtil.dateTime(DateUtil.YYYY_MM_DD_HH_MM_SS, endTime.toString()));
+        }
     }
 
 }

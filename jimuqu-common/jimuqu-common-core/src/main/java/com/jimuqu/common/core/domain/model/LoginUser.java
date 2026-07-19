@@ -1,13 +1,14 @@
 package com.jimuqu.common.core.domain.model;
 
+import com.jimuqu.common.core.domain.dto.PostDTO;
 import com.jimuqu.common.core.domain.dto.RoleDTO;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -34,6 +35,11 @@ public class LoginUser implements Serializable {
     private Long deptId;
 
     /**
+     * 部门类别编码
+     */
+    private String deptCategory;
+
+    /**
      * 部门名
      */
     private String deptName;
@@ -51,12 +57,12 @@ public class LoginUser implements Serializable {
     /**
      * 登录时间
      */
-    private Date loginTime;
+    private Long loginTime;
 
     /**
      * 过期时间
      */
-    private Date expireTime;
+    private Long expireTime;
 
     /**
      * 登录IP地址
@@ -104,14 +110,19 @@ public class LoginUser implements Serializable {
     private List<RoleDTO> roles;
 
     /**
+     * 数据权限角色映射，key 为权限码，value 为参与数据权限计算的角色ID列表
+     */
+    private Map<String, List<Long>> dataScopeRoleMap;
+
+    /**
+     * 岗位对象
+     */
+    private List<PostDTO> posts;
+
+    /**
      * 数据权限 当前角色ID
      */
     private Long roleId;
-
-    /**
-     * 数据权限范围（1全部数据权限 2自定数据权限 3部门数据权限 4部门及以下数据权限 5仅本人数据权限）
-     */
-    private String dataScope;
 
     /**
      * 客户端

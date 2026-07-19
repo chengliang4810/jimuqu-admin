@@ -1,15 +1,21 @@
 package com.jimuqu.system.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import cn.xbatis.db.annotations.Ignores;
 import cn.xbatis.db.annotations.ResultEntity;
+import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.system.domain.SysMenu;
 import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
+import org.noear.snack4.annotation.ONodeAttr;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * 菜单权限视图对象
@@ -21,6 +27,7 @@ import java.io.Serializable;
 @Accessors(chain = true)
 @ResultEntity(SysMenu.class)
 @AutoMapper(target = SysMenu.class)
+@Ignores("children")
 public class SysMenuVo implements Serializable {
 
     @Serial
@@ -30,6 +37,7 @@ public class SysMenuVo implements Serializable {
      * 菜单ID
      */
     @JsonProperty("menuId")
+    @ONodeAttr(name = "menuId")
     private Long id;
     /**
      * 父菜单ID
@@ -54,14 +62,13 @@ public class SysMenuVo implements Serializable {
     /**
      * 路由参数
      */
-    @JsonProperty("query")
     private String queryParam;
     /**
-     * 是否为外链（0是 1否）
+     * 是否为外链（Y是 N否）
      */
     private String isFrame;
     /**
-     * 是否缓存（0缓存 1不缓存）
+     * 是否缓存（Y缓存 N不缓存）
      */
     private String isCache;
     /**
@@ -90,5 +97,42 @@ public class SysMenuVo implements Serializable {
      * 备注
      */
     private String remark;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 创建部门
+     */
+    private Long createDept;
+
+    /**
+     * 子菜单
+     */
+    private List<SysMenuVo> children = new ArrayList<>();
+
+    public String getIsFrame() {
+        return UserConstants.YES_FRAME.equals(isFrame) ? UserConstants.YES
+                : UserConstants.NO_FRAME.equals(isFrame) ? UserConstants.NO : isFrame;
+    }
+
+    public SysMenuVo setIsFrame(String isFrame) {
+        this.isFrame = UserConstants.YES_FRAME.equals(isFrame) ? UserConstants.YES
+                : UserConstants.NO_FRAME.equals(isFrame) ? UserConstants.NO : isFrame;
+        return this;
+    }
+
+    public String getIsCache() {
+        return "0".equals(isCache) ? UserConstants.YES
+                : "1".equals(isCache) ? UserConstants.NO : isCache;
+    }
+
+    public SysMenuVo setIsCache(String isCache) {
+        this.isCache = "0".equals(isCache) ? UserConstants.YES
+                : "1".equals(isCache) ? UserConstants.NO : isCache;
+        return this;
+    }
 
 }

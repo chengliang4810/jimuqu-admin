@@ -1,7 +1,6 @@
 package com.jimuqu.common.ratelimit.exception;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.jimuqu.common.core.exception.base.BaseException;
 
 /**
  * 限流异常
@@ -9,27 +8,26 @@ import lombok.Setter;
  * @author chengliang
  * @date 2025/09/24
  */
-@Setter
-@Getter
-public class RateLimitException extends RuntimeException {
+public class RateLimitException extends BaseException {
 
-    private Integer code;
+    private static final String MODULE = "ratelimit";
+    private static final int DEFAULT_CODE = 500;
 
     public RateLimitException(String message) {
-        super(message);
+        super(MODULE, DEFAULT_CODE, message);
     }
 
     public RateLimitException(String message, Throwable cause) {
-        super(message, cause);
+        this(message);
+        initCause(cause);
     }
 
     public RateLimitException(Integer code, String message) {
-        super(message);
-        this.code = code;
+        super(MODULE, code == null ? DEFAULT_CODE : code, message);
     }
 
     public RateLimitException(Integer code, String message, Throwable cause) {
-        super(message, cause);
-        this.code = code;
+        this(code, message);
+        initCause(cause);
     }
 }

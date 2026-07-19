@@ -22,7 +22,7 @@ public class SaPermissionImpl implements StpInterface {
             return List.of();
         }
         UserType userType = UserType.getUserType(loginUser.getUserType());
-        if (userType == UserType.PC_USER) {
+        if (userType == UserType.SYS_USER) {
             return new ArrayList<>(loginUser.getMenuPermission());
         } else if (userType == UserType.APP_USER) {
             // 其他端 自行根据业务编写
@@ -40,7 +40,7 @@ public class SaPermissionImpl implements StpInterface {
             return List.of();
         }
         UserType userType = UserType.getUserType(loginUser.getUserType());
-        if (userType == UserType.PC_USER) {
+        if (userType == UserType.SYS_USER) {
             return new ArrayList<>(loginUser.getRolePermission());
         } else if (userType == UserType.APP_USER) {
             // 其他端 自行根据业务编写

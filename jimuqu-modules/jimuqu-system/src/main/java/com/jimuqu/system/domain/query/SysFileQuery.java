@@ -104,6 +104,11 @@ public class SysFileQuery implements Serializable, ObjectConditionLifeCycle {
     @Condition(value = EQ, property = "platform")
     private String service;
     /**
+     * Bell 上传人参数
+     */
+    @Condition(value = EQ)
+    private Long createBy;
+    /**
      * 缩略图访问路径
      */
     @Condition(value = EQ)
@@ -195,6 +200,9 @@ public class SysFileQuery implements Serializable, ObjectConditionLifeCycle {
      */
     @Override
     public void beforeBuildCondition() {
+        if (fileSuffix != null && fileSuffix.length() > 1 && fileSuffix.startsWith(".")) {
+            fileSuffix = fileSuffix.substring(1);
+        }
         Object beginTime = getParams().get("beginTime");
         Object endTime = getParams().get("endTime");
         if (beginTime != null && endTime != null) {

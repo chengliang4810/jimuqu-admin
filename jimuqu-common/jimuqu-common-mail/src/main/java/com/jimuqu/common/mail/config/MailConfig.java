@@ -22,12 +22,22 @@ public class MailConfig {
         account.setAuth(mailProperties.getAuth());
         account.setFrom(mailProperties.getFrom());
         account.setUser(mailProperties.getUser());
-        account.setPass(mailProperties.getPass().toCharArray());
-        account.setSocketFactoryPort(mailProperties.getPort());
-        account.setStarttlsEnable(mailProperties.getStarttlsEnable());
+        if (mailProperties.getPass() != null) {
+            account.setPass(mailProperties.getPass().toCharArray());
+        }
+        if (mailProperties.getPort() != null) {
+            account.setSocketFactoryPort(mailProperties.getPort());
+        }
+        if (mailProperties.getStarttlsEnable() != null) {
+            account.setStarttlsEnable(mailProperties.getStarttlsEnable());
+        }
         account.setSslEnable(mailProperties.getSslEnable());
-        account.setTimeout(mailProperties.getTimeout());
-        account.setConnectionTimeout(mailProperties.getConnectionTimeout());
+        if (mailProperties.getTimeout() != null) {
+            account.setTimeout(mailProperties.getTimeout());
+        }
+        if (mailProperties.getConnectionTimeout() != null) {
+            account.setConnectionTimeout(mailProperties.getConnectionTimeout());
+        }
         return account;
     }
 

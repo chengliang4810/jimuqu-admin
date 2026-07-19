@@ -46,6 +46,9 @@ public class DropDownOptions {
      * 分隔符
      */
     private static final String DELIMITER = "_";
+    private static final String OPTION_PART_REGEX = "^[A-Za-z0-9\\u4e00-\\u9fa5]+$";
+    private static final String EXCEL_NAME_REGEX = "^[A-Za-z_\\u4e00-\\u9fa5][A-Za-z0-9_\\u4e00-\\u9fa5]*$";
+    private static final String CELL_REFERENCE_REGEX = "^[A-Za-z]{1,3}[1-9][0-9]*$";
 
     /**
      * 创建只有一级的下拉选
@@ -64,10 +67,9 @@ public class DropDownOptions {
      */
     public static String createOptionValue(Object... vars) {
         StringBuilder stringBuffer = new StringBuilder();
-        String regex = "^[\\S\\d\\u4e00-\\u9fa5]+$";
         for (int i = 0; i < vars.length; i++) {
-            String var = StrUtil.trimToEmpty(String.valueOf(vars[i]));
-            if (!var.matches(regex)) {
+            String var = StrUtil.trimToEmpty(vars[i] == null ? null : vars[i].toString());
+            if (!var.matches(OPTION_PART_REGEX)) {
                 throw new ServiceException("选项数据不符合规则，仅允许使用中英文字符以及数字" );
             }
             stringBuffer.append(var);
@@ -76,10 +78,24 @@ public class DropDownOptions {
                 stringBuffer.append(DELIMITER);
             }
         }
-        if (stringBuffer.toString().matches("^\\d_*$" )) {
-            throw new ServiceException("禁止以数字开头" );
+        String optionValue = stringBuffer.toString();
+        validateOptionValue(optionValue);
+        return optionValue;
+    }
+
+    public static void validateOptionValue(String optionValue) {
+        if (StrUtil.isBlank(optionValue)) {
+            throw new ServiceException("选项数据不能为空");
         }
-        return stringBuffer.toString();
+        if (Character.isDigit(optionValue.charAt(0))) {
+            throw new ServiceException("禁止以数字开头");
+        }
+        if (!optionValue.matches(EXCEL_NAME_REGEX)) {
+            throw new ServiceException("选项数据不符合Excel名称规则，仅允许中英文、数字或下划线，且不能以数字开头");
+        }
+        if (optionValue.matches(CELL_REFERENCE_REGEX)) {
+            throw new ServiceException("选项数据不能为Excel单元格引用");
+        }
     }
 
     /**

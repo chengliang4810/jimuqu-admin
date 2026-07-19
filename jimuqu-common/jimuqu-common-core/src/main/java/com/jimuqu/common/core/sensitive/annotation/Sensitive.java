@@ -37,4 +37,14 @@ public @interface Sensitive {
      * 中间替换字符串。
      */
     String mask() default "****";
+
+    /**
+     * 允许查看原文的角色标识，满足任意一个即可。
+     */
+    String[] roleKey() default {};
+
+    /**
+     * 允许查看原文的权限标识，满足任意一个即可。
+     */
+    String[] perms() default {};
 }

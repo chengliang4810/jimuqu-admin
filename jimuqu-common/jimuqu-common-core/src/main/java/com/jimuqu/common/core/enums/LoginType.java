@@ -15,7 +15,7 @@ public enum LoginType {
     /**
      * 密码登录
      */
-    PASSWORD("密码输入错误{}次，帐户锁定{}分钟", "密码输入错误{}次"),
+    PASSWORD("user.password.retry.limit.exceed", "user.password.retry.limit.count"),
 
     /**
      * 短信登录

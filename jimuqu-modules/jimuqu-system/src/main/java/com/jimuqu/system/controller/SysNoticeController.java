@@ -13,6 +13,7 @@ import com.jimuqu.system.domain.vo.SysNoticeVo;
 import com.jimuqu.system.service.SysNoticeService;
 import lombok.RequiredArgsConstructor;
 import org.noear.solon.annotation.Controller;
+import org.noear.solon.annotation.Body;
 import org.noear.solon.annotation.Delete;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Mapping;
@@ -53,7 +54,7 @@ public class SysNoticeController extends BaseController {
     @NoRepeatSubmit
     @SaCheckPermission("system:notice:add")
     @Log(title = "通知公告", businessType = BusinessType.ADD)
-    public R<Void> add(@Validated SysNoticeBo bo) {
+    public R<Void> add(@Body @Validated SysNoticeBo bo) {
         return toAjax(noticeService.insert(bo));
     }
 
@@ -62,7 +63,7 @@ public class SysNoticeController extends BaseController {
     @NoRepeatSubmit
     @SaCheckPermission("system:notice:edit")
     @Log(title = "通知公告", businessType = BusinessType.UPDATE)
-    public R<Void> edit(@Validated SysNoticeBo bo) {
+    public R<Void> edit(@Body @Validated SysNoticeBo bo) {
         return toAjax(noticeService.update(bo));
     }
 

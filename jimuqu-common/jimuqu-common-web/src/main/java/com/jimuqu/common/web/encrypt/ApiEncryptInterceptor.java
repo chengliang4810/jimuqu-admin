@@ -36,10 +36,10 @@ public class ApiEncryptInterceptor implements RouterInterceptor {
             String encryptedKey = ctx.header(ApiEncryptSupport.headerFlag());
             if (StrUtil.isNotBlank(encryptedKey)) {
                 String body = ctx.bodyNew();
-                if (StrUtil.isNotBlank(body)) {
-                    ctx.bodyNew(ApiCryptoUtil.decryptRequest(body, encryptedKey, ApiEncryptSupport.privateKey()));
-                }
+                ctx.bodyNew(ApiCryptoUtil.decryptRequest(body, encryptedKey, ApiEncryptSupport.privateKey()));
             } else if (apiEncrypt != null) {
+                // 先消费请求体，避免 SmartHTTP 在输出 JSON 错误前重置连接。
+                ctx.body();
                 throw new ServiceException("没有访问权限，请联系管理员授权", HttpStatus.FORBIDDEN);
             }
         }

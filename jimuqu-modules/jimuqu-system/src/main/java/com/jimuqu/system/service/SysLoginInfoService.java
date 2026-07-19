@@ -3,20 +3,20 @@ package com.jimuqu.system.service;
 import cn.hutool.v7.http.useragent.UserAgent;
 import cn.hutool.v7.http.useragent.UserAgentUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
+import com.jimuqu.common.core.checker.Assert;
 import com.jimuqu.common.core.constant.Constants;
-import com.jimuqu.common.core.domain.model.LoginUser;
+import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.core.utils.ip.AddressUtil;
 import com.jimuqu.common.log.event.LogininforEvent;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
-import com.jimuqu.common.satoken.utils.LoginHelper;
+import com.jimuqu.system.domain.SysClient;
 import com.jimuqu.system.domain.SysLoginInfo;
 import com.jimuqu.system.domain.query.SysLoginInfoQuery;
 import com.jimuqu.system.domain.vo.SysLoginInfoVo;
 import com.jimuqu.system.mapper.SysLoginInfoMapper;
 import lombok.RequiredArgsConstructor;
 import org.noear.solon.annotation.Component;
-import org.noear.solon.core.handle.Context;
 
 import java.util.Date;
 import java.util.List;
@@ -29,9 +29,11 @@ import java.util.List;
 public class SysLoginInfoService {
 
     private final SysLoginInfoMapper mapper;
+    private final SysClientService clientService;
 
     public Page<SysLoginInfoVo> queryPage(SysLoginInfoQuery query, PageQuery pageQuery) {
-        return buildQuery(query).orderByDesc(SysLoginInfo::getInfoId)
+        return pageQuery.applyOrder(buildQuery(query),
+                        chain -> chain.orderByDesc(SysLoginInfo::getInfoId))
                 .returnType(SysLoginInfoVo.class).paging(pageQuery.build());
     }
 
@@ -41,7 +43,16 @@ public class SysLoginInfoService {
     }
 
     public int delete(List<Long> ids) {
-        return mapper.deleteByIds(ids);
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+        Assert.isFalse(ids.stream().anyMatch(java.util.Objects::isNull), "登录日志ID不能为空");
+        List<Long> requested = ids.stream().distinct().toList();
+        long existing = QueryChain.of(mapper)
+                .where(where -> where.in(SysLoginInfo::getInfoId, requested))
+                .count();
+        Assert.isTrue(existing == requested.size(), "登录日志不存在");
+        return mapper.deleteByIds(requested);
     }
 
     public int clean() {
@@ -54,20 +65,19 @@ public class SysLoginInfoService {
                 .setStatus(isSuccess(event.getStatus()) ? Constants.SUCCESS : Constants.FAIL)
                 .setMsg(event.getMessage())
                 .setLoginTime(new Date());
-        try {
-            Context context = Context.current();
-            String ip = context.realIp();
-            UserAgent agent = UserAgentUtil.parse(context.header("User-Agent"));
-            entity.setIpaddr(ip)
-                    .setLoginLocation(AddressUtil.getRealAddressByIP(ip))
-                    .setBrowser(agent.getBrowser().getName())
-                    .setOs(agent.getOs().getName());
-        } catch (RuntimeException ignored) {
+        if (StringUtil.isNotBlank(event.getIpaddr())) {
+            entity.setIpaddr(event.getIpaddr())
+                    .setLoginLocation(AddressUtil.getRealAddressByIP(event.getIpaddr()));
         }
-        try {
-            LoginUser user = LoginHelper.getLoginUser();
-            entity.setClientKey(user.getClientKey()).setDeviceType(user.getDeviceType());
-        } catch (RuntimeException ignored) {
+        if (StringUtil.isNotBlank(event.getUserAgent())) {
+            UserAgent agent = UserAgentUtil.parse(event.getUserAgent());
+            entity.setBrowser(agent.getBrowser().getName()).setOs(agent.getOs().getName());
+        }
+        if (StringUtil.isNotBlank(event.getClientId())) {
+            SysClient client = clientService.queryByClientId(event.getClientId());
+            if (client != null) {
+                entity.setClientKey(client.getClientKey()).setDeviceType(client.getDeviceType());
+            }
         }
         mapper.save(entity);
     }

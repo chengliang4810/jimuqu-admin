@@ -11,6 +11,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.dromara.autotable.annotation.AutoColumn;
+import org.dromara.autotable.annotation.Index;
 
 import java.io.Serial;
 
@@ -41,6 +42,7 @@ public class SysPost extends BaseEntity {
      * 部门id
      */
     @AutoColumn(comment = "部门id")
+    @Index(name = "sys_post_dept_id")
     private Long deptId;
     /**
      * 岗位编码
@@ -61,12 +63,18 @@ public class SysPost extends BaseEntity {
      * 显示顺序
      */
     @AutoColumn(comment = "显示顺序", defaultValue = "0")
-    private Long postSort;
+    private Integer postSort;
     /**
      * 状态（0正常 1停用）
      */
     @AutoColumn(comment = "状态（0正常 1停用）", length = 1, defaultValue = "0")
     private String status;
+    /**
+     * 删除标志（0代表存在 1代表删除）
+     */
+    @LogicDelete(beforeValue = "0", afterValue = "1")
+    @AutoColumn(comment = "删除标志（0代表存在 1代表删除）", length = 1, defaultValue = "0")
+    private String delFlag;
     /**
      * 备注
      */

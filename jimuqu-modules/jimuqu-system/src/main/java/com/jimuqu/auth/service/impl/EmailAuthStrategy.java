@@ -16,6 +16,7 @@ import com.jimuqu.common.core.enums.UserStatus;
 import com.jimuqu.common.core.exception.user.CaptchaExpireException;
 import com.jimuqu.common.core.exception.user.UserException;
 import com.jimuqu.common.core.utils.JsonUtil;
+import com.jimuqu.common.core.utils.MessageUtils;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.SysClient;
@@ -67,7 +68,7 @@ public class EmailAuthStrategy implements AuthStrategyService {
 
         LoginVo loginVo = new LoginVo();
         loginVo.setAccessToken(StpUtil.getTokenValue());
-        loginVo.setExpireIn(Math.toIntExact(StpUtil.getTokenTimeout()));
+        loginVo.setExpireIn(StpUtil.getTokenTimeout());
         loginVo.setClientId(client.getClientId());
         return loginVo;
     }
@@ -78,7 +79,8 @@ public class EmailAuthStrategy implements AuthStrategyService {
     private boolean validateEmailCode(String email, String emailCode) {
         String code = cacheService.get(GlobalConstants.CAPTCHA_CODE_KEY + email, String.class);
         if (StringUtil.isBlank(code)) {
-            loginService.recordLogininfor(email, Constants.LOGIN_FAIL, "验证码已失效" );
+            loginService.recordLogininfor(email, Constants.LOGIN_FAIL,
+                    MessageUtils.message("user.jcaptcha.expire"));
             throw new CaptchaExpireException();
         }
         return code.equals(emailCode);

@@ -20,8 +20,8 @@ xss:
   enabled: true
   excludeUrls:
     - /system/notice
-# Java21 虚拟线程
-solon.threads.virtual.enabled: true
+# 项目基线为 Java 17，不启用 Java 21 虚拟线程。
+solon.threads.virtual.enabled: false
 
 solon:
   # 应用环境配置
@@ -64,10 +64,13 @@ security:
     # 登录
     - /auth/login
 
-# 本地缓存
+# Jimu 的在线会话、缓存监控与集群消息依赖 Redis。
 jimuqu.cache:
-  driverType: "local" #缓存类型
-  keyHeader: "jimuqu"
+  driverType: "redis"
+  server: "${JIMU_REDIS_SERVER:127.0.0.1:6379}"
+  db: ${JIMU_REDIS_DB:0}
+  password: ${JIMU_REDIS_PASSWORD:}
+  keyHeader: "${JIMU_REDIS_PREFIX:jimuqu}"
 
 # 限流配置
 jimuqu:
@@ -88,7 +91,7 @@ jimuqu:
     # 限流键前缀
     keyPrefix: "rate_limit:"
     # 限流失败时的错误消息
-    errorMessage: "请求过于频繁，请稍后再试"
+    errorMessage: "访问过于频繁，请稍候再试"
 
 # 表自动配置
 auto-table:
@@ -104,12 +107,17 @@ auto-table:
   auto-drop-index: false
   # 数据库不存在自动创建
   auto-build-database: true
+  mysql:
+    table-default-charset: utf8mb4
+    table-default-collation: utf8mb4_unicode_ci
   # update(默认)：系统启动时，会自动判断哪些表是新建的，哪些字段要新增修改，哪些索引/约束要新增删除等。
   mode: update
   # 首次建表后由 AutoTable 自动执行初始化数据脚本。
   init-data:
     enable: true
     base-path: classpath:sql/{dialect}
+    # 默认脚本与数据源专属的 jimuqu.sql 必须不同，避免同一文件执行两次。
+    default-init-file-name: default
   # 记录表信息维护过程中执行的SQL
   recordSql:
     enable: true
@@ -158,10 +166,10 @@ dromara:
 sse:
   enabled: true
   path: /resource/message
-  # 是否开启心跳，使用CDN情况下后端无消息会自动断开连接
-  heartbeat: false
-  # 心跳间隔 10S
-  heartbeatInterval: 10000
+  # 是否开启心跳，避免代理或 CDN 在无业务消息时断开连接
+  heartbeat: true
+  # 心跳间隔 60S
+  heartbeatInterval: ${JIMU_SSE_HEARTBEAT_INTERVAL:60000}
 
 --- # websocket
 websocket:
@@ -227,3 +235,37 @@ mail:
   timeout: 0
   # Socket连接超时值，单位毫秒，缺省值不超时
   connectionTimeout: 0
+
+--- # JustAuth 社交登录（Bell 账户绑定页使用以下来源）
+justauth:
+  enabled: ${JIMU_JUSTAUTH_ENABLED:false}
+  address: "${JIMU_JUSTAUTH_ADDRESS:http://localhost:5666}"
+  type:
+    gitee:
+      client-id: "${JIMU_JUSTAUTH_GITEE_CLIENT_ID:}"
+      client-secret: "${JIMU_JUSTAUTH_GITEE_CLIENT_SECRET:}"
+      redirect-uri: "${JIMU_JUSTAUTH_GITEE_REDIRECT_URI:http://localhost:5666/social-callback?source=gitee}"
+    github:
+      client-id: "${JIMU_JUSTAUTH_GITHUB_CLIENT_ID:}"
+      client-secret: "${JIMU_JUSTAUTH_GITHUB_CLIENT_SECRET:}"
+      redirect-uri: "${JIMU_JUSTAUTH_GITHUB_REDIRECT_URI:http://localhost:5666/social-callback?source=github}"
+    maxkey:
+      server-url: "${JIMU_JUSTAUTH_MAXKEY_SERVER_URL:}"
+      client-id: "${JIMU_JUSTAUTH_MAXKEY_CLIENT_ID:}"
+      client-secret: "${JIMU_JUSTAUTH_MAXKEY_CLIENT_SECRET:}"
+      redirect-uri: "${JIMU_JUSTAUTH_MAXKEY_REDIRECT_URI:http://localhost:5666/social-callback?source=maxkey}"
+    topiam:
+      server-url: "${JIMU_JUSTAUTH_TOPIAM_SERVER_URL:}"
+      client-id: "${JIMU_JUSTAUTH_TOPIAM_CLIENT_ID:}"
+      client-secret: "${JIMU_JUSTAUTH_TOPIAM_CLIENT_SECRET:}"
+      redirect-uri: "${JIMU_JUSTAUTH_TOPIAM_REDIRECT_URI:http://localhost:5666/social-callback?source=topiam}"
+      scopes: [openid, email, phone, profile]
+    gitea:
+      server-url: "${JIMU_JUSTAUTH_GITEA_SERVER_URL:}"
+      client-id: "${JIMU_JUSTAUTH_GITEA_CLIENT_ID:}"
+      client-secret: "${JIMU_JUSTAUTH_GITEA_CLIENT_SECRET:}"
+      redirect-uri: "${JIMU_JUSTAUTH_GITEA_REDIRECT_URI:http://localhost:5666/social-callback?source=gitea}"
+    wechat:
+      client-id: "${JIMU_JUSTAUTH_WECHAT_CLIENT_ID:}"
+      client-secret: "${JIMU_JUSTAUTH_WECHAT_CLIENT_SECRET:}"
+      redirect-uri: "${JIMU_JUSTAUTH_WECHAT_REDIRECT_URI:http://localhost:5666/social-callback?source=wechat}"

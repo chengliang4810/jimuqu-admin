@@ -1,12 +1,11 @@
 package com.jimuqu.system.service;
 
 import cn.xbatis.core.sql.executor.chain.QueryChain;
-import com.jimuqu.common.core.domain.model.LoginUser;
+import com.jimuqu.common.core.checker.Assert;
 import com.jimuqu.common.core.utils.ip.AddressUtil;
 import com.jimuqu.common.log.event.OperLogEvent;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
-import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.SysOperLog;
 import com.jimuqu.system.domain.query.SysOperLogQuery;
 import com.jimuqu.system.domain.vo.SysOperLogVo;
@@ -27,12 +26,8 @@ public class SysOperLogService {
     private final SysOperLogMapper mapper;
 
     public Page<SysOperLogVo> queryPage(SysOperLogQuery query, PageQuery pageQuery) {
-        QueryChain<SysOperLog> chain = buildQuery(query);
-        if (pageQuery.buildOrderBy().length == 0) {
-            chain.orderByDesc(SysOperLog::getOperId);
-        } else {
-            chain.orderBy(pageQuery.buildOrderBy());
-        }
+        QueryChain<SysOperLog> chain = pageQuery.applyOrder(buildQuery(query),
+                queryChain -> queryChain.orderByDesc(SysOperLog::getOperId));
         return chain.returnType(SysOperLogVo.class).paging(pageQuery.build());
     }
 
@@ -41,7 +36,16 @@ public class SysOperLogService {
     }
 
     public int delete(List<Long> ids) {
-        return mapper.deleteByIds(ids);
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+        Assert.isFalse(ids.stream().anyMatch(java.util.Objects::isNull), "操作日志ID不能为空");
+        List<Long> requested = ids.stream().distinct().toList();
+        long existing = QueryChain.of(mapper)
+                .where(where -> where.in(SysOperLog::getOperId, requested))
+                .count();
+        Assert.isTrue(existing == requested.size(), "操作日志不存在");
+        return mapper.deleteByIds(requested);
     }
 
     public int clean() {
@@ -49,7 +53,11 @@ public class SysOperLogService {
     }
 
     public void record(OperLogEvent event) {
-        SysOperLog entity = new SysOperLog()
+        mapper.save(toEntity(event));
+    }
+
+    static SysOperLog toEntity(OperLogEvent event) {
+        return new SysOperLog()
                 .setOperId(event.getOperId())
                 .setTitle(event.getTitle())
                 .setBusinessType(event.getBusinessType())
@@ -57,7 +65,13 @@ public class SysOperLogService {
                 .setRequestMethod(event.getRequestMethod())
                 .setOperatorType(event.getOperatorType())
                 .setOperName(event.getOperName())
+                .setUserId(event.getUserId())
+                .setDeptId(event.getDeptId())
                 .setDeptName(event.getDeptName())
+                .setClientKey(event.getClientKey())
+                .setDeviceType(event.getDeviceType())
+                .setBrowser(event.getBrowser())
+                .setOs(event.getOs())
                 .setOperUrl(event.getOperUrl())
                 .setOperIp(event.getOperIp())
                 .setOperLocation(AddressUtil.getRealAddressByIP(event.getOperIp()))
@@ -67,17 +81,6 @@ public class SysOperLogService {
                 .setErrorMsg(event.getErrorMsg())
                 .setOperTime(event.getOperTime() == null ? new Date() : event.getOperTime())
                 .setCostTime(event.getCostTime());
-        try {
-            LoginUser user = LoginHelper.getLoginUser();
-            entity.setUserId(user.getUserId())
-                    .setDeptId(user.getDeptId())
-                    .setClientKey(user.getClientKey())
-                    .setDeviceType(user.getDeviceType())
-                    .setBrowser(user.getBrowser())
-                    .setOs(user.getOs());
-        } catch (RuntimeException ignored) {
-        }
-        mapper.save(entity);
     }
 
     private QueryChain<SysOperLog> buildQuery(SysOperLogQuery query) {

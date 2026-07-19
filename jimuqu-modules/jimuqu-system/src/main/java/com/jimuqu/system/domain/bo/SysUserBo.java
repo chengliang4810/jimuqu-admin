@@ -15,7 +15,6 @@ import lombok.experimental.Accessors;
 import org.noear.solon.validation.annotation.*;
 import org.noear.snack4.annotation.ONodeAttr;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -47,7 +46,7 @@ public class SysUserBo extends BoBaseEntity {
      * 用户账号
      */
     @Xss(message = "用户账号不能包含脚本字符")
-    @Length(min = 0, max = 30, message = "用户账号长度不能超过{max}个字符")
+    @Length(min = 2, max = 30, message = "用户账号长度必须在{min}到{max}个字符之间")
     @NotBlank(message = "用户账号不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private String userName;
     /**
@@ -89,14 +88,6 @@ public class SysUserBo extends BoBaseEntity {
      * 帐号状态（0正常 1停用）
      */
     private String status;
-    /**
-     * 最后登录IP
-     */
-    private String loginIp;
-    /**
-     * 最后登录时间
-     */
-    private Date loginDate;
     /**
      * 备注
      */

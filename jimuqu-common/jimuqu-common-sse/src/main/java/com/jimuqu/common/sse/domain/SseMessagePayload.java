@@ -5,7 +5,6 @@ import lombok.experimental.Accessors;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
@@ -22,7 +21,7 @@ public class SseMessagePayload implements Serializable {
     private String message;
     private String type;
     private String source;
-    private BigDecimal timestamp;
+    private Long timestamp;
     private String path;
     private Object data;
 
@@ -32,6 +31,6 @@ public class SseMessagePayload implements Serializable {
                 .setMessage(message)
                 .setType("message")
                 .setSource("backend")
-                .setTimestamp(BigDecimal.valueOf(System.currentTimeMillis()));
+                .setTimestamp(System.currentTimeMillis());
     }
 }

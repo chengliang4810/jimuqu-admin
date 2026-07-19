@@ -11,8 +11,9 @@ import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.core.handle.Action;
 import org.noear.solon.core.handle.Context;
-import org.noear.solon.core.handle.Filter;
-import org.noear.solon.core.handle.FilterChain;
+import org.noear.solon.core.handle.Handler;
+import org.noear.solon.core.route.RouterInterceptor;
+import org.noear.solon.core.route.RouterInterceptorChain;
 
 import java.lang.reflect.Method;
 
@@ -20,8 +21,8 @@ import java.lang.reflect.Method;
  * 限流拦截器
  */
 @Slf4j
-@Component(index = -999)
-public class RateLimitFilter implements Filter {
+@Component(index = -80)
+public class RateLimitFilter implements RouterInterceptor {
 
     @Inject
     private RateLimiter rateLimiter;
@@ -30,28 +31,32 @@ public class RateLimitFilter implements Filter {
     private RateLimitConfig globalConfig;
 
     @Override
-    public void doFilter(Context ctx, FilterChain chain) throws Throwable {
+    public void doIntercept(Context ctx, Handler mainHandler, RouterInterceptorChain chain) throws Throwable {
         try {
             if (!globalConfig.isEnabled()) {
-                chain.doFilter(ctx);
+                chain.doIntercept(ctx, mainHandler);
                 return;
             }
             // 获取当前请求的控制器方法
-            Method method = getHandlerMethod(ctx);
+            Action action = mainHandler instanceof Action handlerAction ? handlerAction : ctx.action();
+            Method method = action == null ? null : action.method().getMethod();
             if (method == null) {
-                chain.doFilter(ctx);
+                chain.doIntercept(ctx, mainHandler);
                 return;
             }
 
             // 获取限流注解
             RateLimit rateLimit = method.getAnnotation(RateLimit.class);
+            if (rateLimit == null && action.controller() != null) {
+                rateLimit = action.controller().clz().getAnnotation(RateLimit.class);
+            }
             if (rateLimit == null) {
-                chain.doFilter(ctx);
+                chain.doIntercept(ctx, mainHandler);
                 return;
             }
 
             if (!rateLimit.enabled()) {
-                chain.doFilter(ctx);
+                chain.doIntercept(ctx, mainHandler);
                 return;
             }
 
@@ -74,7 +79,7 @@ public class RateLimitFilter implements Filter {
                 throw new RateLimitException(message);
             }
 
-            chain.doFilter(ctx);
+            chain.doIntercept(ctx, mainHandler);
 
         } catch (RateLimitException e) {
             log.warn("限流异常: {}", e.getMessage());
@@ -101,23 +106,6 @@ public class RateLimitFilter implements Filter {
         }
 
         return RateLimitUtils.buildRateLimitKey(method, rateLimit.key(), ip, userId, rateLimit.type());
-    }
-
-    /**
-     * 获取当前处理的方法
-     */
-    private Method getHandlerMethod(Context ctx) {
-        try {
-            // 从上下文中获取当前处理的方法信息
-            Action action = ctx.action();
-            if (action == null) {
-                return null;
-            }
-            return action.method().getMethod();
-        } catch (Exception e) {
-            log.warn("获取处理器方法失败", e);
-            return null;
-        }
     }
 
     /**

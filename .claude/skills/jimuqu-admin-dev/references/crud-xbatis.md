@@ -13,7 +13,7 @@
 - `service/impl`：业务实现。
 - `controller`：接口入口。
 
-优先参考：`docs/通用增删改查示例.md` 和同模块已有代码，例如 `SysConfig`、`SysApiKey`、`SysFile`、`SysJob`。
+优先参考：`docs/通用增删改查示例.md` 和同模块已有代码，例如 `SysConfig`、`SysClient`、`SysFile`、`SysNotice`。
 
 ## 实体与 Mapper
 

@@ -7,6 +7,7 @@ import cn.xbatis.db.annotations.TableId;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.dromara.autotable.annotation.AutoColumn;
+import org.dromara.autotable.annotation.Index;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -33,6 +34,7 @@ public class SysLoginInfo implements Serializable {
     @AutoColumn(comment = "设备类型", length = 100)
     private String deviceType;
     @AutoColumn(comment = "登录状态", length = 1)
+    @Index(name = "sys_login_info_s")
     private String status;
     @AutoColumn(comment = "登录IP", length = 128)
     private String ipaddr;
@@ -45,5 +47,6 @@ public class SysLoginInfo implements Serializable {
     @AutoColumn(comment = "提示消息", length = 500)
     private String msg;
     @AutoColumn(comment = "登录时间")
+    @Index(name = "sys_login_info_lt")
     private Date loginTime;
 }

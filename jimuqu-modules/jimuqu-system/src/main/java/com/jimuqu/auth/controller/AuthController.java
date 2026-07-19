@@ -13,16 +13,19 @@ import com.jimuqu.common.core.encrypt.annotation.ApiEncrypt;
 import com.jimuqu.common.core.domain.model.LoginBody;
 import com.jimuqu.common.core.domain.model.RegisterBody;
 import com.jimuqu.common.core.domain.model.SocialLoginBody;
+import com.jimuqu.common.core.utils.DateUtil;
 import com.jimuqu.common.core.utils.JsonUtil;
+import com.jimuqu.common.core.utils.MessageUtils;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.common.social.config.properties.SocialLoginConfigProperties;
 import com.jimuqu.common.social.config.properties.SocialProperties;
 import com.jimuqu.common.social.utils.SocialUtils;
-import com.jimuqu.common.sse.utils.SseMessageUtil;
 import com.jimuqu.system.domain.SysClient;
+import com.jimuqu.system.domain.vo.SysMessageVo;
 import com.jimuqu.system.service.SysClientService;
 import com.jimuqu.system.service.SysConfigService;
+import com.jimuqu.system.service.SysMessageService;
 import com.jimuqu.system.service.SysSocialService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,11 +34,14 @@ import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.request.AuthRequest;
 import me.zhyd.oauth.utils.AuthStateUtils;
 import org.noear.solon.annotation.*;
-import org.noear.solon.core.util.RunUtil;
 import org.noear.solon.validation.ValidUtils;
 import org.noear.solon.validation.annotation.Validated;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 认证
@@ -55,6 +61,8 @@ public class AuthController {
     private final SysRegisterService registerService;
     private final SysSocialService socialService;
     private final SysConfigService configService;
+    private final SysMessageService messageService;
+    private final ScheduledExecutorService scheduledExecutorService;
 
     /**
      * 登录方法
@@ -75,15 +83,19 @@ public class AuthController {
         // 查询不到 client 或 client 内不包含 grantType
         if (ObjUtil.isNull(client) || !StringUtil.contains(client.getGrantType(), grantType)) {
             log.info("客户端id: {} 认证类型：{} 异常!.", clientId, grantType);
-            return R.fail("认证权限类型错误" );
+            return R.fail(MessageUtils.message("auth.grant.type.error"));
         } else if (!UserConstants.NORMAL.equals(client.getStatus())) {
-            return R.fail("认证权限类型已禁用" );
+            return R.fail(MessageUtils.message("auth.grant.type.blocked"));
         }
         // 登录
         LoginVo loginVo = AuthStrategy.login(body, client, grantType);
 
         Long userId = LoginHelper.getUserId();
-        RunUtil.delay(() -> SseMessageUtil.sendMessage(userId, "欢迎登录积木区后台管理系统"), 3000);
+        scheduledExecutorService.schedule(() -> messageService.publishMessage(List.of(userId), new SysMessageVo()
+                .setType("message")
+                .setSource("backend")
+                .setMessage(DateUtil.getTodayHour(new Date()) + "好，欢迎登录积木区后台管理系统")),
+                5000L, TimeUnit.MILLISECONDS);
         return R.ok(loginVo);
     }
 

@@ -48,7 +48,7 @@ public class RateLimitConfig {
     /**
      * 限流失败时的错误消息
      */
-    private String errorMessage = "请求过于频繁，请稍后再试";
+    private String errorMessage = "访问过于频繁，请稍候再试";
 
 
 }

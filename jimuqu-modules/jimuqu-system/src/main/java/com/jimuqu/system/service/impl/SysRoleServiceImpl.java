@@ -1,14 +1,10 @@
 package com.jimuqu.system.service.impl;
 
-import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.v7.core.collection.CollUtil;
 import cn.hutool.v7.core.util.ObjUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.constant.UserConstants;
-import com.jimuqu.common.core.domain.dto.RoleDTO;
-import com.jimuqu.common.core.domain.model.LoginUser;
-import com.jimuqu.common.core.enums.UserType;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.core.utils.StringUtil;
@@ -21,17 +17,24 @@ import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.SysRole;
 import com.jimuqu.system.domain.SysRoleDept;
 import com.jimuqu.system.domain.SysRoleMenu;
+import com.jimuqu.system.domain.SysDept;
+import com.jimuqu.system.domain.SysMenu;
 import com.jimuqu.system.domain.SysUserRole;
+import com.jimuqu.system.domain.SysUser;
 import com.jimuqu.system.domain.bo.SysRoleBo;
+import com.jimuqu.system.domain.query.SysMenuQuery;
 import com.jimuqu.system.domain.query.SysRoleQuery;
+import com.jimuqu.system.domain.vo.SysMenuVo;
 import com.jimuqu.system.domain.vo.SysRoleVo;
+import com.jimuqu.system.mapper.SysDeptMapper;
+import com.jimuqu.system.mapper.SysMenuMapper;
 import com.jimuqu.system.mapper.SysRoleDeptMapper;
 import com.jimuqu.system.mapper.SysRoleMapper;
 import com.jimuqu.system.mapper.SysRoleMenuMapper;
 import com.jimuqu.system.mapper.SysUserRoleMapper;
+import com.jimuqu.system.mapper.SysUserMapper;
 import com.jimuqu.system.service.SysRoleService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
 
@@ -47,7 +50,6 @@ import java.util.Set;
  *
  * @author chengliang4810
  */
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class SysRoleServiceImpl implements SysRoleService {
@@ -56,7 +58,11 @@ public class SysRoleServiceImpl implements SysRoleService {
     private final SysRoleMenuMapper roleMenuMapper;
     private final SysRoleDeptMapper roleDeptMapper;
     private final SysUserRoleMapper userRoleMapper;
+    private final SysUserMapper userMapper;
+    private final SysMenuMapper menuMapper;
+    private final SysDeptMapper deptMapper;
     private final ISysDataScopeService dataScopeService;
+    private final OnlineUserSessionCleaner onlineUserSessionCleaner;
 
     @Override
     public SysRoleVo queryById(Long id) {
@@ -65,7 +71,7 @@ public class SysRoleServiceImpl implements SysRoleService {
 
     @Override
     public Page<SysRoleVo> queryPageList(SysRoleQuery query, PageQuery pageQuery) {
-        return buildQueryChain(query).returnType(SysRoleVo.class).paging(pageQuery.build());
+        return pageQuery.applyOrder(buildQueryChain(query)).returnType(SysRoleVo.class).paging(pageQuery.build());
     }
 
     @Override
@@ -78,7 +84,7 @@ public class SysRoleServiceImpl implements SysRoleService {
                 .forSearch(true)
                 .where(query)
                 .eq(SysRole::getDelFlag, "0")
-                .orderBy(SysRole::getRoleSort, SysRole::getId);
+                .orderBy(SysRole::getRoleSort, SysRole::getCreateTime);
         applyRoleDataScope(queryChain);
         return queryChain;
     }
@@ -115,9 +121,18 @@ public class SysRoleServiceImpl implements SysRoleService {
     }
 
     @Override
+    @Transaction
     public Boolean updateByBo(SysRoleBo bo) {
         SysRole role = MapstructUtil.convert(bo, SysRole.class);
-        return role != null && roleMapper.update(role) > 0;
+        if (role != null && UserConstants.ROLE_DISABLE.equals(role.getStatus())
+                && countUserRoleByRoleId(role.getId()) > 0) {
+            throw new ServiceException("角色已分配，不能禁用!");
+        }
+        boolean updated = role != null && roleMapper.update(role) > 0;
+        if (updated) {
+            cleanOnlineUserByRole(role.getId());
+        }
+        return updated;
     }
 
     @Override
@@ -130,7 +145,8 @@ public class SysRoleServiceImpl implements SysRoleService {
             checkRoleAllowed(new SysRoleBo(roleId));
             checkRoleDataScope(roleId);
             if (countUserRoleByRoleId(roleId) > 0) {
-                throw new ServiceException("角色已分配用户，不能删除");
+                SysRole role = roleMapper.getById(roleId);
+                throw new ServiceException(role.getRoleName() + "已分配，不能删除!");
             }
         }
         roleMenuMapper.delete(where -> where.in(SysRoleMenu::getRoleId, ids));
@@ -175,7 +191,7 @@ public class SysRoleServiceImpl implements SysRoleService {
                 .eq(SysRole::getStatus, UserConstants.ROLE_NORMAL)
                 .eq(SysRole::getDelFlag, "0")
                 .in(CollUtil.isNotEmpty(roleIds), SysRole::getId, roleIds)
-                .orderBy(SysRole::getRoleSort, SysRole::getId);
+                .orderBy(SysRole::getRoleSort, SysRole::getCreateTime);
         applyRoleDataScope(queryChain);
         return queryChain
                 .returnType(SysRoleVo.class)
@@ -211,6 +227,9 @@ public class SysRoleServiceImpl implements SysRoleService {
         }
         SysRole current = role.getId() == null ? null : roleMapper.getById(role.getId());
         if (current == null) {
+            if (role.getId() != null) {
+                throw new ServiceException("角色不存在");
+            }
             if (GlobalConstants.SUPER_ADMIN_ROLE_KEY.equals(role.getRoleKey())) {
                 throw new ServiceException("不允许使用系统内置管理员角色标识符");
             }
@@ -228,17 +247,15 @@ public class SysRoleServiceImpl implements SysRoleService {
         if (roleId == null) {
             throw new ServiceException("角色ID不能为空");
         }
+        SysRole role = roleMapper.getById(roleId);
+        if (role == null) {
+            throw new ServiceException("角色不存在或已被删除");
+        }
         if (LoginHelper.isSuperAdmin()) {
             return;
         }
-        LoginUser loginUser = LoginHelper.getLoginUser();
-        if (loginUser == null || CollUtil.isEmpty(loginUser.getRoles())) {
-            throw new ServiceException("没有权限访问角色数据");
-        }
-        boolean allowed = loginUser.getRoles().stream()
-                .map(RoleDTO::getRoleId)
-                .anyMatch(roleId::equals);
-        if (!allowed) {
+        DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
+        if (!rule.permits(role.getCreateBy(), role.getCreateDept())) {
             throw new ServiceException("没有权限访问角色数据");
         }
     }
@@ -249,11 +266,16 @@ public class SysRoleServiceImpl implements SysRoleService {
     }
 
     @Override
+    @Transaction
     public boolean updateRoleStatus(Long roleId, String status) {
         if (UserConstants.ROLE_DISABLE.equals(status) && countUserRoleByRoleId(roleId) > 0) {
-            throw new ServiceException("角色已分配，不能禁用");
+            throw new ServiceException("角色已分配，不能禁用!");
         }
-        return roleMapper.update(new SysRole(roleId).setStatus(status)) > 0;
+        boolean updated = roleMapper.update(new SysRole(roleId).setStatus(status)) > 0;
+        if (updated) {
+            cleanOnlineUserByRole(roleId);
+        }
+        return updated;
     }
 
     @Override
@@ -298,50 +320,42 @@ public class SysRoleServiceImpl implements SysRoleService {
 
     @Override
     public void cleanOnlineUserByRole(Long roleId) {
-        List<Long> userIds = QueryChain.of(userRoleMapper)
-                .select(SysUserRole::getUserId)
-                .eq(SysUserRole::getRoleId, roleId)
-                .returnType(Long.class)
-                .list();
-        for (Long userId : userIds) {
-            for (UserType userType : UserType.values()) {
-                try {
-                    StpUtil.logout(userType.getUserType() + ":" + userId);
-                } catch (RuntimeException ex) {
-                    log.warn("清理角色在线用户失败，roleId={}, userId={}, type={}",
-                            roleId, userId, userType.getUserType(), ex);
-                }
-            }
-        }
+        onlineUserSessionCleaner.cleanRoleAfterCommit(roleId);
     }
 
     @Override
+    @Transaction
     public int deleteAuthUser(SysUserRole userRole) {
         if (userRole == null || userRole.getRoleId() == null || userRole.getUserId() == null) {
             return 0;
         }
+        checkRoleDataScope(userRole.getRoleId());
         checkNotCurrentUser(List.of(userRole.getUserId()));
+        checkUserDataScope(List.of(userRole.getUserId()));
         int rows = userRoleMapper.delete(where -> where
                 .eq(SysUserRole::getRoleId, userRole.getRoleId())
                 .eq(SysUserRole::getUserId, userRole.getUserId()));
         if (rows > 0) {
-            cleanOnlineUsers(List.of(userRole.getUserId()));
+            onlineUserSessionCleaner.cleanUsersAfterCommit(List.of(userRole.getUserId()));
         }
         return rows;
     }
 
     @Override
+    @Transaction
     public int deleteAuthUsers(Long roleId, Long[] userIds) {
         if (roleId == null || userIds == null || userIds.length == 0) {
             return 0;
         }
+        checkRoleDataScope(roleId);
         List<Long> requested = Arrays.stream(userIds).distinct().toList();
         checkNotCurrentUser(requested);
+        checkUserDataScope(requested);
         int rows = userRoleMapper.delete(where -> where
                 .eq(SysUserRole::getRoleId, roleId)
                 .in(SysUserRole::getUserId, requested));
         if (rows > 0) {
-            cleanOnlineUsers(requested);
+            onlineUserSessionCleaner.cleanUsersAfterCommit(requested);
         }
         return rows;
     }
@@ -352,8 +366,10 @@ public class SysRoleServiceImpl implements SysRoleService {
         if (roleId == null || userIds == null || userIds.length == 0) {
             return 0;
         }
+        checkRoleDataScope(roleId);
         List<Long> requested = Arrays.stream(userIds).distinct().toList();
         checkNotCurrentUser(requested);
+        checkUserDataScope(requested);
         Set<Long> existing = new HashSet<>(QueryChain.of(userRoleMapper)
                 .select(SysUserRole::getUserId)
                 .eq(SysUserRole::getRoleId, roleId)
@@ -371,7 +387,7 @@ public class SysRoleServiceImpl implements SysRoleService {
                 .toList();
         int rows = relations.isEmpty() ? 0 : userRoleMapper.saveBatch(relations);
         if (rows > 0) {
-            cleanOnlineUsers(requested);
+            onlineUserSessionCleaner.cleanUsersAfterCommit(requested);
         }
         return rows;
     }
@@ -382,24 +398,28 @@ public class SysRoleServiceImpl implements SysRoleService {
         }
     }
 
-    private void cleanOnlineUsers(Collection<Long> userIds) {
-        for (Long userId : userIds) {
-            for (UserType userType : UserType.values()) {
-                try {
-                    StpUtil.logout(userType.getUserType() + ":" + userId);
-                } catch (RuntimeException ex) {
-                    log.warn("清理用户在线会话失败，userId={}, type={}", userId, userType.getUserType(), ex);
-                }
-            }
+    private void checkUserDataScope(Collection<Long> userIds) {
+        List<SysUser> users = QueryChain.of(userMapper).in(SysUser::getId, userIds).list();
+        if (users.size() != userIds.size()) {
+            throw new ServiceException("用户不存在或已被删除");
+        }
+        DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
+        if (users.stream().anyMatch(user -> !permitsUser(rule, user))) {
+            throw new ServiceException("没有权限访问部分用户数据");
         }
     }
 
+    static boolean permitsUser(DataScopeRule rule, SysUser user) {
+        return SysUserServiceImpl.permitsUser(rule, user);
+    }
+
     private void replaceRoleMenus(Long roleId, Long[] menuIds) {
+        List<Long> requested = validateMenuIds(menuIds);
         roleMenuMapper.delete(where -> where.eq(SysRoleMenu::getRoleId, roleId));
-        if (menuIds == null || menuIds.length == 0) {
+        if (requested.isEmpty()) {
             return;
         }
-        List<SysRoleMenu> relations = Arrays.stream(menuIds).distinct().map(menuId -> {
+        List<SysRoleMenu> relations = requested.stream().map(menuId -> {
             SysRoleMenu relation = new SysRoleMenu();
             relation.setRoleId(roleId);
             relation.setMenuId(menuId);
@@ -409,16 +429,72 @@ public class SysRoleServiceImpl implements SysRoleService {
     }
 
     private void replaceRoleDepts(Long roleId, Long[] deptIds) {
+        List<Long> requested = validateDeptIds(deptIds);
         roleDeptMapper.delete(where -> where.eq(SysRoleDept::getRoleId, roleId));
-        if (deptIds == null || deptIds.length == 0) {
+        if (requested.isEmpty()) {
             return;
         }
-        List<SysRoleDept> relations = Arrays.stream(deptIds).distinct().map(deptId -> {
+        List<SysRoleDept> relations = requested.stream().map(deptId -> {
             SysRoleDept relation = new SysRoleDept();
             relation.setRoleId(roleId);
             relation.setDeptId(deptId);
             return relation;
         }).toList();
         roleDeptMapper.saveBatch(relations);
+    }
+
+    private List<Long> validateMenuIds(Long[] menuIds) {
+        List<Long> requested = validateDistinctIds(menuIds, "菜单");
+        if (requested.isEmpty()) {
+            return requested;
+        }
+        Set<Long> accessibleIds;
+        if (LoginHelper.isSuperAdmin()) {
+            accessibleIds = new HashSet<>(QueryChain.of(menuMapper)
+                    .select(SysMenu::getId)
+                    .in(SysMenu::getId, requested)
+                    .returnType(Long.class)
+                    .list());
+        } else {
+            accessibleIds = menuMapper.selectMenuListByUserId(LoginHelper.getUserId(), new SysMenuQuery()).stream()
+                    .map(SysMenuVo::getId)
+                    .collect(java.util.stream.Collectors.toSet());
+        }
+        if (!accessibleIds.containsAll(requested)) {
+            throw new ServiceException("菜单不存在或无权访问");
+        }
+        return requested;
+    }
+
+    private List<Long> validateDeptIds(Long[] deptIds) {
+        List<Long> requested = validateDistinctIds(deptIds, "部门");
+        if (requested.isEmpty()) {
+            return requested;
+        }
+        List<SysDept> depts = QueryChain.of(deptMapper)
+                .in(SysDept::getId, requested)
+                .list();
+        if (depts.size() != requested.size()) {
+            throw new ServiceException("部门不存在或无权访问");
+        }
+        if (!LoginHelper.isSuperAdmin()) {
+            DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
+            if (!rule.allAccess() && depts.stream().anyMatch(dept -> !rule.departmentIds().contains(dept.getId()))) {
+                throw new ServiceException("部门不存在或无权访问");
+            }
+        }
+        return requested;
+    }
+
+    private List<Long> validateDistinctIds(Long[] ids, String relationName) {
+        if (ids == null || ids.length == 0) {
+            return List.of();
+        }
+        List<Long> requested = Arrays.asList(ids);
+        if (requested.stream().anyMatch(java.util.Objects::isNull)
+                || new HashSet<>(requested).size() != requested.size()) {
+            throw new ServiceException(relationName + "ID不能为空或重复");
+        }
+        return requested;
     }
 }

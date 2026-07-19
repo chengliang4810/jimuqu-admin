@@ -28,21 +28,22 @@ public class ExcelBigNumberConvert implements Converter<Long> {
 
     @Override
     public CellDataTypeEnum supportExcelTypeKey() {
-        return CellDataTypeEnum.STRING;
+        return null;
     }
 
     @Override
     public Long convertToJavaData(ReadCellData<?> cellData, ExcelContentProperty contentProperty, GlobalConfiguration globalConfiguration) {
-        return ConvertUtil.toLong(cellData.getData());
+        return ConvertUtil.toLong(cellData.getStringValue());
     }
 
     @Override
     public WriteCellData<Object> convertToExcelData(Long object, ExcelContentProperty contentProperty, GlobalConfiguration globalConfiguration) {
-        if (ObjUtil.isNotNull(object)) {
-            String str = ConvertUtil.toStr(object);
-            if (str.length() > 15) {
-                return new WriteCellData<>(str);
-            }
+        if (ObjUtil.isNull(object)) {
+            return new WriteCellData<>("");
+        }
+        String str = ConvertUtil.toStr(object);
+        if (str.length() > 15) {
+            return new WriteCellData<>(str);
         }
         WriteCellData<Object> cellData = new WriteCellData<>(new BigDecimal(object));
         cellData.setType(CellDataTypeEnum.NUMBER);

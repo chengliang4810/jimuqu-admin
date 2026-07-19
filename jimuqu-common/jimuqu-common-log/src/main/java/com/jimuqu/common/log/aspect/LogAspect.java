@@ -3,6 +3,7 @@ package com.jimuqu.common.log.aspect;
 import cn.dev33.satoken.router.SaHttpMethod;
 import com.jimuqu.common.core.constant.HttpStatus;
 import com.jimuqu.common.core.domain.model.LoginUser;
+import com.jimuqu.common.core.sensitive.utils.SensitiveUtil;
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.log.annotation.Log;
@@ -16,11 +17,15 @@ import cn.hutool.v7.core.map.Dict;
 import cn.hutool.v7.core.map.MapUtil;
 import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Component;
+import org.noear.solon.annotation.Body;
 import org.noear.solon.core.event.EventBus;
 import org.noear.solon.core.handle.*;
 import org.noear.solon.core.route.RouterInterceptor;
 import org.noear.solon.core.route.RouterInterceptorChain;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -36,6 +41,10 @@ import java.util.StringJoiner;
 @Slf4j
 @Component(index = -99)
 public class LogAspect implements RouterInterceptor {
+
+    private static final int MAX_URL_LENGTH = 255;
+    private static final int MAX_CLIENT_KEY_LENGTH = 32;
+    private static final int MAX_CONTENT_LENGTH = 3800;
 
     /**
      * 排除敏感属性字段
@@ -93,18 +102,17 @@ public class LogAspect implements RouterInterceptor {
             // 请求的地址
             String ip = joinPoint.realIp();
             operLog.setOperIp(ip);
-            operLog.setOperUrl(StringUtil.substring(joinPoint.url(), 0, 255));
+            operLog.setOperUrl(StringUtil.substring(joinPoint.path(), 0, MAX_URL_LENGTH));
             LoginUser loginUser = LoginHelper.getLoginUser();
-            operLog.setOperName(loginUser.getUsername());
-            operLog.setDeptName(loginUser.getDeptName());
+            snapshotOperator(operLog, loginUser, joinPoint.header(LoginHelper.CLIENT_KEY));
 
             if (e != null) {
                 operLog.setStatus(BusinessStatus.FAIL.ordinal());
-                operLog.setErrorMsg(StringUtil.substring(e.getMessage(), 0, 2000));
+                operLog.setErrorMsg(StringUtil.substring(e.getMessage(), 0, MAX_CONTENT_LENGTH));
             }
             // 设置方法名称
-            String className = joinPoint.action().getClass().getName();
-            String methodName = joinPoint.action().fullName();
+            String className = joinPoint.action().controller().clz().getName();
+            String methodName = joinPoint.action().method().getName();
             operLog.setMethod(className + "." + methodName + "()" );
             // 设置请求方式
             operLog.setRequestMethod(joinPoint.method());
@@ -118,8 +126,7 @@ public class LogAspect implements RouterInterceptor {
             EventBus.publish(operLog);
         } catch (Exception exp) {
             // 记录本地异常日志
-            log.error("异常信息:{}", exp.getMessage());
-            exp.printStackTrace();
+            log.error("记录操作日志异常", exp);
         } finally {
             TIME_THREADLOCAL.remove();
         }
@@ -149,7 +156,7 @@ public class LogAspect implements RouterInterceptor {
                 && !(jsonResult instanceof Throwable)
                 && log.isSaveResponseData()
                 && ObjUtil.isNotNull(jsonResult)) {
-            operLog.setJsonResult(StringUtil.substring(JsonUtil.toString(jsonResult), 0, 2000));
+            operLog.setJsonResult(StringUtil.substring(JsonUtil.toString(jsonResult), 0, MAX_CONTENT_LENGTH));
         }
     }
 
@@ -165,28 +172,62 @@ public class LogAspect implements RouterInterceptor {
         if (MapUtil.isEmpty(paramsMap) && (SaHttpMethod.PUT.name().equals(requestMethod)
                 || SaHttpMethod.POST.name().equals(requestMethod)
                 || SaHttpMethod.DELETE.name().equals(requestMethod))) {
-            String params = sanitizeRequestBody(joinPoint.body(), excludeParamNames);
-            operLog.setOperParam(StringUtil.substring(params, 0, 2000));
+            String params = sanitizeRequestBody(joinPoint.body(), requestBodyType(joinPoint), excludeParamNames);
+            operLog.setOperParam(StringUtil.substring(params, 0, MAX_CONTENT_LENGTH));
         } else {
             MapUtil.removeAny(paramsMap, EXCLUDE_PROPERTIES);
             MapUtil.removeAny(paramsMap, excludeParamNames);
-            operLog.setOperParam(StringUtil.substring(JsonUtil.toString(paramsMap), 0, 2000));
+            operLog.setOperParam(StringUtil.substring(JsonUtil.toString(paramsMap), 0, MAX_CONTENT_LENGTH));
+        }
+    }
+
+    static void snapshotOperator(OperLogEvent operLog, LoginUser loginUser, String requestClientKey) {
+        operLog.setClientKey(StringUtil.substring(requestClientKey, 0, MAX_CLIENT_KEY_LENGTH));
+        if (loginUser == null) {
+            return;
+        }
+        operLog.setOperName(loginUser.getUsername());
+        operLog.setUserId(loginUser.getUserId());
+        operLog.setDeptId(loginUser.getDeptId());
+        operLog.setDeptName(loginUser.getDeptName());
+        operLog.setDeviceType(loginUser.getDeviceType());
+        operLog.setBrowser(loginUser.getBrowser());
+        operLog.setOs(loginUser.getOs());
+        if (StringUtil.isBlank(operLog.getClientKey())) {
+            operLog.setClientKey(loginUser.getClientKey());
         }
     }
 
     static String sanitizeRequestBody(String body, String[] excludeParamNames) {
+        return sanitizeRequestBody(body, Object.class, excludeParamNames);
+    }
+
+    static String sanitizeRequestBody(String body, Type bodyType, String[] excludeParamNames) {
         if (StringUtil.isBlank(body)) {
             return body;
         }
         try {
-            Object value = JsonUtil.toObject(body, Object.class);
+            Object value = JsonUtil.toObject(body, bodyType == null ? Object.class : bodyType);
+            value = SensitiveUtil.desensitizeObject(value);
             Set<String> excluded = new LinkedHashSet<>(List.of(EXCLUDE_PROPERTIES));
             excluded.addAll(List.of(excludeParamNames));
             removeExcludedFields(value, excluded);
             return JsonUtil.toString(value);
         } catch (RuntimeException ignored) {
-            return body;
+            return "[请求体无法解析]";
         }
+    }
+
+    private static Type requestBodyType(Context context) {
+        if (context.action() == null) {
+            return Object.class;
+        }
+        for (Parameter parameter : context.action().method().getParameters()) {
+            if (parameter.isAnnotationPresent(Body.class)) {
+                return parameter.getParameterizedType();
+            }
+        }
+        return Object.class;
     }
 
     @SuppressWarnings("unchecked")
@@ -229,22 +270,34 @@ public class LogAspect implements RouterInterceptor {
      * @param o 对象信息。
      * @return 如果是需要过滤的对象，则返回true；否则返回false。
      */
-    @SuppressWarnings("rawtypes" )
     public boolean isFilterObject(final Object o) {
         Class<?> clazz = o.getClass();
         if (clazz.isArray()) {
-            return clazz.getComponentType().isAssignableFrom(UploadedFile.class);
+            int length = Array.getLength(o);
+            for (int i = 0; i < length; i++) {
+                if (isFilterValue(Array.get(o, i))) {
+                    return true;
+                }
+            }
         } else if (Collection.class.isAssignableFrom(clazz)) {
-            Collection collection = (Collection) o;
+            Collection<?> collection = (Collection<?>) o;
             for (Object value : collection) {
-                return value instanceof UploadedFile;
+                if (isFilterValue(value)) {
+                    return true;
+                }
             }
         } else if (Map.class.isAssignableFrom(clazz)) {
-            Map map = (Map) o;
+            Map<?, ?> map = (Map<?, ?>) o;
             for (Object value : map.values()) {
-                return value instanceof UploadedFile;
+                if (isFilterValue(value)) {
+                    return true;
+                }
             }
         }
-        return o instanceof UploadedFile;
+        return isFilterValue(o);
+    }
+
+    private boolean isFilterValue(Object value) {
+        return value instanceof UploadedFile || value instanceof Context;
     }
 }

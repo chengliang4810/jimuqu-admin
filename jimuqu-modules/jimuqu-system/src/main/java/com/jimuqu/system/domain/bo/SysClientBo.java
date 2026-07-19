@@ -46,6 +46,7 @@ public class SysClientBo extends BoBaseEntity {
     /**
      * 授权类型
      */
+    @NotNull(message = "授权类型不能为空", groups = {AddGroup.class, UpdateGroup.class})
     private List<String> grantTypeList;
 
     private String grantType;

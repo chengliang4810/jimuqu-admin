@@ -2,6 +2,9 @@ package com.jimuqu.system.service.impl;
 
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.v7.core.text.StrUtil;
+import com.jimuqu.common.core.constant.CacheConstants;
+import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
@@ -14,6 +17,7 @@ import com.jimuqu.system.service.SysConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
+import org.noear.solon.data.cache.CacheService;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,7 +34,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SysConfigServiceImpl implements SysConfigService {
 
+    private static final int CACHE_TTL_SECONDS = 0;
+
     private final SysConfigMapper sysConfigMapper;
+    private final CacheService cacheService;
 
     /**
      * 查询参数配置
@@ -45,7 +52,7 @@ public class SysConfigServiceImpl implements SysConfigService {
      */
     @Override
     public Page<SysConfigVo> queryPageList(SysConfigQuery query, PageQuery pageQuery) {
-        return buildQueryChain(query)
+        return pageQuery.applyOrder(buildQueryChain(query))
                 .returnType(SysConfigVo.class)
                 .paging(pageQuery.build());
     }
@@ -67,7 +74,8 @@ public class SysConfigServiceImpl implements SysConfigService {
     private QueryChain<SysConfig> buildQueryChain(SysConfigQuery query) {
         return QueryChain.of(sysConfigMapper)
                 .forSearch(true)
-                .where(query);
+                .where(query)
+                .orderBy(SysConfig::getId);
     }
 
     /**
@@ -78,6 +86,9 @@ public class SysConfigServiceImpl implements SysConfigService {
         SysConfig sysConfig = MapstructUtil.convert(bo, SysConfig.class);
         boolean flag = sysConfigMapper.save(sysConfig) > 0;
         bo.setId(sysConfig.getId());
+        if (flag) {
+            storeConfigCache(sysConfig.getConfigKey(), sysConfig.getConfigValue());
+        }
         return flag;
     }
 
@@ -86,8 +97,16 @@ public class SysConfigServiceImpl implements SysConfigService {
      */
     @Override
     public Boolean updateByBo(SysConfigBo bo) {
+        SysConfig old = bo.getId() == null ? null : sysConfigMapper.getById(bo.getId());
         SysConfig sysConfig = MapstructUtil.convert(bo, SysConfig.class);
-        return sysConfigMapper.update(sysConfig) > 0;
+        boolean updated = sysConfigMapper.update(sysConfig) > 0;
+        if (updated) {
+            if (old != null && !ObjUtil.equals(old.getConfigKey(), sysConfig.getConfigKey())) {
+                evictConfigCache(old.getConfigKey());
+            }
+            storeConfigCache(sysConfig.getConfigKey(), sysConfig.getConfigValue());
+        }
+        return updated;
     }
 
     @Override
@@ -103,12 +122,22 @@ public class SysConfigServiceImpl implements SysConfigService {
     }
 
     @Override
+    public String selectConfigByKey(String configKey) {
+        if (StrUtil.isBlank(configKey)) {
+            return "";
+        }
+        return cacheService.getOrStore(cacheKey(configKey), String.class, CACHE_TTL_SECONDS, () -> {
+            SysConfig config = QueryChain.of(sysConfigMapper)
+                    .eq(SysConfig::getConfigKey, configKey)
+                    .select(SysConfig::getConfigValue)
+                    .get();
+            return config == null || config.getConfigValue() == null ? "" : config.getConfigValue();
+        });
+    }
+
+    @Override
     public boolean selectRegisterEnabled() {
-        SysConfig config = QueryChain.of(sysConfigMapper)
-                .eq(SysConfig::getConfigKey, "sys.account.registerUser")
-                .select(SysConfig::getConfigValue)
-                .get();
-        return config != null && Boolean.parseBoolean(config.getConfigValue());
+        return Boolean.parseBoolean(selectConfigByKey("sys.account.registerUser"));
     }
 
     @Override
@@ -124,6 +153,45 @@ public class SysConfigServiceImpl implements SysConfigService {
      */
     @Override
     public Integer deleteByIds(Collection<Long> ids) {
-        return sysConfigMapper.deleteByIds(ids);
+        List<Long> requested = ids.stream().distinct().toList();
+        List<SysConfig> configs = QueryChain.of(sysConfigMapper).in(SysConfig::getId, requested).list();
+        if (configs.size() != requested.size()) {
+            throw new ServiceException("参数配置不存在");
+        }
+        for (SysConfig config : configs) {
+            if ("Y".equals(config.getConfigType())) {
+                throw new ServiceException("内置参数【" + config.getConfigKey() + "】不能删除");
+            }
+        }
+        int rows = sysConfigMapper.deleteByIds(requested);
+        if (rows > 0) {
+            configs.forEach(config -> evictConfigCache(config.getConfigKey()));
+        }
+        return rows;
+    }
+
+    @Override
+    public void resetConfigCache() {
+        QueryChain.of(sysConfigMapper)
+                .select(SysConfig::getConfigKey)
+                .returnType(String.class)
+                .list()
+                .forEach(this::evictConfigCache);
+    }
+
+    private void storeConfigCache(String configKey, String configValue) {
+        if (StrUtil.isNotBlank(configKey)) {
+            cacheService.store(cacheKey(configKey), configValue == null ? "" : configValue, CACHE_TTL_SECONDS);
+        }
+    }
+
+    private void evictConfigCache(String configKey) {
+        if (StrUtil.isNotBlank(configKey)) {
+            cacheService.remove(cacheKey(configKey));
+        }
+    }
+
+    private String cacheKey(String configKey) {
+        return CacheConstants.SYS_CONFIG_KEY + configKey;
     }
 }

@@ -6,6 +6,8 @@ import cn.dev33.satoken.listener.SaTokenListener;
 import cn.dev33.satoken.stp.parameter.SaLoginParameter;
 import com.jimuqu.common.core.domain.model.LoginUser;
 import com.jimuqu.common.core.constant.Constants;
+import com.jimuqu.common.core.utils.MessageUtils;
+import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.core.utils.ip.AddressUtil;
 import com.jimuqu.auth.service.SysLoginService;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +16,6 @@ import cn.hutool.v7.http.useragent.UserAgent;
 import cn.hutool.v7.http.useragent.UserAgentUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.core.handle.Context;
-
-import java.util.Date;
 
 import static com.jimuqu.common.satoken.utils.LoginHelper.LOGIN_USER_KEY;
 
@@ -51,10 +51,12 @@ public class UserActionListener implements SaTokenListener {
         loginUser.setOs(userAgent.getOs().getName());
         loginUser.setIpaddr(ip);
         loginUser.setLoginLocation(AddressUtil.getRealAddressByIP(ip));
-        loginUser.setLoginTime(new Date());
+        loginUser.setLoginTime(System.currentTimeMillis());
         loginUser.setToken(tokenValue);
         loginService.recordLoginInfo(loginUser.getUserId(), ip);
-        loginService.recordLogininfor(loginUser.getUsername(), Constants.LOGIN_SUCCESS, "登录成功");
+        loginService.recordLogininfor(loginUser.getUsername(), Constants.LOGIN_SUCCESS,
+                MessageUtils.message("user.login.success"));
+        log.info("user doLogin, userId:{}, token:{}", loginId, maskToken(tokenValue));
     }
 
     /**
@@ -62,7 +64,7 @@ public class UserActionListener implements SaTokenListener {
      */
     @Override
     public void doLogout(String loginType, Object loginId, String tokenValue) {
-
+        log.info("user doLogout, userId:{}, token:{}", loginId, maskToken(tokenValue));
     }
 
     /**
@@ -70,7 +72,7 @@ public class UserActionListener implements SaTokenListener {
      */
     @Override
     public void doKickout(String loginType, Object loginId, String tokenValue) {
-        log.info("user doKickout, userId:{}, token:{}", loginId, tokenValue);
+        log.info("user doKickout, userId:{}, token:{}", loginId, maskToken(tokenValue));
     }
 
     /**
@@ -78,7 +80,7 @@ public class UserActionListener implements SaTokenListener {
      */
     @Override
     public void doReplaced(String loginType, Object loginId, String tokenValue) {
-        log.info("user doReplaced, userId:{}, token:{}", loginId, tokenValue);
+        log.info("user doReplaced, userId:{}, token:{}", loginId, maskToken(tokenValue));
     }
 
     /**
@@ -134,6 +136,13 @@ public class UserActionListener implements SaTokenListener {
     @Override
     public void doRenewTimeout(String loginType, Object loginId, String tokenValue, long timeout) {
 
+    }
+
+    static String maskToken(String tokenValue) {
+        if (StringUtil.isEmpty(tokenValue)) {
+            return "***";
+        }
+        return "***" + tokenValue.substring(Math.max(0, tokenValue.length() - 8));
     }
 
 }

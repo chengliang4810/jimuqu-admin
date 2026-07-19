@@ -4,6 +4,7 @@ import cn.xbatis.core.sql.executor.Where;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.mybatis.core.mapper.BaseMapperPlus;
 import com.jimuqu.system.domain.SysDept;
+import com.jimuqu.system.domain.SysRole;
 import com.jimuqu.system.domain.SysRoleDept;
 import com.jimuqu.system.domain.vo.SysDeptVo;
 import org.apache.ibatis.annotations.Mapper;
@@ -70,7 +71,10 @@ public interface SysDeptMapper extends BaseMapperPlus<SysDept, SysDeptVo> {
         List<SysDept> selected = QueryChain.of(this)
                 .select(SysDept::getId, SysDept::getParentId)
                 .leftJoin(SysDept::getId, SysRoleDept::getDeptId)
+                .leftJoin(SysRoleDept::getRoleId, SysRole::getId)
                 .eq(SysRoleDept::getRoleId, roleId)
+                .eq(SysRole::getStatus, "0")
+                .eq(SysRole::getDelFlag, "0")
                 .orderBy(SysDept::getParentId, SysDept::getOrderNum)
                 .list();
         Set<Long> selectedParentIds = new HashSet<>();

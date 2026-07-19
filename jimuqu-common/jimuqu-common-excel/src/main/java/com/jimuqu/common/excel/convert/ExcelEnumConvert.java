@@ -52,10 +52,18 @@ public class ExcelEnumConvert implements Converter<Object> {
         Map<Object, String> enumCodeToTextMap = beforeConvert(contentProperty);
         // 从Java输出至Excel是code转text
         // 因此从Excel转Java应该将text与code对调
-        Map<Object, Object> enumTextToCodeMap = new HashMap<>();
-        enumCodeToTextMap.forEach((key, value) -> enumTextToCodeMap.put(value, key));
+        Map<String, Object> enumTextToCodeMap = new HashMap<>();
+        enumCodeToTextMap.forEach((key, value) -> {
+            Object previous = enumTextToCodeMap.put(value, key);
+            if (previous != null) {
+                throw new IllegalArgumentException("枚举导入文本值重复: " + value);
+            }
+        });
         // 应该从text -> code中查找
-        Object codeValue = enumTextToCodeMap.get(textValue);
+        Object codeValue = enumTextToCodeMap.get(ConvertUtil.toStr(textValue));
+        if (ObjUtil.isNull(codeValue)) {
+            throw new IllegalArgumentException("枚举值不匹配: " + textValue + "，允许值: " + enumTextToCodeMap.keySet());
+        }
         return ConvertUtil.convert(contentProperty.getField().getType(), codeValue);
     }
 
@@ -76,6 +84,9 @@ public class ExcelEnumConvert implements Converter<Object> {
         for (Enum<?> enumConstant : enumConstants) {
             Object codeValue = ReflectUtil.invokeGetter(enumConstant, anno.codeField());
             String textValue = ReflectUtil.invokeGetter(enumConstant, anno.textField());
+            if (ObjUtil.isNull(codeValue) || ObjUtil.isNull(textValue)) {
+                throw new IllegalArgumentException("枚举字段 code/text 不能为空: " + enumConstant.name());
+            }
             enumValueMap.put(codeValue, textValue);
         }
         return enumValueMap;

@@ -73,12 +73,17 @@ public interface UserConstants {
     String YES = "Y";
 
     /**
-     * 是否菜单外链（是）
+     * 否
+     */
+    String NO = "N";
+
+    /**
+     * 旧版是否菜单外链（是），仅用于兼容已有 0/1 数据
      */
     String YES_FRAME = "0";
 
     /**
-     * 是否菜单外链（否）
+     * 旧版是否菜单外链（否），仅用于兼容已有 0/1 数据
      */
     String NO_FRAME = "1";
 
@@ -126,13 +131,13 @@ public interface UserConstants {
      * 用户名长度限制
      */
     int USERNAME_MIN_LENGTH = 2;
-    int USERNAME_MAX_LENGTH = 20;
+    int USERNAME_MAX_LENGTH = 30;
 
     /**
      * 密码长度限制
      */
     int PASSWORD_MIN_LENGTH = 5;
-    int PASSWORD_MAX_LENGTH = 20;
+    int PASSWORD_MAX_LENGTH = 30;
 
     /**
      * 超级管理员ID

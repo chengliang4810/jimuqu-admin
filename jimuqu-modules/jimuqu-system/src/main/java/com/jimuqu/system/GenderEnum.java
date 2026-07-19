@@ -6,9 +6,9 @@ import lombok.Getter;
 @Getter
 public enum GenderEnum implements TranslatableEnum<String> {
 
-    UNKNOWN("0", "未知"),
-    MAN("1", "男"),
-    WOMAN("2", "女"),
+    MAN("0", "男"),
+    WOMAN("1", "女"),
+    UNKNOWN("2", "未知"),
     ;
 
     private final String value;

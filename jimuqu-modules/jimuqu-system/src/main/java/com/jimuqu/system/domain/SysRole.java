@@ -11,6 +11,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.dromara.autotable.annotation.AutoColumn;
+import org.dromara.autotable.annotation.TableIndex;
 
 import java.io.Serial;
 
@@ -26,6 +27,8 @@ import java.io.Serial;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Table(value = "sys_role")
+@TableIndex(name = "sys_role_create_dept", fields = "createDept")
+@TableIndex(name = "sys_role_create_by", fields = "createBy")
 public class SysRole extends BaseEntity {
 
     @Serial
@@ -75,6 +78,7 @@ public class SysRole extends BaseEntity {
     /**
      * 删除标志（0代表存在 1代表删除）
      */
+    @LogicDelete(beforeValue = "0", afterValue = "1")
     @AutoColumn(comment = "删除标志（0代表存在 1代表删除）", length = 1, defaultValue = "0")
     private String delFlag;
     /**

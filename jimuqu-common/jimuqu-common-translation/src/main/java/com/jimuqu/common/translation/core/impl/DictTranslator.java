@@ -8,9 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * 字典翻译
  */
@@ -23,7 +20,6 @@ public class DictTranslator implements TranslationInterface {
 
     @Override
     public String translate(Object value, Trans trans) {
-        System.out.println("字典翻译::::" + value);
         if (ObjUtil.isNull(value) || ObjUtil.isNull(dictService)) {
             return trans.defaultValue();
         }
@@ -32,7 +28,6 @@ public class DictTranslator implements TranslationInterface {
 
         try {
             String dictLabel = dictService.getDictLabel(dictType, dictValue);
-            System.out.println("字典翻译::::" + dictLabel);
             if (ObjUtil.isNotEmpty(dictLabel)) {
                 return dictLabel;
             }

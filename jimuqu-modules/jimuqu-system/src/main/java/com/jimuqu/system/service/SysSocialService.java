@@ -12,7 +12,7 @@ import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
 
 import java.util.List;
-import java.util.Objects;
+import java.sql.SQLException;
 
 /**
  * 社会化账号绑定服务。
@@ -44,8 +44,8 @@ public class SysSocialService {
         SysSocial boundAccount = QueryChain.of(socialMapper)
                 .eq(SysSocial::getAuthId, authId)
                 .get();
-        if (boundAccount != null && !Objects.equals(boundAccount.getUserId(), userId)) {
-            throw new ServiceException("此第三方账号已经被其他用户绑定");
+        if (boundAccount != null) {
+            throw new ServiceException("此三方账号已经被绑定!");
         }
 
         SysSocial sameSource = QueryChain.of(socialMapper)
@@ -53,16 +53,22 @@ public class SysSocialService {
                 .eq(SysSocial::getSource, authUser.getSource())
                 .get();
         SysSocial social = toEntity(authUser, userId, authId);
-        SysSocial current = boundAccount != null ? boundAccount : sameSource;
-        if (current == null) {
-            if (socialMapper.save(social) <= 0) {
-                throw new ServiceException("第三方账号绑定失败");
+        try {
+            if (sameSource == null) {
+                if (socialMapper.save(social) <= 0) {
+                    throw new ServiceException("第三方账号绑定失败");
+                }
+                return;
             }
-            return;
-        }
-        social.setId(current.getId());
-        if (socialMapper.update(social) <= 0) {
-            throw new ServiceException("第三方账号绑定更新失败");
+            social.setId(sameSource.getId());
+            if (socialMapper.update(social) <= 0) {
+                throw new ServiceException("第三方账号绑定更新失败");
+            }
+        } catch (RuntimeException exception) {
+            if (isUniqueConstraintViolation(exception)) {
+                throw new ServiceException("此三方账号已经被绑定!");
+            }
+            throw exception;
         }
     }
 
@@ -70,6 +76,17 @@ public class SysSocialService {
         return socialMapper.delete(where -> where
                 .eq(SysSocial::getId, socialId)
                 .eq(SysSocial::getUserId, userId)) > 0;
+    }
+
+    private boolean isUniqueConstraintViolation(Throwable exception) {
+        Throwable current = exception;
+        while (current != null) {
+            if (current instanceof SQLException sqlException && "23000".equals(sqlException.getSQLState())) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private SysSocial toEntity(AuthUser authUser, Long userId, String authId) {

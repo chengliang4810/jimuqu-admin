@@ -60,8 +60,10 @@ public interface SysDictTypeService {
 
     boolean checkDictKeyUnique(SysDictTypeBo bo);
 
+    void resetDictCache();
+
     /**
-     * 批量删除代码生成模板信息
+     * 批量删除字典类型
      *
      * @param ids 字典类型主键列表
      * @return {@link Integer } 删除成功条数

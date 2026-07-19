@@ -11,6 +11,7 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.dromara.autotable.annotation.AutoColumn;
+import org.dromara.autotable.annotation.Index;
 
 import java.io.Serial;
 
@@ -46,7 +47,7 @@ public class SysDictData extends BaseEntity {
      * 字典排序
      */
     @AutoColumn(comment = "字典排序", defaultValue = "0")
-    private Long dictSort;
+    private Integer dictSort;
     /**
      * 字典标签
      */
@@ -61,6 +62,7 @@ public class SysDictData extends BaseEntity {
      * 字典类型
      */
     @AutoColumn(comment = "字典类型", length = 100, defaultValue = "L")
+    @Index(name = "sys_dict_data_type")
     private String dictTypeKey;
     /**
      * 样式属性（其他样式扩展）

@@ -1,28 +1,29 @@
 package com.jimuqu.common.sse.core;
 
 import cn.hutool.v7.core.map.MapUtil;
-import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.web.sse.SseEmitter;
 import org.noear.solon.web.sse.SseEvent;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 管理 Server-Sent Events (SSE) 连接
  *
  * @author Lion Li
  */
-@Slf4j
 public class SseEmitterManager {
 
-    /**
-     * 订阅的频道
-     */
-    private final static String SSE_TOPIC = "global:sse";
-
+    private static final String KICKED = "kicked";
     private final static Map<Long, Map<String, SseEmitter>> USER_TOKEN_EMITTERS = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService scheduledExecutorService;
+
+    public SseEmitterManager(ScheduledExecutorService scheduledExecutorService) {
+        this.scheduledExecutorService = scheduledExecutorService;
+    }
 
     /**
      * 建立与指定用户的 SSE 连接
@@ -39,26 +40,25 @@ public class SseEmitterManager {
         // 创建一个新的 SseEmitter 实例，超时时间设置为一天 避免连接之后直接关闭浏览器导致连接停滞
         SseEmitter emitter = new SseEmitter(86400000L);
 
-        emitters.put(token, emitter);
+        SseEmitter oldEmitter = emitters.put(token, emitter);
+        if (oldEmitter != null) {
+            try {
+                // 控制信号使用独立事件名，避免 Bell 将纯文本当作 JSON 消息解析。
+                oldEmitter.send(new SseEvent().name(KICKED));
+            } catch (Exception ignored) {
+            }
+            scheduledExecutorService.schedule(oldEmitter::complete, 100L, TimeUnit.MILLISECONDS);
+        }
 
         // 当 emitter 完成、超时或发生错误时，从映射表中移除对应的 token
         emitter.onCompletion(() -> {
-            SseEmitter remove = emitters.remove(token);
-            if (remove != null) {
-                remove.complete();
-            }
+            remove(userId, token, emitter);
         });
         emitter.onTimeout(() -> {
-            SseEmitter remove = emitters.remove(token);
-            if (remove != null) {
-                remove.complete();
-            }
+            remove(userId, token, emitter);
         });
         emitter.onError((e) -> {
-            SseEmitter remove = emitters.remove(token);
-            if (remove != null) {
-                remove.complete();
-            }
+            remove(userId, token, emitter);
         });
 
         try {
@@ -66,7 +66,7 @@ public class SseEmitterManager {
             emitter.send(new SseEvent().name("connected"));
         } catch (IOException e) {
             // 如果发送消息失败，则从映射表中移除 emitter
-            emitters.remove(token);
+            remove(userId, token, emitter);
         }
         return emitter;
     }
@@ -83,13 +83,18 @@ public class SseEmitterManager {
         }
         Map<String, SseEmitter> emitters = USER_TOKEN_EMITTERS.get(userId);
         if (MapUtil.isNotEmpty(emitters)) {
+            SseEmitter sseEmitter = emitters.remove(token);
             try {
-                SseEmitter sseEmitter = emitters.get(token);
+                if (sseEmitter == null) {
+                    return;
+                }
                 sseEmitter.send(new SseEvent().name("disconnected"));
                 sseEmitter.complete();
             } catch (Exception ignore) {
             }
-            emitters.remove(token);
+            if (emitters.isEmpty()) {
+                USER_TOKEN_EMITTERS.remove(userId, emitters);
+            }
         } else {
             USER_TOKEN_EMITTERS.remove(userId);
         }
@@ -129,11 +134,14 @@ public class SseEmitterManager {
                 try {
                     entry.getValue().send(sseEvent);
                 } catch (Exception e) {
-                    SseEmitter remove = emitters.remove(entry.getKey());
+                    SseEmitter remove = emitters.remove(entry.getKey(), entry.getValue()) ? entry.getValue() : null;
                     if (remove != null) {
                         remove.complete();
                     }
                 }
+            }
+            if (emitters.isEmpty()) {
+                USER_TOKEN_EMITTERS.remove(userId, emitters);
             }
         } else {
             USER_TOKEN_EMITTERS.remove(userId);
@@ -150,33 +158,11 @@ public class SseEmitterManager {
         }
     }
 
-// TODO 发布订阅消息
-//    /**
-//     * 发布SSE订阅消息
-//     *
-//     * @param sseMessageDto 要发布的SSE消息对象
-//     */
-//    public void publishMessage(SseMessageDto sseMessageDto) {
-//        SseMessageDto broadcastMessage = new SseMessageDto();
-//        broadcastMessage.setMessage(sseMessageDto.getMessage());
-//        broadcastMessage.setUserIds(sseMessageDto.getUserIds());
-//        RedisUtils.publish(SSE_TOPIC, broadcastMessage, consumer -> {
-//            log.info("SSE发送主题订阅消息topic:{} session keys:{} message:{}",
-//                    SSE_TOPIC, sseMessageDto.getUserIds(), sseMessageDto.getMessage());
-//        });
-//    }
-//
-//    /**
-//     * 向所有的用户发布订阅的消息(群发)
-//     *
-//     * @param message 要发布的消息内容
-//     */
-//    public void publishAll(String message) {
-//        SseMessageDto broadcastMessage = new SseMessageDto();
-//        broadcastMessage.setMessage(message);
-//        RedisUtils.publish(SSE_TOPIC, broadcastMessage, consumer -> {
-//            log.info("SSE发送主题订阅消息topic:{} message:{}", SSE_TOPIC, message);
-//        });
-//    }
+    private void remove(Long userId, String token, SseEmitter emitter) {
+        Map<String, SseEmitter> emitters = USER_TOKEN_EMITTERS.get(userId);
+        if (emitters != null && emitters.remove(token, emitter) && emitters.isEmpty()) {
+            USER_TOKEN_EMITTERS.remove(userId, emitters);
+        }
+    }
 
 }

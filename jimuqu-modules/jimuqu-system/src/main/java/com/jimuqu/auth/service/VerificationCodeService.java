@@ -6,11 +6,16 @@ import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.mail.utils.MailUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.Solon;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.cache.CacheService;
+import org.dromara.sms4j.api.SmsBlend;
+import org.dromara.sms4j.api.entity.SmsResponse;
+import org.dromara.sms4j.core.factory.SmsFactory;
 
 import java.security.SecureRandom;
+import java.util.LinkedHashMap;
 
 /**
  * 登录验证码签发服务。
@@ -20,6 +25,7 @@ import java.security.SecureRandom;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class VerificationCodeService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -30,9 +36,28 @@ public class VerificationCodeService {
     public void sendSms(String phoneNumber) {
         String code = resolveCode();
         if (StringUtil.isBlank(localCode())) {
-            throw new ServiceException("短信验证码发送器未配置");
+            LinkedHashMap<String, String> templateParams = new LinkedHashMap<>(1);
+            templateParams.put("code", code);
+            SmsBlend smsBlend = SmsFactory.getSmsBlend(
+                    Solon.cfg().get("auth.verification.sms-config-id", "config1"));
+            if (smsBlend == null) {
+                throw new ServiceException("短信验证码发送器未配置");
+            }
+            SmsResponse response = smsBlend.sendMessage(
+                    phoneNumber,
+                    Solon.cfg().get("auth.verification.sms-template-id", ""),
+                    templateParams);
+            ensureSmsSent(response);
         }
         cache(phoneNumber, code);
+    }
+
+    static void ensureSmsSent(SmsResponse response) {
+        if (response == null || !response.isSuccess()) {
+            log.error("验证码短信发送异常 => {}", response);
+            Object data = response == null ? null : response.getData();
+            throw new ServiceException(data == null ? "验证码短信发送失败" : data.toString());
+        }
     }
 
     public void sendEmail(String email) {
@@ -47,7 +72,7 @@ public class VerificationCodeService {
         MailUtils.sendText(
                 email,
                 "登录验证码",
-                "您本次验证码为：" + code + "，有效期为" + Constants.CAPTCHA_EXPIRATION + "分钟。"
+                "您本次验证码为：" + code + "，有效性为" + Constants.CAPTCHA_EXPIRATION + "分钟，请尽快填写。"
         );
         cache(email, code);
     }

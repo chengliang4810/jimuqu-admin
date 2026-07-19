@@ -2,11 +2,17 @@ package com.jimuqu.common.ratelimit.core.impl;
 
 import com.jimuqu.common.ratelimit.core.RateLimitConfig;
 import com.jimuqu.common.ratelimit.core.RateLimiter;
+import com.jimuqu.common.ratelimit.exception.RateLimitException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.noear.solon.cache.redisson.RedissonCacheService;
 import org.noear.solon.data.cache.CacheService;
+import org.redisson.api.RLock;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -39,18 +45,42 @@ public class CacheRateLimiter implements RateLimiter {
         }
 
         try {
+            validate(permits, config);
             String cacheKey = config.getKeyPrefix() + key;
-            long currentTime = System.currentTimeMillis();
-
-            return switch (config.getAlgorithm()) {
-                case SLIDING_WINDOW -> tryAcquireWithSlidingWindow(cacheKey, permits, currentTime, config);
-                case FIXED_WINDOW -> tryAcquireWithFixedWindow(cacheKey, permits, currentTime, config);
-                default -> tryAcquireWithTokenBucket(cacheKey, permits, currentTime, config);
-            };
+            if (cacheService instanceof RedissonCacheService redisson) {
+                RLock lock = redisson.client().getLock(cacheKey + ":lock");
+                lock.lock();
+                try {
+                    return acquire(cacheKey, permits, config);
+                } finally {
+                    lock.unlock();
+                }
+            }
+            synchronized (cacheService) {
+                return acquire(cacheKey, permits, config);
+            }
         } catch (Exception e) {
             log.error("限流器异常 - Key: {}, Permits: {}, 异常: {}", key, permits, e.getMessage(), e);
-            // 限流器异常时，默认放行
-            return true;
+            throw new RateLimitException("服务器限流异常，请稍候再试", e);
+        }
+    }
+
+    private boolean acquire(String cacheKey, int permits, RateLimitConfig config) {
+        long currentTime = System.currentTimeMillis();
+        return switch (config.getAlgorithm()) {
+            case SLIDING_WINDOW -> tryAcquireWithSlidingWindow(cacheKey, permits, currentTime, config);
+            case FIXED_WINDOW -> tryAcquireWithFixedWindow(cacheKey, permits, currentTime, config);
+            default -> tryAcquireWithTokenBucket(cacheKey, permits, currentTime, config);
+        };
+    }
+
+    private void validate(int permits, RateLimitConfig config) {
+        Objects.requireNonNull(config, "config");
+        Objects.requireNonNull(config.getAlgorithm(), "algorithm");
+        Objects.requireNonNull(config.getKeyPrefix(), "keyPrefix");
+        if (permits <= 0 || config.getMaxBurst() <= 0 || config.getWindow() <= 0
+                || config.getPermitsPerSecond() <= 0) {
+            throw new IllegalArgumentException("限流参数必须大于 0");
         }
     }
 
@@ -58,48 +88,17 @@ public class CacheRateLimiter implements RateLimiter {
      * 令牌桶算法实现（基于CAS乐观锁）
      */
     private boolean tryAcquireWithTokenBucket(String key, int permits, long currentTime, RateLimitConfig config) {
-        final int maxRetries = 3;
-
-        for (int i = 0; i < maxRetries; i++) {
-            // 1. 读取当前令牌桶
-            TokenBucket bucket = cacheService.get(key, TokenBucket.class);
-            if (bucket == null) {
-                bucket = new TokenBucket(System.currentTimeMillis(), currentTime, config.getMaxBurst());
-            }
-
-            // 2. 计算补充的令牌数
-            long timePassed = currentTime - bucket.getLastRefillTime();
-            double tokensToAdd = timePassed * config.getPermitsPerSecond() / 1000.0;
-            double newTokens = Math.min(config.getMaxBurst(), bucket.getTokens() + tokensToAdd);
-
-            // 3. 检查是否有足够的令牌
-            if (newTokens >= permits) {
-                // 4. 创建新的令牌桶状态
-                TokenBucket newBucket = new TokenBucket(System.currentTimeMillis(), currentTime, newTokens - permits);
-
-                // 5. 尝试CAS更新
-                TokenBucket currentBucket = cacheService.get(key, TokenBucket.class);
-                // 修复CAS逻辑：如果是第一次访问（currentBucket为null）或者桶状态未改变，则允许更新
-                if (currentBucket == null || bucket.equals(currentBucket)) {
-                    // 简单实现：直接更新（适用于单机或低并发场景）
-                    int expireTime = (int) (config.getMaxBurst() / config.getPermitsPerSecond()) + 1;
-
-                    cacheService.store(key, newBucket, expireTime);
-                    return true;
-                }
-                // 如果被其他线程修改了，重试
-                continue;
-            } else {
-                // 令牌不足，保存更新后的桶状态
-                TokenBucket newBucket = new TokenBucket(System.currentTimeMillis(), currentTime, newTokens);
-                int expireTime = (int) (config.getMaxBurst() / config.getPermitsPerSecond()) + 1;
-                cacheService.store(key, newBucket, expireTime);
-                return false;
-            }
+        TokenBucket bucket = cacheService.get(key, TokenBucket.class);
+        if (bucket == null) {
+            bucket = new TokenBucket(0, currentTime, config.getMaxBurst());
         }
-
-        // 重试次数耗尽，默认拒绝
-        return false;
+        long timePassed = Math.max(0, currentTime - bucket.getLastRefillTime());
+        double tokens = Math.min(config.getMaxBurst(),
+                bucket.getTokens() + timePassed * config.getPermitsPerSecond() / 1000.0);
+        boolean acquired = tokens >= permits;
+        cacheService.store(key, new TokenBucket(bucket.getVersion() + 1, currentTime,
+                acquired ? tokens - permits : tokens), tokenBucketTtl(config));
+        return acquired;
     }
 
     /**
@@ -108,28 +107,21 @@ public class CacheRateLimiter implements RateLimiter {
     private boolean tryAcquireWithSlidingWindow(String key, int permits, long currentTime, RateLimitConfig config) {
         long windowTime = TimeUnit.SECONDS.toMillis(config.getWindow());
 
-        // 使用多个时间分片来模拟滑动窗口，避免并发问题
-        int sliceCount = 10; // 将窗口分为10个分片
-        long sliceTime = windowTime / sliceCount;
-        int currentSlice = (int) ((currentTime % windowTime) / sliceTime);
-
-        // 构建分片键
-        String sliceKey = key + ":slice:" + currentSlice;
-
-        // 获取当前分片的计数
-        WindowCounter counter = cacheService.get(sliceKey, WindowCounter.class);
-        if (counter == null) {
-            counter = new WindowCounter(0);
-        }
-
-        // 简单实现：检查当前分片是否还有容量
-        if (counter.getCount() + permits <= config.getMaxBurst() / sliceCount) {
-            counter.setCount(counter.getCount() + permits);
-            cacheService.store(sliceKey, counter, (int) (sliceTime / 1000) + 1);
-            return true;
-        } else {
+        SlidingWindow window = cacheService.get(key, SlidingWindow.class);
+        List<Long> requestTimes = window == null || window.getRequestTimes() == null
+                ? new ArrayList<>()
+                : new ArrayList<>(window.getRequestTimes());
+        long cutoff = currentTime - windowTime;
+        requestTimes.removeIf(timestamp -> timestamp <= cutoff);
+        if (requestTimes.size() + permits > config.getMaxBurst()) {
+            cacheService.store(key, new SlidingWindow(requestTimes), windowTtl(config));
             return false;
         }
+        for (int index = 0; index < permits; index++) {
+            requestTimes.add(currentTime);
+        }
+        cacheService.store(key, new SlidingWindow(requestTimes), windowTtl(config));
+        return true;
     }
 
     /**
@@ -140,24 +132,13 @@ public class CacheRateLimiter implements RateLimiter {
         long windowStart = currentTime / (config.getWindow() * 1000);
         String windowKey = key + ":" + windowStart;
 
-        // 使用原子递增操作
-        for (int i = 0; i < 3; i++) {
-            WindowCounter counter = cacheService.get(windowKey, WindowCounter.class);
-            if (counter == null) {
-                counter = new WindowCounter(0);
-            }
-
-            if (counter.getCount() + permits <= config.getMaxBurst()) {
-                // 创建新的计数器状态
-                WindowCounter newCounter = new WindowCounter(counter.getCount() + permits);
-                cacheService.store(windowKey, newCounter, (int) config.getWindow());
-                return true;
-            } else {
-                return false;
-            }
+        WindowCounter counter = cacheService.get(windowKey, WindowCounter.class);
+        long count = counter == null ? 0 : counter.getCount();
+        if (count + permits > config.getMaxBurst()) {
+            return false;
         }
-
-        return false;
+        cacheService.store(windowKey, new WindowCounter(count + permits), windowTtl(config));
+        return true;
     }
 
     @Override
@@ -171,18 +152,25 @@ public class CacheRateLimiter implements RateLimiter {
                     if (bucket == null) {
                         return globalConfig.getMaxBurst();
                     }
-                    return bucket.getTokens();
+                    long elapsed = Math.max(0, System.currentTimeMillis() - bucket.getLastRefillTime());
+                    return Math.min(globalConfig.getMaxBurst(),
+                            bucket.getTokens() + elapsed * globalConfig.getPermitsPerSecond() / 1000.0);
 
                 case SLIDING_WINDOW:
                     SlidingWindow window = cacheService.get(cacheKey, SlidingWindow.class);
-                    if (window == null) {
+                    if (window == null || window.getRequestTimes() == null) {
                         return globalConfig.getMaxBurst();
                     }
-                    return Math.max(0, globalConfig.getMaxBurst() - window.getRequestCount());
+                    long cutoff = System.currentTimeMillis()
+                            - TimeUnit.SECONDS.toMillis(globalConfig.getWindow());
+                    long active = window.getRequestTimes().stream().filter(timestamp -> timestamp > cutoff).count();
+                    return Math.max(0, globalConfig.getMaxBurst() - active);
 
                 case FIXED_WINDOW:
-                    // 固定窗口的剩余令牌数较难精确计算，返回最大值
-                    return globalConfig.getMaxBurst();
+                    long windowStart = System.currentTimeMillis() / (globalConfig.getWindow() * 1000);
+                    WindowCounter counter = cacheService.get(cacheKey + ":" + windowStart, WindowCounter.class);
+                    return Math.max(0, globalConfig.getMaxBurst()
+                            - (counter == null ? 0 : counter.getCount()));
 
                 default:
                     return globalConfig.getMaxBurst();
@@ -198,10 +186,20 @@ public class CacheRateLimiter implements RateLimiter {
         return globalConfig;
     }
 
+    private int tokenBucketTtl(RateLimitConfig config) {
+        return (int) Math.min(Integer.MAX_VALUE,
+                Math.ceil(config.getMaxBurst() / config.getPermitsPerSecond()) + 1);
+    }
+
+    private int windowTtl(RateLimitConfig config) {
+        return (int) Math.min(Integer.MAX_VALUE, config.getWindow() + 1);
+    }
+
     /**
      * 令牌桶数据结构（带版本号）
      */
     @Data
+    @NoArgsConstructor
     @AllArgsConstructor
     public static class TokenBucket {
         private long version;           // 版本号，用于CAS操作
@@ -213,16 +211,17 @@ public class CacheRateLimiter implements RateLimiter {
      * 滑动窗口数据结构
      */
     @Data
+    @NoArgsConstructor
     @AllArgsConstructor
     public static class SlidingWindow {
-        private long windowStartTime;  // 窗口开始时间
-        private long requestCount;     // 窗口内请求数
+        private List<Long> requestTimes;
     }
 
     /**
      * 固定窗口计数器
      */
     @Data
+    @NoArgsConstructor
     @AllArgsConstructor
     public static class WindowCounter {
         private long count;  // 窗口内计数

@@ -23,6 +23,11 @@
             <artifactId>sms4j-solon-plugin</artifactId>
             <version>${sms4j.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

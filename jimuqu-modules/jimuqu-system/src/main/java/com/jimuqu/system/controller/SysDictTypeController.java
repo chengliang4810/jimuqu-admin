@@ -74,15 +74,15 @@ public class SysDictTypeController extends BaseController {
     @Mapping
     @NoRepeatSubmit
     @SaCheckPermission("system:dict:add")
-    @Log(title = "新增字典类型", businessType = BusinessType.ADD)
-    public Long add(@Body @Validated(AddGroup.class) SysDictTypeBo bo) {
+    @Log(title = "字典类型", businessType = BusinessType.ADD)
+    public R<Void> add(@Body @Validated(AddGroup.class) SysDictTypeBo bo) {
         normalizeBellFields(bo);
         if (!sysDictTypeService.checkDictKeyUnique(bo)) {
             throw new ServiceException("新增字典'" + bo.getDictName() + "'失败，字典类型已存在");
         }
         boolean result = sysDictTypeService.insertByBo(bo);
         Assert.isTrue(result, "新增字典类型失败");
-        return bo.getDictId();
+        return R.ok();
     }
 
     /**
@@ -92,7 +92,7 @@ public class SysDictTypeController extends BaseController {
     @Put
     @Mapping
     @SaCheckPermission("system:dict:edit")
-    @Log(title = "更新字典类型", businessType = BusinessType.UPDATE)
+    @Log(title = "字典类型", businessType = BusinessType.UPDATE)
     public void edit(@Body @Validated(UpdateGroup.class) SysDictTypeBo bo) {
         normalizeBellFields(bo);
         if (!sysDictTypeService.checkDictKeyUnique(bo)) {
@@ -108,11 +108,11 @@ public class SysDictTypeController extends BaseController {
     @Delete
     @Mapping("/{ids}")
     @SaCheckPermission("system:dict:remove")
-    @Log(title = "删除字典类型", businessType = BusinessType.DELETE)
-    public Integer delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
+    @Log(title = "字典类型", businessType = BusinessType.DELETE)
+    public R<Void> delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
         Integer num = sysDictTypeService.deleteByIds(ids);
         Assert.gtZero(num, "删除字典类型失败");
-        return num;
+        return R.ok();
     }
 
     @Get
@@ -124,13 +124,17 @@ public class SysDictTypeController extends BaseController {
     @Post
     @Mapping("/export")
     @SaCheckPermission("system:dict:export")
+    @Log(title = "字典类型", businessType = BusinessType.EXPORT)
     public DownloadedFile export(SysDictTypeQuery query) {
         return ExcelUtil.exportExcel(sysDictTypeService.queryList(query), "字典类型", SysDictTypeVo.class);
     }
 
     @Delete
     @Mapping("/refreshCache")
+    @SaCheckPermission("system:dict:remove")
+    @Log(title = "字典类型", businessType = BusinessType.CLEAN)
     public R<Void> refreshCache() {
+        sysDictTypeService.resetDictCache();
         return R.ok();
     }
 

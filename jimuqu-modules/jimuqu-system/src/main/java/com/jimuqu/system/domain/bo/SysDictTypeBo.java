@@ -1,5 +1,6 @@
 package com.jimuqu.system.domain.bo;
 
+import com.jimuqu.common.core.constant.RegexConstants;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
 import com.jimuqu.common.mybatis.core.entity.BoBaseEntity;
@@ -35,11 +36,15 @@ public class SysDictTypeBo extends BoBaseEntity {
      * 字典名称
      */
     @NotBlank(message = "字典名称不能为空", groups = { AddGroup.class, UpdateGroup.class })
+    @Length(max = 100, message = "字典类型名称长度不能超过{max}个字符")
     private String dictName;
     /**
      * 字典类型 L 列表 T 树
      */
     @NotBlank(message = "字典类型不能为空", groups = { AddGroup.class, UpdateGroup.class })
+    @Length(max = 100, message = "字典类型长度不能超过{max}个字符")
+    @Pattern(value = RegexConstants.DICTIONARY_TYPE,
+            message = "字典类型必须以字母开头，且只能包含小写字母、数字和下划线")
     private String dictType;
     /**
      * 系统内置（Y是 N否）

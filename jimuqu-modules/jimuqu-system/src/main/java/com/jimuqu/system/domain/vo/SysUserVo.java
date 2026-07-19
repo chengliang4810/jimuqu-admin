@@ -61,12 +61,12 @@ public class SysUserVo implements Serializable {
     /**
      * 用户邮箱
      */
-    @Sensitive(type = SensitiveType.EMAIL)
+    @Sensitive(type = SensitiveType.EMAIL, perms = "system:user:edit")
     private String email;
     /**
      * 手机号码
      */
-    @Sensitive(type = SensitiveType.MOBILE)
+    @Sensitive(type = SensitiveType.MOBILE, perms = "system:user:edit")
     @JsonProperty("phoneNumber")
     @ONodeAttr(name = "phoneNumber")
     private String phonenumber;
@@ -110,6 +110,17 @@ public class SysUserVo implements Serializable {
      * 创建时间
      */
     private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
+
+    /**
+     * 部门名称
+     */
+    @Ignore
+    private String deptName;
 
     /**
      * 部门对象

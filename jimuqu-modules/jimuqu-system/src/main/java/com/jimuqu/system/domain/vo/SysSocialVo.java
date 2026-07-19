@@ -25,7 +25,7 @@ public class SysSocialVo implements Serializable {
     private String authId;
     private String source;
     private String accessToken;
-    private Integer expireIn;
+    private int expireIn;
     private String refreshToken;
     private String openId;
     private String userName;

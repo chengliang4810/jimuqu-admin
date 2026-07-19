@@ -109,6 +109,9 @@ public class SysUserOnlineController extends BaseController {
 
     private SysUserOnlineVo toOnlineVo(String tokenValue) {
         try {
+            if (StpUtil.stpLogic.getTokenActiveTimeoutByToken(tokenValue) < -1) {
+                return null;
+            }
             LoginUser loginUser = LoginHelper.getLoginUser(tokenValue);
             if (loginUser == null) {
                 return null;
@@ -116,7 +119,6 @@ public class SysUserOnlineController extends BaseController {
             return new SysUserOnlineVo()
                     .setTokenId(tokenValue)
                     .setDeptName(loginUser.getDeptName())
-                    .setNickName(loginUser.getNickname())
                     .setUserName(loginUser.getUsername())
                     .setClientKey(loginUser.getClientKey())
                     .setDeviceType(loginUser.getDeviceType())

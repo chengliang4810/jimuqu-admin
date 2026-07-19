@@ -2,6 +2,7 @@ package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.jimuqu.common.core.checker.Assert;
+import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.excel.utils.ExcelUtil;
@@ -85,15 +86,15 @@ public class SysDictDataController extends BaseController {
     @Mapping
     @NoRepeatSubmit
     @SaCheckPermission("system:dict:add")
-    @Log(title = "新增字典数据", businessType = BusinessType.ADD)
-    public Long add(@Body @Validated(AddGroup.class) SysDictDataBo bo) {
+    @Log(title = "字典数据", businessType = BusinessType.ADD)
+    public R<Void> add(@Body @Validated(AddGroup.class) SysDictDataBo bo) {
         normalizeBellFields(bo);
         if (!sysDictDataService.checkDictDataUnique(bo)) {
             throw new ServiceException("新增字典数据'" + bo.getDictValue() + "'失败，字典键值已存在");
         }
         boolean result = sysDictDataService.insertByBo(bo);
         Assert.isTrue(result, "新增字典数据失败");
-        return bo.getId();
+        return R.ok();
     }
 
     /**
@@ -103,7 +104,7 @@ public class SysDictDataController extends BaseController {
     @Put
     @Mapping
     @SaCheckPermission("system:dict:edit")
-    @Log(title = "更新字典数据", businessType = BusinessType.UPDATE)
+    @Log(title = "字典数据", businessType = BusinessType.UPDATE)
     public void edit(@Body @Validated(UpdateGroup.class) SysDictDataBo bo) {
         normalizeBellFields(bo);
         if (!sysDictDataService.checkDictDataUnique(bo)) {
@@ -119,16 +120,17 @@ public class SysDictDataController extends BaseController {
     @Delete
     @Mapping("/{ids}")
     @SaCheckPermission("system:dict:remove")
-    @Log(title = "删除字典数据", businessType = BusinessType.DELETE)
-    public Integer delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
+    @Log(title = "字典数据", businessType = BusinessType.DELETE)
+    public R<Void> delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
         Integer num = sysDictDataService.deleteByIds(ids);
         Assert.gtZero(num, "删除字典数据失败");
-        return num;
+        return R.ok();
     }
 
     @Post
     @Mapping("/export")
     @SaCheckPermission("system:dict:export")
+    @Log(title = "字典数据", businessType = BusinessType.EXPORT)
     public DownloadedFile export(SysDictDataQuery query) {
         return ExcelUtil.exportExcel(sysDictDataService.queryList(query), "字典数据", SysDictDataVo.class);
     }

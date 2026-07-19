@@ -1,10 +1,9 @@
 package com.jimuqu.common.mail.utils;
 
 import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.collection.ListUtil;
+import cn.hutool.v7.core.bean.BeanUtil;
 import cn.hutool.v7.core.io.IoUtil;
 import cn.hutool.v7.core.map.MapUtil;
-import cn.hutool.v7.core.text.CharUtil;
 import cn.hutool.v7.core.text.StrUtil;
 import cn.hutool.v7.core.text.split.SplitUtil;
 import cn.hutool.v7.extra.mail.Mail;
@@ -29,13 +28,11 @@ import java.util.Map.Entry;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MailUtils {
 
-    private static final MailAccount ACCOUNT = Solon.context().getBean(MailAccount.class);
-
     /**
      * 获取邮件发送实例
      */
     public static MailAccount getMailAccount() {
-        return ACCOUNT;
+        return Solon.context().getBean(MailAccount.class);
     }
 
     /**
@@ -45,10 +42,17 @@ public class MailUtils {
      * @param pass 授权码
      */
     public static MailAccount getMailAccount(String from, String user, String pass) {
-        ACCOUNT.setFrom(StrUtil.defaultIfBlank(from, ACCOUNT.getFrom()));
-        ACCOUNT.setUser(StrUtil.defaultIfBlank(user, ACCOUNT.getUser()));
-        ACCOUNT.setPass(StrUtil.isNotBlank(pass) ? pass.toCharArray() : ACCOUNT.getPass());
-        return ACCOUNT;
+        return copyWithOverrides(getMailAccount(), from, user, pass);
+    }
+
+    static MailAccount copyWithOverrides(MailAccount source, String from, String user, String pass) {
+        MailAccount account = new MailAccount();
+        BeanUtil.copyProperties(source, account);
+        account.setPass(source.getPass() == null ? null : source.getPass().clone());
+        account.setFrom(StrUtil.defaultIfBlank(from, account.getFrom()));
+        account.setUser(StrUtil.defaultIfBlank(user, account.getUser()));
+        account.setPass(StrUtil.isNotBlank(pass) ? pass.toCharArray() : account.getPass());
+        return account;
     }
 
     /**
@@ -417,6 +421,7 @@ public class MailUtils {
      */
     private static String send(MailAccount mailAccount, boolean useGlobalSession, Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String subject, String content,
                                Map<String, InputStream> imageMap, boolean isHtml, DataSource... files) {
+        validateMessage(tos, subject, content);
         final Mail mail = Mail.of(mailAccount).setUseGlobalSession(useGlobalSession);
 
         // 可选抄送人
@@ -432,18 +437,36 @@ public class MailUtils {
         mail.setTitle(subject);
         mail.setContent(content);
         mail.setHtml(isHtml);
-        mail.addAttachments(files);
+        if (files != null && files.length > 0) {
+            mail.addAttachments(files);
+        }
         
-        // 图片
-        if (MapUtil.isNotEmpty(imageMap)) {
-            for (Entry<String, InputStream> entry : imageMap.entrySet()) {
-                mail.addImage(entry.getKey(), entry.getValue());
-                // 关闭流
-                IoUtil.closeIfPossible(entry.getValue());
+        try {
+            if (MapUtil.isNotEmpty(imageMap)) {
+                for (Entry<String, InputStream> entry : imageMap.entrySet()) {
+                    if (StrUtil.isNotBlank(entry.getKey()) && entry.getValue() != null) {
+                        mail.addImage(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
+            return mail.send();
+        } finally {
+            if (MapUtil.isNotEmpty(imageMap)) {
+                imageMap.values().forEach(IoUtil::closeIfPossible);
             }
         }
+    }
 
-        return mail.send();
+    private static void validateMessage(Collection<String> tos, String subject, String content) {
+        if (CollUtil.isEmpty(tos)) {
+            throw new IllegalArgumentException("邮件收件人不能为空");
+        }
+        if (StrUtil.isBlank(subject)) {
+            throw new IllegalArgumentException("邮件标题不能为空");
+        }
+        if (content == null) {
+            throw new IllegalArgumentException("邮件正文不能为空");
+        }
     }
 
     /**
@@ -452,20 +475,13 @@ public class MailUtils {
      * @param addresses 多个联系人，如果为空返回null
      * @return 联系人列表
      */
-    private static List<String> splitAddress(String addresses) {
+    static List<String> splitAddress(String addresses) {
         if (StrUtil.isBlank(addresses)) {
-            return null;
+            return List.of();
         }
-
-        List<String> result;
-        if (StrUtil.contains(addresses, CharUtil.COMMA)) {
-            result = SplitUtil.splitTrim(addresses, ",");
-        } else if (StrUtil.contains(addresses, ';')) {
-            result = SplitUtil.splitTrim(addresses, ";");
-        } else {
-            result = ListUtil.of(addresses);
-        }
-        return result;
+        return SplitUtil.splitTrim(addresses.replace(';', ','), ",").stream()
+                .filter(StrUtil::isNotBlank)
+                .toList();
     }
     // ------------------------------------------------------------------------------------------------------------------------ Private method end
 }

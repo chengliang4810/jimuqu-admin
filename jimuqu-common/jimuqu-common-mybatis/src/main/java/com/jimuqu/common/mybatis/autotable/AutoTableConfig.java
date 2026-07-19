@@ -2,6 +2,7 @@ package com.jimuqu.common.mybatis.autotable;
 
 import com.jimuqu.common.mybatis.autotable.adapter.CustomAutoTableClassScanner;
 import com.jimuqu.common.mybatis.autotable.adapter.CustomAutoTableMetadataAdapter;
+import org.dromara.autotable.core.AutoTableAnnotationFinder;
 import org.dromara.autotable.core.AutoTableClassScanner;
 import org.dromara.autotable.core.AutoTableMetadataAdapter;
 import org.noear.solon.annotation.Bean;
@@ -15,6 +16,14 @@ import org.noear.solon.annotation.Configuration;
  */
 @Configuration
 public class AutoTableConfig {
+
+    /**
+     * 使用 AutoTable 原生注解查找，避免 Solon 深度合并重复索引时重复返回容器元素。
+     */
+    @Bean
+    public AutoTableAnnotationFinder autoTableAnnotationFinder() {
+        return new AutoTableAnnotationFinder() { };
+    }
 
     /**
      * 自动表类扫描器

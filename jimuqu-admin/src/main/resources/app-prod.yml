@@ -6,21 +6,21 @@ solon.dataSources.jimuqu!: #数据源（!结尾表示 typed=true）
   master:
     dataSourceClassName: "com.zaxxer.hikari.HikariDataSource"
     driverClassName: com.mysql.cj.jdbc.Driver
-    jdbcUrl: jdbc:mysql://mariadb:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
-    username: jimuqu
-    password: P@ssw0rd
+    jdbcUrl: "${JIMU_DB_URL:jdbc:mysql://127.0.0.1:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true}"
+    # 生产环境必须显式提供数据库凭据，禁止回退到仓库内置账号或密码。
+    username: "${JIMU_DB_USERNAME}"
+    password: "${JIMU_DB_PASSWORD}"
 #  slave:
 #    dataSourceClassName: "com.zaxxer.hikari.HikariDataSource"
 #    driverClassName: com.mysql.cj.jdbc.Driver
-#    jdbcUrl: jdbc:mysql://mariadb:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true
-#    username: jimuqu
-#    password: P@ssw0rd
+#    jdbcUrl: "${JIMU_SLAVE_DB_URL:jdbc:mysql://127.0.0.1:3306/jimuqu_db?useUnicode=true&characterEncoding=utf8&autoReconnect=true&rewriteBatchedStatements=true}"
+#    username: "${JIMU_SLAVE_DB_USERNAME}"
+#    password: "${JIMU_SLAVE_DB_PASSWORD}"
 
-# 自动维护表结构
+# 自动维护表结构；生产环境首次连接空库时同样自动建表并执行初始化数据脚本。
 auto-table:
-  # none | validate ｜ create ｜ update) https://autotable.tangzc.com/%E9%85%8D%E7%BD%AE.html
-  # 系统启动时，会检查数据库中的表与 java 实体类是否匹配。如果不匹配，则启动失败。
-  mode: validate
+  # none | validate | create | update: https://autotable.tangzc.com/%E9%85%8D%E7%BD%AE.html
+  mode: update
 
 #开启redis缓存配置, 自动覆盖 app.yml的配置
 #jimuqu.cache:

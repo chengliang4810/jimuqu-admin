@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * 在线用户信息
@@ -27,11 +26,6 @@ public class SysUserOnlineVo implements Serializable {
      * 用户名称
      */
     private String userName;
-
-    /**
-     * 用户昵称
-     */
-    private String nickName;
 
     /**
      * 客户端
@@ -66,6 +60,6 @@ public class SysUserOnlineVo implements Serializable {
     /**
      * 登录时间
      */
-    private Date loginTime;
+    private Long loginTime;
 
 }

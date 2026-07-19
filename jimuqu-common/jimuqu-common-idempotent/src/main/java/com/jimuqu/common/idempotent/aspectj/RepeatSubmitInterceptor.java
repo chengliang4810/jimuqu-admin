@@ -1,7 +1,6 @@
 package com.jimuqu.common.idempotent.aspectj;
 
 import cn.dev33.satoken.SaManager;
-import cn.hutool.v7.core.math.NumberUtil;
 import cn.hutool.v7.core.text.StrUtil;
 import cn.hutool.v7.core.util.ObjUtil;
 import cn.hutool.v7.crypto.SecureUtil;
@@ -9,6 +8,7 @@ import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.JsonUtil;
+import com.jimuqu.common.core.utils.MessageUtils;
 import com.jimuqu.common.idempotent.annotation.RepeatSubmit;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Inject;
@@ -19,10 +19,11 @@ import org.noear.solon.core.handle.Handler;
 import org.noear.solon.core.route.RouterInterceptor;
 import org.noear.solon.core.route.RouterInterceptorChain;
 import org.noear.solon.core.util.MultiMap;
-import org.noear.solon.data.cache.CacheService;
 import org.noear.solon.lang.Nullable;
+import org.noear.solon.validation.annotation.NoRepeatSubmit;
+import com.jimuqu.common.idempotent.validation.NoRepeatSubmitCheckerImpl;
 
-import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.StringJoiner;
 
 /**
@@ -36,9 +37,7 @@ import java.util.StringJoiner;
 public class RepeatSubmitInterceptor implements RouterInterceptor {
 
     @Inject
-    private CacheService cacheService;
-
-    private static final ThreadLocal<String> KEY_CACHE = new ThreadLocal<>();
+    private NoRepeatSubmitCheckerImpl noRepeatSubmitChecker;
 
     @Override
     public void doIntercept(Context ctx, @Nullable Handler mainHandler, RouterInterceptorChain chain) throws Throwable {
@@ -50,10 +49,16 @@ public class RepeatSubmitInterceptor implements RouterInterceptor {
         }
 
         RepeatSubmit repeatSubmit = action.method().getAnnotation(RepeatSubmit.class);
+        NoRepeatSubmit noRepeatSubmit = action.method().getAnnotation(NoRepeatSubmit.class);
 
         // 无注解则不处理
-        if (repeatSubmit == null) {
+        if (repeatSubmit == null && noRepeatSubmit == null) {
             chain.doIntercept(ctx, mainHandler);
+            return;
+        }
+
+        if (repeatSubmit == null) {
+            interceptSolonAnnotation(ctx, mainHandler, chain);
             return;
         }
 
@@ -67,7 +72,7 @@ public class RepeatSubmitInterceptor implements RouterInterceptor {
         String nowParams = argsArrayToString(ctx.paramMap(), ctx.bodyNew());
 
         // 请求地址（作为存放cache的key值）
-        String url = ctx.url();
+        String url = ctx.path();
 
         // 唯一值（没有消息头则使用请求地址）
         String submitKey = StrUtil.trimToEmpty(ctx.header(SaManager.getConfig().getTokenName()));
@@ -76,26 +81,30 @@ public class RepeatSubmitInterceptor implements RouterInterceptor {
 
         // 唯一标识（指定key + url + 消息头）
         String cacheRepeatKey = GlobalConstants.REPEAT_SUBMIT_KEY + url + submitKey;
-        String value = cacheService.get(cacheRepeatKey, String.class);
-
-        // 存在相同请求
-        if (ObjUtil.isNull(value)) {
-            KEY_CACHE.set(cacheRepeatKey);
-            BigDecimal bigDecimal = NumberUtil.div(interval, 1000);
-            cacheService.store(cacheRepeatKey, "", bigDecimal.intValue());
-        } else {
-            String message = repeatSubmit.message();
-            throw new ServiceException(message);
+        if (!noRepeatSubmitChecker.tryReserve(cacheRepeatKey, Duration.ofMillis(interval))) {
+            throw new ServiceException(resolveMessage(repeatSubmit.message()));
         }
 
-        // 继续执行
-        chain.doIntercept(ctx, mainHandler);
-
-        if (needClearCache(ctx)) {
-            cacheService.remove(cacheRepeatKey);
-            KEY_CACHE.remove();
+        try {
+            chain.doIntercept(ctx, mainHandler);
+            if (needClearCache(ctx)) {
+                noRepeatSubmitChecker.release(cacheRepeatKey);
+            }
+        } catch (Throwable throwable) {
+            noRepeatSubmitChecker.release(cacheRepeatKey);
+            throw throwable;
         }
+    }
 
+    private void interceptSolonAnnotation(Context ctx, Handler mainHandler,
+                                          RouterInterceptorChain chain) throws Throwable {
+        try {
+            chain.doIntercept(ctx, mainHandler);
+            noRepeatSubmitChecker.complete(!needClearCache(ctx));
+        } catch (Throwable throwable) {
+            noRepeatSubmitChecker.complete(false);
+            throw throwable;
+        }
     }
 
     /**
@@ -128,6 +137,13 @@ public class RepeatSubmitInterceptor implements RouterInterceptor {
             params.add(JsonUtil.toString(paramsArray));
         }
         return params.toString();
+    }
+
+    static String resolveMessage(String message) {
+        if (StrUtil.isWrap(message, "{", "}")) {
+            return MessageUtils.message(StrUtil.sub(message, 1, -1));
+        }
+        return message;
     }
 
 }

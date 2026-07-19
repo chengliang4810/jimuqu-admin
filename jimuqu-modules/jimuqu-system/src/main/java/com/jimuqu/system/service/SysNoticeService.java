@@ -1,6 +1,8 @@
 package com.jimuqu.system.service;
 
 import cn.xbatis.core.sql.executor.chain.QueryChain;
+import com.jimuqu.common.core.checker.Assert;
+import com.jimuqu.common.core.service.DictService;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
@@ -15,7 +17,6 @@ import com.jimuqu.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.noear.solon.annotation.Component;
 
-import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +33,10 @@ public class SysNoticeService {
     private final SysNoticeMapper noticeMapper;
     private final SysUserMapper userMapper;
     private final SysMessageService messageService;
+    private final DictService dictService;
 
     public Page<SysNoticeVo> queryPage(SysNoticeQuery query, PageQuery pageQuery) {
-        Page<SysNoticeVo> page = buildQuery(query)
+        Page<SysNoticeVo> page = pageQuery.applyOrder(buildQuery(query))
                 .returnType(SysNoticeVo.class)
                 .paging(pageQuery.build());
         fillCreatorNames(page.getRows());
@@ -49,6 +51,9 @@ public class SysNoticeService {
 
     public int insert(SysNoticeBo bo) {
         SysNotice notice = toEntity(bo);
+        if (notice.getStatus() == null) {
+            notice.setStatus("0");
+        }
         int rows = noticeMapper.save(notice);
         bo.setNoticeId(notice.getNoticeId());
         if (rows > 0) {
@@ -62,7 +67,16 @@ public class SysNoticeService {
     }
 
     public int delete(List<Long> ids) {
-        return noticeMapper.deleteByIds(ids);
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+        Assert.isFalse(ids.stream().anyMatch(Objects::isNull), "公告ID不能为空");
+        List<Long> requested = ids.stream().distinct().toList();
+        long existing = QueryChain.of(noticeMapper)
+                .where(where -> where.in(SysNotice::getNoticeId, requested))
+                .count();
+        Assert.isTrue(existing == requested.size(), "通知公告不存在");
+        return noticeMapper.deleteByIds(requested);
     }
 
     private QueryChain<SysNotice> buildQuery(SysNoticeQuery query) {
@@ -82,7 +96,7 @@ public class SysNoticeService {
                 .setNoticeTitle(bo.getNoticeTitle())
                 .setNoticeType(bo.getNoticeType())
                 .setNoticeContent(bo.getNoticeContent())
-                .setStatus(bo.getStatus() == null ? "0" : bo.getStatus())
+                .setStatus(bo.getStatus())
                 .setRemark(bo.getRemark());
     }
 
@@ -98,8 +112,8 @@ public class SysNoticeService {
                 .setCreateTime(notice.getCreateTime());
     }
 
-    private SysMessageVo toMessage(SysNoticeVo notice) {
-        String typeLabel = "2".equals(notice.getNoticeType()) ? "公告" : "通知";
+    SysMessageVo toMessage(SysNoticeVo notice) {
+        String typeLabel = dictService.getDictLabel("sys_notice_type", notice.getNoticeType());
         long timestamp = notice.getCreateTime() == null
                 ? System.currentTimeMillis()
                 : notice.getCreateTime().getTime();
@@ -111,16 +125,12 @@ public class SysNoticeService {
         data.put("noticeContent", notice.getNoticeContent());
         data.put("status", notice.getStatus());
         return new SysMessageVo()
-                .setMessageId(String.valueOf(notice.getNoticeId()))
-                .setCategory("notice")
                 .setType("notice")
                 .setSource("notice")
-                .setTitle("[" + typeLabel + "] " + notice.getNoticeTitle())
-                .setMessage(notice.getNoticeTitle())
-                .setContent(notice.getNoticeContent())
+                .setMessage("[" + typeLabel + "] " + notice.getNoticeTitle())
                 .setData(data)
                 .setPath("/system/notice?noticeId=" + notice.getNoticeId())
-                .setTimestamp(BigDecimal.valueOf(timestamp))
+                .setTimestamp(timestamp)
                 .setCreateTime(notice.getCreateTime());
     }
 

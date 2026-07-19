@@ -4,14 +4,19 @@ import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.core.utils.sql.SqlUtil;
 import com.jimuqu.common.mybatis.core.Page;
+import cn.xbatis.core.sql.executor.chain.QueryChain;
 import db.sql.api.impl.cmd.Methods;
 import db.sql.api.impl.cmd.basic.OrderByDirection;
 import db.sql.api.impl.cmd.struct.query.OrderBy;
+import db.sql.api.impl.cmd.struct.query.OrderByValue;
 import lombok.Data;
 import cn.hutool.v7.core.util.ObjUtil;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * 分页查询实体类
@@ -77,11 +82,11 @@ public class PageQuery implements Serializable {
         orderBy = StringUtil.toUnderScoreCase(orderBy);
 
         // 兼容前端排序类型
-        isAsc = StringUtil.replace(isAsc, "ascending", "asc");
-        isAsc = StringUtil.replace(isAsc, "descending", "desc");
+        String orderDirection = StringUtil.replace(isAsc, "ascending", "asc");
+        orderDirection = StringUtil.replace(orderDirection, "descending", "desc");
 
         String[] orderByArr = orderBy.split(StringUtil.SEPARATOR);
-        String[] isAscArr = isAsc.split(StringUtil.SEPARATOR);
+        String[] isAscArr = orderDirection.split(StringUtil.SEPARATOR);
         if (isAscArr.length != 1 && isAscArr.length != orderByArr.length) {
             throw new ServiceException("排序参数有误" );
         }
@@ -99,6 +104,42 @@ public class PageQuery implements Serializable {
             }
         }
         return orderBys;
+    }
+
+    /**
+     * 将分页排序放到查询默认排序之前，与上游 Page orders 的优先级一致。
+     */
+    public <T> QueryChain<T> applyOrder(QueryChain<T> queryChain) {
+        OrderBy[] requested = buildOrderBy();
+        if (requested.length == 0) {
+            return queryChain;
+        }
+
+        return prependOrder(queryChain, requested);
+    }
+
+    /**
+     * 动态排序缺失时应用指定默认排序；存在时不再追加默认排序。
+     */
+    public <T> QueryChain<T> applyOrder(QueryChain<T> queryChain,
+                                        Consumer<QueryChain<T>> defaultOrder) {
+        OrderBy[] requested = buildOrderBy();
+        if (requested.length == 0) {
+            defaultOrder.accept(queryChain);
+            return queryChain;
+        }
+        return prependOrder(queryChain, requested);
+    }
+
+    private <T> QueryChain<T> prependOrder(QueryChain<T> queryChain, OrderBy[] requested) {
+        List<OrderByValue> values = queryChain.$orderBy().getOrderByField();
+        List<OrderByValue> defaults = new ArrayList<>(values);
+        values.clear();
+        for (OrderBy orderBy : requested) {
+            values.addAll(orderBy.getOrderByField());
+        }
+        values.addAll(defaults);
+        return queryChain;
     }
 
 

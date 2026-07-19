@@ -14,10 +14,6 @@ public enum TransType {
      */
     ENUM,
     /**
-     * 自定义翻译
-     */
-    CUSTOM,
-    /**
      * 默认翻译
      */
     DEFAULT;

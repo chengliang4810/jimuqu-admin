@@ -17,6 +17,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class WebSocketSessionHolder {
 
+    public static final int REPLACED_CLOSE_CODE = 4001;
+    public static final String REPLACED_CLOSE_REASON = "kicked";
+
     private static final Map<Long, Map<String, WebSocket>> USER_SESSION_MAP = new ConcurrentHashMap<>();
 
     /**
@@ -26,7 +29,9 @@ public class WebSocketSessionHolder {
      * @param session    要添加的WebSocket会话
      */
     public static void addSession(Long userId, String token, WebSocket session) {
-        USER_SESSION_MAP.computeIfAbsent(userId, ignored -> new ConcurrentHashMap<>()).put(token, session);
+        WebSocket oldSession = USER_SESSION_MAP.computeIfAbsent(userId, ignored -> new ConcurrentHashMap<>())
+                .put(token, session);
+        closeReplaced(oldSession);
     }
 
     /**
@@ -36,11 +41,19 @@ public class WebSocketSessionHolder {
      * @param token 登录 token
      */
     public static void removeSession(Long userId, String token) {
+        removeSession(userId, token, null);
+    }
+
+    public static void removeSession(Long userId, String token, WebSocket session) {
         Map<String, WebSocket> sessions = USER_SESSION_MAP.get(userId);
         if (sessions != null) {
-            sessions.remove(token);
+            if (session == null) {
+                close(sessions.remove(token));
+            } else {
+                sessions.remove(token, session);
+            }
             if (sessions.isEmpty()) {
-                USER_SESSION_MAP.remove(userId);
+                USER_SESSION_MAP.remove(userId, sessions);
             }
         }
     }
@@ -75,13 +88,48 @@ public class WebSocketSessionHolder {
     }
 
     public static void sendAll(String message) {
-        USER_SESSION_MAP.values().stream()
-                .flatMap(sessions -> sessions.values().stream())
-                .forEach(session -> {
-                    try {
-                        session.send(message);
-                    } catch (Exception ignored) {
-                    }
-                });
+        for (Long userId : Set.copyOf(USER_SESSION_MAP.keySet())) {
+            sendMessage(userId, message);
+        }
     }
+
+    public static void sendMessage(Long userId, String message) {
+        Map<String, WebSocket> sessions = USER_SESSION_MAP.get(userId);
+        if (sessions == null) {
+            return;
+        }
+        sessions.entrySet().removeIf(entry -> {
+            try {
+                entry.getValue().send(message);
+                return false;
+            } catch (Exception ignored) {
+                close(entry.getValue());
+                return true;
+            }
+        });
+        if (sessions.isEmpty()) {
+            USER_SESSION_MAP.remove(userId, sessions);
+        }
+    }
+
+    private static void close(WebSocket session) {
+        if (session == null) {
+            return;
+        }
+        try {
+            session.close();
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static void closeReplaced(WebSocket session) {
+        if (session == null) {
+            return;
+        }
+        try {
+            session.close(REPLACED_CLOSE_CODE, REPLACED_CLOSE_REASON);
+        } catch (Exception ignored) {
+        }
+    }
+
 }

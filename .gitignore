@@ -45,3 +45,9 @@ temp
 **flattened-pom.xml
 settings.local.json
 .env
+
+# AutoTable schema records and local full-stack verification artifacts
+/db/sql/
+/runtime/
+/frontend-dist/
+/output/

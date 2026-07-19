@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPairGenerator;
 import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,6 +19,17 @@ class ApiCryptoUtilTest {
     void rejectsInvalidRsaConfigurationAtInitialization() {
         assertThrows(RuntimeException.class,
                 () -> ApiCryptoUtil.validateRsaKeyPair("broken", "broken"));
+    }
+
+    @Test
+    void rejectsRsaKeysBelowUpstreamMinimumSize() throws Exception {
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+        generator.initialize(512);
+        java.security.KeyPair keyPair = generator.generateKeyPair();
+
+        assertThrows(RuntimeException.class, () -> ApiCryptoUtil.validateRsaKeyPair(
+                Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()),
+                Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded())));
     }
 
     @Test
@@ -36,6 +48,16 @@ class ApiCryptoUtilTest {
         String body = Base64.getEncoder().encodeToString(aes.doFinal(json.getBytes(StandardCharsets.UTF_8)));
 
         assertEquals(json, ApiCryptoUtil.decryptRequest(body, encryptedKey, keyPair.getPrivateKey()));
+    }
+
+    @Test
+    void malformedCiphertextDoesNotExposeCryptoDetails() {
+        RsaKeyPair keyPair = ApiCryptoUtil.generateRsaKeyPair();
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> ApiCryptoUtil.decryptRequest("not-a-cipher", "not-a-key", keyPair.getPrivateKey()));
+
+        assertEquals("接口请求解密失败", exception.getMessage());
     }
 
     @Test

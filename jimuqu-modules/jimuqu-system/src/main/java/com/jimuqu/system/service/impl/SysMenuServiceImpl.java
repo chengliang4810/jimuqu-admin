@@ -59,7 +59,7 @@ public class SysMenuServiceImpl implements SysMenuService {
      */
     @Override
     public SysMenuVo queryById(Long id) {
-        return sysMenuMapper.getVoById(id);
+        return normalizeYesNo(sysMenuMapper.getVoById(id));
     }
 
     /**
@@ -68,9 +68,9 @@ public class SysMenuServiceImpl implements SysMenuService {
     @Override
     public List<SysMenuVo> queryList(SysMenuQuery query, Long userId) {
         if (LoginHelper.isSuperAdmin(userId)) {
-            return buildQueryChain(query).returnType(SysMenuVo.class).list();
+            return normalizeYesNo(buildQueryChain(query).returnType(SysMenuVo.class).list());
         }
-        return sysMenuMapper.selectMenuListByUserId(userId, query);
+        return normalizeYesNo(sysMenuMapper.selectMenuListByUserId(userId, query));
     }
 
     /**
@@ -78,18 +78,7 @@ public class SysMenuServiceImpl implements SysMenuService {
      */
     @Override
     public List<SysMenuVo> queryListForTreeSelect(SysMenuQuery query, Long userId) {
-        if (LoginHelper.isSuperAdmin(userId)) {
-            return QueryChain.of(sysMenuMapper)
-                    .forSearch(true)
-                    .where(query)
-                    .eq(SysMenu::getStatus, UserConstants.MENU_NORMAL)
-                    .orderBy(SysMenu::getParentId, SysMenu::getOrderNum)
-                    .returnType(SysMenuVo.class)
-                    .list();
-        }
-        return sysMenuMapper.selectMenuListByUserId(userId, query).stream()
-                .filter(menu -> UserConstants.MENU_NORMAL.equals(menu.getStatus()))
-                .toList();
+        return queryList(query, userId);
     }
 
     /**
@@ -111,6 +100,7 @@ public class SysMenuServiceImpl implements SysMenuService {
     @Override
     public Boolean insertByBo(SysMenuBo bo) {
         SysMenu sysMenu = MapstructUtil.convert(bo, SysMenu.class);
+        normalizeYesNo(sysMenu);
         boolean flag = sysMenuMapper.save(sysMenu) > 0;
         bo.setId(sysMenu.getId());
         return flag;
@@ -122,11 +112,41 @@ public class SysMenuServiceImpl implements SysMenuService {
     @Override
     public Boolean updateByBo(SysMenuBo bo) {
         SysMenu sysMenu = MapstructUtil.convert(bo, SysMenu.class);
+        normalizeYesNo(sysMenu);
         return sysMenuMapper.update(sysMenu) > 0;
     }
 
+    private void normalizeYesNo(SysMenu menu) {
+        menu.setIsFrame(normalizeYesNo(menu.getIsFrame(), UserConstants.NO, "是否外链"));
+        menu.setIsCache(normalizeYesNo(menu.getIsCache(), UserConstants.YES, "是否缓存"));
+    }
+
+    private SysMenuVo normalizeYesNo(SysMenuVo menu) {
+        if (menu != null) {
+            menu.setIsFrame(menu.getIsFrame());
+            menu.setIsCache(menu.getIsCache());
+        }
+        return menu;
+    }
+
+    private List<SysMenuVo> normalizeYesNo(List<SysMenuVo> menus) {
+        menus.forEach(this::normalizeYesNo);
+        return menus;
+    }
+
+    private String normalizeYesNo(String value, String defaultValue, String fieldName) {
+        if (StringUtil.isBlank(value)) {
+            return defaultValue;
+        }
+        return switch (value) {
+            case UserConstants.YES, "0" -> UserConstants.YES;
+            case UserConstants.NO, "1" -> UserConstants.NO;
+            default -> throw new ServiceException(fieldName + "必须为Y或N");
+        };
+    }
+
     /**
-     * 删除代码生成模板信息
+     * 删除菜单信息
      *
      * @param menuIdList 菜单ID
      * @return {@link Integer } 删除成功条数
@@ -134,8 +154,13 @@ public class SysMenuServiceImpl implements SysMenuService {
     @Override
     @Transaction
     public Integer deleteById(List<Long> menuIdList) {
-        int num = sysMenuMapper.deleteByIds(menuIdList);
-        sysRoleMenuMapper.deleteByMenuIds(menuIdList);
+        List<Long> requested = menuIdList.stream().distinct().toList();
+        long existing = QueryChain.of(sysMenuMapper).in(SysMenu::getId, requested).count();
+        if (existing != requested.size()) {
+            throw new ServiceException("菜单不存在");
+        }
+        int num = sysMenuMapper.deleteByIds(requested);
+        sysRoleMenuMapper.deleteByMenuIds(requested);
         return num;
     }
 
@@ -235,7 +260,7 @@ public class SysMenuServiceImpl implements SysMenuService {
             router.setComponent(menu.getComponentInfo());
             router.setQuery(menu.getQueryParam());
             router.setExt(menu.getExt());
-            router.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), StringUtil.equals("1", menu.getIsCache()), menu.getPath(), menu.getActiveMenu()));
+            router.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), isNoCache(menu.getIsCache()), menu.getPath(), menu.getActiveMenu()));
             List<SysMenu> cMenus = menu.getChildren();
             if (CollUtil.isNotEmpty(cMenus) && UserConstants.TYPE_DIR.equals(menu.getMenuType())) {
                 router.setAlwaysShow(true);
@@ -248,7 +273,7 @@ public class SysMenuServiceImpl implements SysMenuService {
                 children.setPath(menu.getPath());
                 children.setComponent(menu.getComponent());
                 children.setName(StrUtil.upperFirst(menu.getPath()) + menu.getId());
-                children.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), StringUtil.equals("1", menu.getIsCache()), menu.getPath(), menu.getActiveMenu()));
+                children.setMeta(new MetaVo(menu.getMenuName(), menu.getIcon(), isNoCache(menu.getIsCache()), menu.getPath(), menu.getActiveMenu()));
                 children.setQuery(menu.getQueryParam());
                 children.setExt(menu.getExt());
                 childrenList.add(children);
@@ -270,6 +295,10 @@ public class SysMenuServiceImpl implements SysMenuService {
             routers.add(router);
         }
         return routers;
+    }
+
+    static boolean isNoCache(String value) {
+        return UserConstants.NO.equals(value) || "1".equals(value);
     }
 
     /**
@@ -297,6 +326,8 @@ public class SysMenuServiceImpl implements SysMenuService {
                     tree.putExtra("menuType", m.getMenuType());
                     tree.putExtra("perms", m.getPerms());
                     tree.putExtra("icon", m.getIcon());
+                    tree.putExtra("visible", m.getVisible());
+                    tree.putExtra("status", m.getStatus());
                 });
                 MapTree<Long> tree = StreamUtil.findFirst(trees, it -> it.getId().longValue() == menu.getId());
                 treeList.add(tree);
@@ -387,15 +418,24 @@ public class SysMenuServiceImpl implements SysMenuService {
         if (UserConstants.TYPE_BUTTON.equals(bo.getMenuType())) {
             return true;
         }
-        String path = StringUtil.isBlank(bo.getPath()) ? "" : bo.getPath();
-        String routeName = StringUtil.upperFirst(path);
+        SysMenu candidate = MapstructUtil.convert(bo, SysMenu.class);
+        String path = StringUtil.defaultIfBlank(candidate.getPath(), "");
+        String computedRouteName = candidate.getRouteName();
+        String routeName = StringUtil.isBlank(computedRouteName) ? path : computedRouteName;
         return QueryChain.of(sysMenuMapper)
                 .in(SysMenu::getMenuType, List.of(UserConstants.TYPE_DIR, UserConstants.TYPE_MENU))
                 .list().stream()
                 .filter(menu -> !Objects.equals(menu.getId(), bo.getId()))
-                .noneMatch(menu -> (Objects.equals(menu.getParentId(), bo.getParentId())
-                        && path.equalsIgnoreCase(StringUtil.isBlank(menu.getPath()) ? "" : menu.getPath()))
-                        || routeName.equalsIgnoreCase(menu.getRouteName()));
+                .noneMatch(menu -> {
+                    String storedPath = StringUtil.defaultIfBlank(menu.getPath(), "");
+                    String storedComputedRouteName = menu.getRouteName();
+                    String storedRouteName = StringUtil.isBlank(storedComputedRouteName)
+                            ? storedPath : storedComputedRouteName;
+                    return (Objects.equals(menu.getParentId(), candidate.getParentId())
+                            && path.equalsIgnoreCase(storedPath))
+                            || (Objects.equals(menu.getMenuType(), candidate.getMenuType())
+                            && routeName.equalsIgnoreCase(storedRouteName));
+                });
     }
 
     private Set<String> splitPermissions(List<String> values) {

@@ -20,6 +20,7 @@ import org.noear.solon.annotation.Mapping;
 import org.noear.solon.annotation.Post;
 import org.noear.solon.core.handle.DownloadedFile;
 import org.noear.solon.data.cache.CacheService;
+import org.noear.solon.validation.annotation.NoRepeatSubmit;
 
 import java.util.List;
 
@@ -65,6 +66,7 @@ public class SysLoginInfoController extends BaseController {
 
     @Get
     @Mapping("/unlock/{username}")
+    @NoRepeatSubmit
     @Log(title = "账户解锁", businessType = BusinessType.OTHER)
     @SaCheckPermission("monitor:logininfor:unlock")
     public R<Void> unlock(String username) {

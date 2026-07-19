@@ -10,7 +10,6 @@ import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.encrypt.annotation.ApiEncrypt;
 import com.jimuqu.common.core.domain.model.LoginUser;
-import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.core.utils.StreamUtil;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.core.validate.group.AddGroup;
@@ -19,8 +18,6 @@ import com.jimuqu.common.excel.utils.ExcelUtil;
 import com.jimuqu.common.excel.core.ExcelResult;
 import com.jimuqu.common.log.annotation.Log;
 import com.jimuqu.common.log.enums.BusinessType;
-import com.jimuqu.common.mybatis.annotation.DataColumn;
-import com.jimuqu.common.mybatis.annotation.DataPermission;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.common.satoken.utils.LoginHelper;
@@ -78,10 +75,6 @@ public class SysUserController extends BaseController {
     @Get
     @Mapping("/list")
     @SaCheckPermission("system:user:list")
-    @DataPermission({
-        @DataColumn(key = "deptName", value = "d.dept_id"),
-        @DataColumn(key = "userName", value = "u.user_id")
-    })
     public Page<SysUserVo> list(SysUserQuery query, PageQuery pageQuery) {
         return sysUserService.queryPageList(query, pageQuery);
     }
@@ -193,7 +186,7 @@ public class SysUserController extends BaseController {
     @Post
     @Mapping
     @SaCheckPermission("system:user:add")
-    @Log(title = "新增用户信息", businessType = BusinessType.ADD)
+    @Log(title = "用户管理", businessType = BusinessType.ADD)
     public R<Void> add(@Body @Validated(AddGroup.class) SysUserBo user) {
         deptService.checkDeptDataScope(user.getDeptId());
         if (!sysUserService.checkUserNameUnique(user)) {
@@ -214,7 +207,7 @@ public class SysUserController extends BaseController {
     @Put
     @Mapping
     @SaCheckPermission("system:user:edit")
-    @Log(title = "更新用户信息", businessType = BusinessType.UPDATE)
+    @Log(title = "用户管理", businessType = BusinessType.UPDATE)
     public R<Void> edit(@Body @Validated(UpdateGroup.class) SysUserBo user) {
         sysUserService.checkUserAllowed(user.getId());
         sysUserService.checkUserDataScope(user.getId());
@@ -283,7 +276,7 @@ public class SysUserController extends BaseController {
     @Delete
     @Mapping("/{ids}")
     @SaCheckPermission("system:user:remove")
-    @Log(title = "删除用户信息", businessType = BusinessType.DELETE)
+    @Log(title = "用户管理", businessType = BusinessType.DELETE)
     public R<Void> delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
         Assert.isFalse(ids.contains(LoginHelper.getUserId()), "当前用户不能删除");
         Integer num = sysUserService.deleteByIds(ids);
@@ -324,9 +317,8 @@ public class SysUserController extends BaseController {
     @SaCheckPermission("system:user:export")
     @Mapping("/export")
     public DownloadedFile export(SysUserQuery query) {
-        List<SysUserVo> list = sysUserService.queryList(query);
-        List<SysUserExportVo> listVo = MapstructUtil.convert(list, SysUserExportVo.class);
-        return ExcelUtil.exportExcel(listVo, "用户数据", SysUserExportVo.class);
+        return ExcelUtil.exportExcel(sysUserService.selectUserExportList(query),
+                "用户数据", SysUserExportVo.class);
     }
 
     /**
@@ -347,7 +339,6 @@ public class SysUserController extends BaseController {
      */
     @Post
     @Mapping("/importTemplate")
-    @SaCheckPermission("system:user:import")
     public DownloadedFile importTemplate() {
         return ExcelUtil.exportExcel(new ArrayList<>(), "用户数据", SysUserImportVo.class);
     }

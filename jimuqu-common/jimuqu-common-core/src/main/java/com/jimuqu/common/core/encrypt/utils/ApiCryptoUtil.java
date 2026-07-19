@@ -14,6 +14,7 @@ import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.interfaces.RSAKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
@@ -26,6 +27,7 @@ public class ApiCryptoUtil {
     private static final String RSA_TRANSFORMATION = "RSA/ECB/PKCS1Padding";
     private static final String AES = "AES";
     private static final String AES_TRANSFORMATION = "AES/ECB/PKCS5Padding";
+    private static final int MIN_RSA_KEY_SIZE = 1024;
     private static final String KEY_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -39,7 +41,7 @@ public class ApiCryptoUtil {
             String aesKey = new String(Base64.getDecoder().decode(encodedAesKey), StandardCharsets.UTF_8);
             return decryptByAes(body, aesKey);
         } catch (Exception e) {
-            throw new ServiceException("接口请求解密失败: " + e.getMessage());
+            throw new ServiceException("接口请求解密失败").setDetailMessage(e.getMessage());
         }
     }
 
@@ -83,8 +85,8 @@ public class ApiCryptoUtil {
 
     public static void validateRsaKeyPair(String publicKey, String privateKey) {
         try {
-            parsePublicKey(publicKey);
-            parsePrivateKey(privateKey);
+            validateRsaKeySize((RSAKey) parsePublicKey(publicKey));
+            validateRsaKeySize((RSAKey) parsePrivateKey(privateKey));
         } catch (Exception e) {
             throw new ServiceException("RSA秘钥配置错误: " + e.getMessage());
         }
@@ -123,5 +125,11 @@ public class ApiCryptoUtil {
                 .replace("-----BEGIN PRIVATE KEY-----", "")
                 .replace("-----END PRIVATE KEY-----", "")
                 .replaceAll("\\s+", "");
+    }
+
+    private static void validateRsaKeySize(RSAKey key) {
+        if (key.getModulus().bitLength() < MIN_RSA_KEY_SIZE) {
+            throw new ServiceException("RSA密钥长度不能低于" + MIN_RSA_KEY_SIZE + "位");
+        }
     }
 }

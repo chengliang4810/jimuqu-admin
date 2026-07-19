@@ -60,12 +60,16 @@ public interface SysConfigService {
 
     Boolean updateByKey(SysConfigBo bo);
 
+    String selectConfigByKey(String configKey);
+
     boolean selectRegisterEnabled();
 
     boolean checkConfigKeyUnique(SysConfigBo bo);
 
+    void resetConfigCache();
+
     /**
-     * 批量删除代码生成模板信息
+     * 批量删除参数配置
      *
      * @param ids 参数配置主键列表
      * @return {@link Integer } 删除成功条数

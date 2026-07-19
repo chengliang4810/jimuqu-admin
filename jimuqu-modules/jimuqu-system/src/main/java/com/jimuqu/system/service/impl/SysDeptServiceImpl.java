@@ -3,6 +3,7 @@ package com.jimuqu.system.service.impl;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.MapstructUtil;
+import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.core.utils.StreamUtil;
 import com.jimuqu.common.core.utils.TreeBuildUtil;
 import com.jimuqu.common.mybatis.core.Page;
@@ -56,7 +57,15 @@ public class SysDeptServiceImpl implements SysDeptService {
      */
     @Override
     public SysDeptVo queryById(Long id) {
-        return sysDeptMapper.getVoById(id);
+        SysDeptVo dept = sysDeptMapper.getVoById(id);
+        if (dept == null || dept.getParentId() == null) {
+            return dept;
+        }
+        SysDept parent = QueryChain.of(sysDeptMapper)
+                .select(SysDept::getDeptName)
+                .eq(SysDept::getId, dept.getParentId())
+                .get();
+        return dept.setParentName(parent == null ? null : parent.getDeptName());
     }
 
     /**
@@ -64,7 +73,7 @@ public class SysDeptServiceImpl implements SysDeptService {
      */
     @Override
     public Page<SysDeptVo> queryPageList(SysDeptQuery query, PageQuery pageQuery) {
-        return buildQueryChain(query)
+        return pageQuery.applyOrder(buildQueryChain(query))
                 .returnType(SysDeptVo.class)
                 .paging(pageQuery.build());
     }
@@ -80,11 +89,12 @@ public class SysDeptServiceImpl implements SysDeptService {
 
     @Override
     public List<SysDeptVo> selectByIds(Collection<Long> ids) {
-        return QueryChain.of(sysDeptMapper)
+        QueryChain<SysDept> queryChain = QueryChain.of(sysDeptMapper)
                 .eq(SysDept::getStatus, "0")
                 .in(CollUtil.isNotEmpty(ids), SysDept::getId, ids)
-                .orderBy(SysDept::getOrderNum, SysDept::getId)
-                .returnType(SysDeptVo.class).list();
+                .orderBy(SysDept::getOrderNum, SysDept::getId);
+        applyDeptDataScope(queryChain);
+        return queryChain.returnType(SysDeptVo.class).list();
     }
 
     /**
@@ -107,18 +117,24 @@ public class SysDeptServiceImpl implements SysDeptService {
             }
         }
 
-        if (!LoginHelper.isSuperAdmin()) {
-            DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
-            if (!rule.allAccess()) {
-                if (rule.departmentIds().isEmpty()) {
-                    sysDeptQueryChain.eq(SysDept::getId, -1L);
-                } else {
-                    sysDeptQueryChain.in(SysDept::getId, rule.departmentIds());
-                }
-            }
-        }
+        applyDeptDataScope(sysDeptQueryChain);
 
         return sysDeptQueryChain;
+    }
+
+    private void applyDeptDataScope(QueryChain<SysDept> queryChain) {
+        if (LoginHelper.isSuperAdmin()) {
+            return;
+        }
+        DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
+        if (rule.allAccess()) {
+            return;
+        }
+        if (rule.departmentIds().isEmpty()) {
+            queryChain.eq(SysDept::getId, -1L);
+        } else {
+            queryChain.in(SysDept::getId, rule.departmentIds());
+        }
     }
 
     /**
@@ -128,6 +144,7 @@ public class SysDeptServiceImpl implements SysDeptService {
     public Boolean insertByBo(SysDeptBo bo) {
         String ancestors = "0";
         if (!Objects.equals(0L, bo.getParentId())) {
+            checkDeptDataScope(bo.getParentId());
             SysDept parent = sysDeptMapper.getById(bo.getParentId());
             if (parent == null) {
                 throw new ServiceException("父部门不存在");
@@ -150,11 +167,11 @@ public class SysDeptServiceImpl implements SysDeptService {
     @Override
     @Transaction
     public Boolean updateByBo(SysDeptBo bo) {
-        SysDept sysDept = MapstructUtil.convert(bo, SysDept.class);
         SysDept old = sysDeptMapper.getById(bo.getId());
         if (old == null) {
             throw new ServiceException("部门不存在，无法修改");
         }
+        String ancestors = old.getAncestors();
         if (!Objects.equals(old.getParentId(), bo.getParentId())) {
             checkDeptDataScope(bo.getParentId());
             String newAncestors = "0";
@@ -163,16 +180,23 @@ public class SysDeptServiceImpl implements SysDeptService {
                 if (parent == null) {
                     throw new ServiceException("父部门不存在");
                 }
+                if (Objects.equals(bo.getId(), parent.getId())
+                        || StringUtil.splitList(parent.getAncestors()).contains(String.valueOf(bo.getId()))) {
+                    throw new ServiceException("上级部门不能是当前部门或其下级部门");
+                }
+                if (!"0".equals(parent.getStatus())) {
+                    throw new ServiceException("部门停用，不允许修改");
+                }
                 newAncestors = parent.getAncestors() + "," + parent.getId();
             }
             updateChildrenAncestors(bo.getId(), newAncestors, old.getAncestors());
-            sysDept.setAncestors(newAncestors);
-        } else {
-            sysDept.setAncestors(old.getAncestors());
+            ancestors = newAncestors;
         }
+        SysDept sysDept = MapstructUtil.convert(bo, SysDept.class);
+        sysDept.setAncestors(ancestors);
         int rows = sysDeptMapper.update(sysDept);
-        if ("0".equals(sysDept.getStatus()) && com.jimuqu.common.core.utils.StringUtil.isNotBlank(sysDept.getAncestors())) {
-            List<Long> parentIds = com.jimuqu.common.core.utils.StringUtil.splitTo(
+        if ("0".equals(sysDept.getStatus()) && StringUtil.isNotBlank(sysDept.getAncestors())) {
+            List<Long> parentIds = StringUtil.splitTo(
                     sysDept.getAncestors(), value -> Long.valueOf(String.valueOf(value)));
             sysDeptMapper.update(new SysDept().setStatus("0"), where -> where.in(SysDept::getId, parentIds));
         }
@@ -327,4 +351,5 @@ public class SysDeptServiceImpl implements SysDeptService {
             throw new ServiceException("没有权限访问部门数据！");
         }
     }
+
 }

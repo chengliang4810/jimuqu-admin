@@ -15,7 +15,8 @@ public enum DataScopeType {
     CUSTOM("2"),
     DEPT("3"),
     DEPT_AND_CHILD("4"),
-    SELF("5");
+    SELF("5"),
+    DEPT_AND_CHILD_OR_SELF("6");
 
     private final String code;
 

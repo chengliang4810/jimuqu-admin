@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import cn.hutool.v7.core.text.StrUtil;
 import org.noear.solon.validation.ValidUtils;
+import org.noear.solon.validation.ValidatorException;
 
 import java.util.Map;
 
@@ -35,10 +36,9 @@ public class DefaultExcelListener<T> extends AnalysisEventListener<T> implements
     /**
      * 导入回执
      */
-    private ExcelResult<T> excelResult;
+    private final ExcelResult<T> excelResult = new DefaultExcelResult<>();
 
     public DefaultExcelListener(boolean isValidate) {
-        this.excelResult = new DefaultExcelResult<>();
         this.isValidate = isValidate;
     }
 
@@ -56,19 +56,20 @@ public class DefaultExcelListener<T> extends AnalysisEventListener<T> implements
             Integer rowIndex = excelDataConvertException.getRowIndex();
             Integer columnIndex = excelDataConvertException.getColumnIndex();
             errMsg = StrUtil.format("第{}行-第{}列-表头{}: 解析异常<br/>",
-                    rowIndex + 1, columnIndex + 1, headMap.get(columnIndex));
+                    rowIndex + 1, columnIndex + 1, headMap == null ? "" : headMap.get(columnIndex));
             if (log.isDebugEnabled()) {
-                log.error(errMsg);
+                log.warn(errMsg);
             }
         }
-//        if (exception instanceof ConstraintViolationException constraintViolationException) {
-//            Set<ConstraintViolation<?>> constraintViolations = constraintViolationException.getConstraintViolations();
-//            String constraintViolationsMsg = StreamUtils.join(constraintViolations, ConstraintViolation::getMessage, ", ");
-//            errMsg = StrUtil.format("第{}行数据校验异常: {}", context.readRowHolder().getRowIndex() + 1, constraintViolationsMsg);
-//            if (log.isDebugEnabled()) {
-//                log.error(errMsg);
-//            }
-//        }
+        if (exception instanceof ValidatorException) {
+            errMsg = StrUtil.format("第{}行数据校验异常: {}",
+                    context.readRowHolder().getRowIndex() + 1, exception.getMessage());
+        }
+        if (errMsg == null) {
+            errMsg = StrUtil.format("第{}行数据异常: {}",
+                    context.readRowHolder().getRowIndex() + 1, exception.getMessage());
+            log.warn(errMsg, exception);
+        }
         excelResult.getErrorList().add(errMsg);
         throw new ExcelAnalysisException(errMsg);
     }

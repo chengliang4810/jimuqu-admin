@@ -32,21 +32,23 @@ public class SysDictDataBo extends BoBaseEntity {
     /**
      * 父级ID
      */
-    @NotNull(message = "父级ID不能为空", groups = { AddGroup.class, UpdateGroup.class })
     private Long parentId;
     /**
      * 字典排序
      */
-    private Long dictSort;
+    @NotNull(message = "字典排序不能为空", groups = { AddGroup.class, UpdateGroup.class })
+    private Integer dictSort;
     /**
      * 字典标签
      */
     @NotBlank(message = "字典标签不能为空", groups = { AddGroup.class, UpdateGroup.class })
+    @Length(max = 100, message = "字典标签长度不能超过{max}个字符")
     private String dictLabel;
     /**
      * 字典键值
      */
     @NotBlank(message = "字典键值不能为空", groups = { AddGroup.class, UpdateGroup.class })
+    @Length(max = 100, message = "字典键值长度不能超过{max}个字符")
     private String dictValue;
     /**
      * 字典类型
@@ -56,10 +58,13 @@ public class SysDictDataBo extends BoBaseEntity {
     /**
      * Bell 兼容字段。
      */
+    @NotBlank(message = "字典类型不能为空", groups = { AddGroup.class, UpdateGroup.class })
+    @Length(max = 100, message = "字典类型长度不能超过{max}个字符")
     private String dictType;
     /**
      * 样式属性（其他样式扩展）
      */
+    @Length(max = 100, message = "样式属性长度不能超过{max}个字符")
     private String cssClass;
     /**
      * 表格回显样式

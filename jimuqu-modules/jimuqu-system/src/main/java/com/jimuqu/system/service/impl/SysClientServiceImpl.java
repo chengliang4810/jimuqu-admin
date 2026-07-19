@@ -1,7 +1,9 @@
 package com.jimuqu.system.service.impl;
 
 import cn.hutool.v7.crypto.SecureUtil;
+import cn.hutool.v7.core.collection.CollUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
+import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.mybatis.core.Page;
@@ -58,7 +60,7 @@ public class SysClientServiceImpl implements SysClientService {
      */
     @Override
     public Page<SysClientVo> queryPageList(SysClientQuery query, PageQuery pageQuery) {
-        Page<SysClient> entityPage = buildQueryChain(query).paging(pageQuery.build());
+        Page<SysClient> entityPage = pageQuery.applyOrder(buildQueryChain(query)).paging(pageQuery.build());
         List<SysClientVo> rows = MapstructUtil.convert(entityPage.getRows(), SysClientVo.class);
         rows.forEach(this::fillRuleFields);
         return Page.of(rows, entityPage.getTotal());
@@ -82,7 +84,8 @@ public class SysClientServiceImpl implements SysClientService {
     private QueryChain<SysClient> buildQueryChain(SysClientQuery query) {
         return QueryChain.of(sysClientMapper)
                 .forSearch(true)
-                .where(query);
+                .where(query)
+                .orderBy(SysClient::getId);
     }
 
     /**
@@ -96,7 +99,7 @@ public class SysClientServiceImpl implements SysClientService {
         sysClient.setIpWhitelist(resolveList(bo.getIpWhitelist(), bo.getIpWhitelistList(), false));
         sysClient.setClientId(SecureUtil.md5(bo.getClientKey() + bo.getClientSecret()));
         if (sysClient.getActiveTimeout() == null) {
-            sysClient.setActiveTimeout(-1L);
+            sysClient.setActiveTimeout(1800L);
         }
         if (sysClient.getTimeout() == null) {
             sysClient.setTimeout(604800L);
@@ -151,7 +154,20 @@ public class SysClientServiceImpl implements SysClientService {
      */
     @Override
     public Integer deleteByIds(Collection<Long> ids) {
-        return sysClientMapper.deleteByIds(ids);
+        if (CollUtil.isEmpty(ids)) {
+            return 0;
+        }
+        if (ids.stream().anyMatch(java.util.Objects::isNull)) {
+            throw new ServiceException("客户端ID不能为空");
+        }
+        List<Long> requested = ids.stream().distinct().toList();
+        long existing = QueryChain.of(sysClientMapper)
+                .in(SysClient::getId, requested)
+                .count();
+        if (existing != requested.size()) {
+            throw new ServiceException("客户端不存在");
+        }
+        return sysClientMapper.deleteByIds(requested);
     }
 
     private SysClientVo fillRuleFields(SysClientVo vo) {
@@ -174,7 +190,6 @@ public class SysClientServiceImpl implements SysClientService {
         return String.join(",", values.stream()
                 .map(value -> normalizePath ? normalizePath(value) : StringUtil.trim(value))
                 .filter(StringUtil::isNotBlank)
-                .distinct()
                 .toList());
     }
 
@@ -182,7 +197,6 @@ public class SysClientServiceImpl implements SysClientService {
         return StringUtil.str2List(value, CLIENT_RULE_SEPARATOR_REGEX, true, true).stream()
                 .map(item -> normalizePath ? normalizePath(item) : item)
                 .filter(StringUtil::isNotBlank)
-                .distinct()
                 .toList();
     }
 

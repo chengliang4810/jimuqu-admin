@@ -1,6 +1,7 @@
 package com.jimuqu.system.service.impl;
 
 import cn.xbatis.core.sql.executor.chain.QueryChain;
+import com.jimuqu.common.core.constant.CacheConstants;
 import com.jimuqu.common.core.service.DictService;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.MapstructUtil;
@@ -13,18 +14,20 @@ import com.jimuqu.system.domain.vo.SysDictTypeVo;
 import com.jimuqu.system.domain.query.SysDictTypeQuery;
 import com.jimuqu.system.mapper.SysDictTypeMapper;
 import com.jimuqu.system.mapper.SysDictDataMapper;
+import com.jimuqu.system.service.SysDictDataService;
 import com.jimuqu.system.service.SysDictTypeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
+import org.noear.solon.data.cache.CacheService;
 import org.noear.solon.data.annotation.Transaction;
 import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.v7.core.text.StrUtil;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.stream.Collectors;
 
 
 /**
@@ -40,6 +43,8 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
 
     private final SysDictTypeMapper sysDictTypeMapper;
     private final SysDictDataMapper sysDictDataMapper;
+    private final SysDictDataService sysDictDataService;
+    private final CacheService cacheService;
 
     /**
      * 查询字典类型
@@ -54,7 +59,7 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
      */
     @Override
     public Page<SysDictTypeVo> queryPageList(SysDictTypeQuery query, PageQuery pageQuery) {
-        return buildQueryChain(query)
+        return pageQuery.applyOrder(buildQueryChain(query))
                 .returnType(SysDictTypeVo.class)
                 .paging(pageQuery.build());
     }
@@ -76,7 +81,8 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
     private QueryChain<SysDictType> buildQueryChain(SysDictTypeQuery query) {
         return QueryChain.of(sysDictTypeMapper)
                 .forSearch(true)
-                .where(query);
+                .where(query)
+                .orderBy(SysDictType::getDictId);
     }
 
     /**
@@ -98,14 +104,19 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
     public Boolean updateByBo(SysDictTypeBo bo) {
         SysDictType old = sysDictTypeMapper.getById(bo.getDictId());
         if (old == null) {
-            return false;
+            throw new ServiceException("字典类型不存在");
         }
         if (!ObjUtil.equals(old.getDictKey(), bo.getDictKey())) {
             sysDictDataMapper.update(new SysDictData().setDictTypeKey(bo.getDictKey()),
                     where -> where.eq(SysDictData::getDictTypeKey, old.getDictKey()));
         }
         SysDictType sysDictType = MapstructUtil.convert(bo, SysDictType.class);
-        return sysDictTypeMapper.update(sysDictType) > 0;
+        if (sysDictTypeMapper.update(sysDictType) <= 0) {
+            throw new ServiceException("操作失败");
+        }
+        evictDictCache(old.getDictKey());
+        evictDictCache(sysDictType.getDictKey());
+        return true;
     }
 
     @Override
@@ -121,14 +132,33 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
      */
     @Override
     public Integer deleteByIds(Collection<Long> ids) {
-        for (SysDictType type : QueryChain.of(sysDictTypeMapper)
-                .in(SysDictType::getDictId, ids).list()) {
+        List<Long> requested = ids.stream().distinct().toList();
+        List<SysDictType> types = QueryChain.of(sysDictTypeMapper)
+                .in(SysDictType::getDictId, requested)
+                .list();
+        if (types.size() != requested.size()) {
+            throw new ServiceException("字典类型不存在");
+        }
+        for (SysDictType type : types) {
             if (QueryChain.of(sysDictDataMapper)
                     .eq(SysDictData::getDictTypeKey, type.getDictKey()).exists()) {
                 throw new ServiceException(type.getDictName() + "已分配，不能删除");
             }
         }
-        return sysDictTypeMapper.deleteByIds(ids);
+        int rows = sysDictTypeMapper.deleteByIds(requested);
+        if (rows > 0) {
+            types.forEach(type -> evictDictCache(type.getDictKey()));
+        }
+        return rows;
+    }
+
+    @Override
+    public void resetDictCache() {
+        QueryChain.of(sysDictTypeMapper)
+                .select(SysDictType::getDictKey)
+                .returnType(String.class)
+                .list()
+                .forEach(this::evictDictCache);
     }
 
     @Override
@@ -183,37 +213,33 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
             return Map.of();
         }
 
-        List<SysDictData> dictDataList = QueryChain.of(sysDictDataMapper)
-                .eq(SysDictData::getDictTypeKey, dictType)
-                .list();
-
-        return dictDataList.stream()
-                .collect(Collectors.toMap(
-                        SysDictData::getDictValue,
-                        SysDictData::getDictLabel,
-                        (existing, replacement) -> existing
-                ));
+        Map<String, String> values = new LinkedHashMap<>();
+        sysDictDataService.queryListByTypeKey(dictType)
+                .forEach(data -> values.putIfAbsent(data.getDictValue(), data.getDictLabel()));
+        return values;
     }
 
     /**
      * 根据字典类型和字典值获取单个字典标签
      */
     private String getSingleDictLabel(String dictType, String dictValue) {
-        SysDictData dictData = QueryChain.of(sysDictDataMapper)
-                .eq(SysDictData::getDictTypeKey, dictType)
-                .eq(SysDictData::getDictValue, dictValue)
-                .get();
-        return dictData != null ? dictData.getDictLabel() : "";
+        return getAllDictByDictType(dictType).getOrDefault(dictValue, "");
     }
 
     /**
      * 根据字典类型和字典标签获取单个字典值
      */
     private String getSingleDictValue(String dictType, String dictLabel) {
-        SysDictData dictData = QueryChain.of(sysDictDataMapper)
-                .eq(SysDictData::getDictTypeKey, dictType)
-                .eq(SysDictData::getDictLabel, dictLabel)
-                .get();
-        return dictData != null ? dictData.getDictValue() : "";
+        return getAllDictByDictType(dictType).entrySet().stream()
+                .filter(entry -> ObjUtil.equals(entry.getValue(), dictLabel))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse("");
+    }
+
+    private void evictDictCache(String dictTypeKey) {
+        if (StrUtil.isNotBlank(dictTypeKey)) {
+            cacheService.remove(CacheConstants.SYS_DICT_KEY + dictTypeKey);
+        }
     }
 }

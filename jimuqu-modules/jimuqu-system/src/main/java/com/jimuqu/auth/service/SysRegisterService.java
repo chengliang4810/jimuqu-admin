@@ -9,6 +9,7 @@ import com.jimuqu.common.core.enums.UserType;
 import com.jimuqu.common.core.exception.user.CaptchaException;
 import com.jimuqu.common.core.exception.user.CaptchaExpireException;
 import com.jimuqu.common.core.exception.user.UserException;
+import com.jimuqu.common.core.utils.MessageUtils;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.log.event.LogininforEvent;
 import com.jimuqu.common.web.config.properties.CaptchaProperties;
@@ -64,13 +65,13 @@ public class SysRegisterService {
         boolean exist = userMapper.exists(Where.create()
                 .eq(SysUser::getUserName, sysUser.getUserName()));
         if (exist) {
-            throw new UserException("保存用户 {} 失败，注册账号已存在", username);
+            throw new UserException("user.register.save.error", username);
         }
         boolean regFlag = userService.registerUser(sysUser);
         if (!regFlag) {
             throw new UserException("user.register.error" );
         }
-        recordLogininfor(username, Constants.REGISTER, "注册成功" );
+        recordLogininfor(username, Constants.REGISTER, MessageUtils.message("user.register.success"));
     }
 
     /**
@@ -85,11 +86,11 @@ public class SysRegisterService {
         String captcha = cacheService.get(verifyKey, String.class);
         cacheService.remove(verifyKey);
         if (captcha == null) {
-            recordLogininfor(username, Constants.REGISTER, "验证码已失效" );
+            recordLogininfor(username, Constants.LOGIN_FAIL, MessageUtils.message("user.jcaptcha.expire"));
             throw new CaptchaExpireException();
         }
-        if (!code.equalsIgnoreCase(captcha)) {
-            recordLogininfor(username, Constants.REGISTER, "验证码错误" );
+        if (code == null || !code.equalsIgnoreCase(captcha)) {
+            recordLogininfor(username, Constants.LOGIN_FAIL, MessageUtils.message("user.jcaptcha.error"));
             throw new CaptchaException();
         }
     }

@@ -38,12 +38,12 @@ public class SysDictTypeQuery implements Serializable, ObjectConditionLifeCycle 
     /**
      * 字典名称
      */
-    @Condition(value = EQ)
+    @Condition(value = LIKE)
     private String dictName;
     /**
      * 字典类型 L 列表 T 树
      */
-    @Condition(value = EQ, property = "dictKey")
+    @Condition(value = LIKE, property = "dictKey")
     private String dictType;
     /**
      * 备注

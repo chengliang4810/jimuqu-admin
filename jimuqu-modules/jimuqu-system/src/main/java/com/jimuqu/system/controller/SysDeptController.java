@@ -2,7 +2,6 @@ package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.hutool.v7.core.convert.ConvertUtil;
-import cn.hutool.v7.core.tree.MapTree;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.utils.StringUtil;
@@ -52,13 +51,6 @@ public class SysDeptController extends BaseController {
     @SaCheckPermission("system:dept:list")
     public List<SysDeptVo> list(SysDeptQuery query) {
         return deptService.queryList(query);
-    }
-
-    @Get
-    @Mapping("/tree")
-    @SaCheckPermission("system:dept:list")
-    public R<List<MapTree<Long>>> deptTree(SysDeptQuery query) {
-        return R.ok(deptService.selectDeptTreeList(query));
     }
 
     @Get

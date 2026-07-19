@@ -1,8 +1,8 @@
 # 通用配置
-#设定最大的请求包大小（或表单项的值大小）//默认: 2m
-server.request.maxBodySize: 2mb #kb,mb
+# 与 Bell 6.X 的总上传请求上限保持一致
+server.request.maxBodySize: 20mb #kb,mb
 #设定最大的上传文件大小
-server.request.maxFileSize: 2mb #kb,mb (默认使用 maxBodySize 配置值)
+server.request.maxFileSize: 10mb #kb,mb (默认使用 maxBodySize 配置值)
 #设定最大的请求头大小//默认: 8k
 server.request.maxHeaderSize: 8kb #kb,mb
 #设定请求体编码
@@ -19,11 +19,11 @@ solon.serialization.json:
   dateAsFormat: 'yyyy-MM-dd HH:mm:ss' #配置日期格式（默认输出为时间戳）
   dateAsTimeZone: 'GMT+8' #配置时区
   dateAsTicks: false #将date转为毫秒数（和 dateAsFormat 二选一）
-  longAsString: true #将long型转为字符串输出 （默认为false）
+  longAsString: false #仅超出 JS 安全整数范围的 long 转为字符串，由公共编码器处理
   boolAsInt: false   #将bool型转为字符串输出 （默认为false）
   nullStringAsEmpty: true
   nullBoolAsFalse: false
   nullNumberAsZero: false
-  nullArrayAsEmpty: true
+  nullArrayAsEmpty: false
   nullAsWriteable: true #输出所有null值
   enumAsName: true #枚举使用名字（v2.2.1 后支持）

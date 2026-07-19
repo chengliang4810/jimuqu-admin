@@ -31,5 +31,5 @@ public class PageResult<T> implements Serializable {
     /**
      * 数据总数。
      */
-    private Integer total = 0;
+    private long total;
 }

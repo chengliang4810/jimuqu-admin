@@ -42,7 +42,7 @@
 
 ## 项目概述
 
-这是一个基于 **Solon** 框架的轻量级管理系统框架 **jimuqu-admin**。它是一个中文开源项目，提供了完整的管理后台系统，包含用户管理、权限管理和代码生成功能。
+这是一个基于 **Solon** 框架的轻量级管理系统框架 **jimuqu-admin**。它是一个中文开源项目，提供用户、权限、文件、日志、消息和系统配置等管理后台功能。
 
 ## 构建和开发命令
 
@@ -50,10 +50,6 @@
 ```bash
 # 构建整个项目
 mvn clean package
-
-# 使用指定环境运行 (dev/prod)
-mvn spring-boot:run -Pdev
-mvn spring-boot:run -Pprod
 
 # 构建时跳过测试 (默认行为)
 mvn clean package -DskipTests
@@ -64,11 +60,11 @@ mvn test
 
 ### 应用启动
 ```bash
-# 启动应用 (默认使用 dev 环境)
-java -jar jimuqu.jar
+# 启动应用 (默认使用 dev 环境，默认端口 5320)
+java -jar jimuqu-admin/target/jimuqu-admin.jar
 
 # 使用指定环境启动
-java -jar jimuqu.jar --spring.profiles.active=prod
+java -jar jimuqu-admin/target/jimuqu-admin.jar --solon.env=prod
 ```
 
 ### 数据库设置
@@ -94,7 +90,6 @@ java -jar jimuqu.jar --spring.profiles.active=prod
   - `jimuqu-common-social`: 第三方认证
 - **jimuqu-modules**: 业务模块
   - `jimuqu-system`: 核心系统功能 (用户、角色、权限)
-  - `jimuqu-generator`: 代码生成工具
 
 ### 核心技术
 - **Solon**: 轻量级 Java 应用框架 (类似 Spring Boot)
@@ -103,7 +98,7 @@ java -jar jimuqu.jar --spring.profiles.active=prod
 - **AutoTable**: 自动数据库架构管理
 - **Hutool**: Java 工具库
 - **MapStruct Plus**: 对象映射
-- **EasyExcel**: Excel 处理
+- **FastExcel**: Excel 处理
 
 ### 核心模式
 
@@ -137,7 +132,7 @@ Page<T> page = Page.of(currentPage, pageSize);
 ### 配置文件
 - `app.yml`: 主配置 (端口、应用信息、安全)
 - `app-dev.yml`: 开发环境 (MySQL 数据源)
-- `app-prod.yml`: 生产环境 (MariaDB 数据源)
+- `app-prod.yml`: 生产环境 (可通过环境变量配置 MySQL 数据源)
 - 其他配置从 `config/*.yml` 加载
 
 ### 数据库配置

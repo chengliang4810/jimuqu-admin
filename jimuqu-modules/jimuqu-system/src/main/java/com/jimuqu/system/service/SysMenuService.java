@@ -146,7 +146,7 @@ public interface SysMenuService {
     Boolean updateByBo(SysMenuBo bo);
 
     /**
-     * 删除代码生成模板信息
+     * 删除菜单信息
      *
      * @param menuIdList 菜单ID
      * @return {@link Integer } 删除成功条数

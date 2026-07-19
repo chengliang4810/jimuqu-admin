@@ -15,18 +15,22 @@ public class ApiEncryptSupport {
     }
 
     public static boolean enabled() {
-        return Solon.cfg().getBool("api-decrypt.enabled", true);
+        var config = Solon.cfg();
+        return config != null && config.getBool("api-decrypt.enabled", true);
     }
 
     public static String headerFlag() {
-        return Solon.cfg().get("api-decrypt.headerFlag", "encrypt-key");
+        var config = Solon.cfg();
+        return config == null ? "encrypt-key" : config.get("api-decrypt.headerFlag", "encrypt-key");
     }
 
     public static String publicKey() {
-        return Solon.cfg().get("api-decrypt.publicKey");
+        var config = Solon.cfg();
+        return config == null ? null : config.get("api-decrypt.publicKey");
     }
 
     public static String privateKey() {
-        return Solon.cfg().get("api-decrypt.privateKey");
+        var config = Solon.cfg();
+        return config == null ? null : config.get("api-decrypt.privateKey");
     }
 }

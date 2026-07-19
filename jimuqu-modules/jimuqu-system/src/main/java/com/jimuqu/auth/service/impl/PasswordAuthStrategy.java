@@ -17,6 +17,7 @@ import com.jimuqu.common.core.exception.user.CaptchaException;
 import com.jimuqu.common.core.exception.user.CaptchaExpireException;
 import com.jimuqu.common.core.exception.user.UserException;
 import com.jimuqu.common.core.utils.JsonUtil;
+import com.jimuqu.common.core.utils.MessageUtils;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.common.web.config.properties.CaptchaProperties;
@@ -39,8 +40,6 @@ import org.noear.solon.validation.ValidUtils;
 @Component("password" + AuthStrategy.BASE_NAME)
 public class PasswordAuthStrategy implements AuthStrategyService {
 
-//    @Inject
-//    private ConfigService configService;
     @Inject
     private CacheService cacheService;
     @Inject
@@ -75,7 +74,7 @@ public class PasswordAuthStrategy implements AuthStrategyService {
 
         LoginVo loginVo = new LoginVo();
         loginVo.setAccessToken(StpUtil.getTokenValue());
-        loginVo.setExpireIn(Math.toIntExact(StpUtil.getTokenTimeout()));
+        loginVo.setExpireIn(StpUtil.getTokenTimeout());
         loginVo.setClientId(client.getClientId());
         return loginVo;
     }
@@ -92,11 +91,13 @@ public class PasswordAuthStrategy implements AuthStrategyService {
         String captcha = cacheService.get(verifyKey, String.class);
         cacheService.remove(verifyKey);
         if (captcha == null) {
-            loginService.recordLogininfor(username, Constants.LOGIN_FAIL, "验证码过期" );
+            loginService.recordLogininfor(username, Constants.LOGIN_FAIL,
+                    MessageUtils.message("user.jcaptcha.expire"));
             throw new CaptchaExpireException();
         }
         if (code == null || !code.equalsIgnoreCase(captcha)) {
-            loginService.recordLogininfor(username, Constants.LOGIN_FAIL, "验证码错误" );
+            loginService.recordLogininfor(username, Constants.LOGIN_FAIL,
+                    MessageUtils.message("user.jcaptcha.error"));
             throw new CaptchaException();
         }
     }

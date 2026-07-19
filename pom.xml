@@ -30,6 +30,8 @@
         <lombok.version>1.18.42</lombok.version>
         <!-- 工具类 -->
         <hutool.version>7.0.0-M5</hutool.version>
+        <!-- 第三方组件仍依赖的 Hutool 5，与 cn.hutool.v7 包名隔离 -->
+        <hutool5.version>5.8.47</hutool5.version>
         <!-- 实体类转换工具 -->
         <mapstruct-plus.version>1.5.0</mapstruct-plus.version>
         <mapstruct-plus.lombok.version>0.2.0</mapstruct-plus.lombok.version>
@@ -53,7 +55,7 @@
         <!-- 三方认证 -->
         <justauth.version>1.16.7</justauth.version>
         <!-- 短信 -->
-        <sms4j.version>3.3.4</sms4j.version>
+        <sms4j.version>3.3.5</sms4j.version>
         <!-- 邮件 -->
         <jakarta.mail.version>2.0.5</jakarta.mail.version>
         <jakarta.mail.api.version>2.1.5</jakarta.mail.api.version>
@@ -111,6 +113,15 @@
                 <groupId>cn.hutool.v7</groupId>
                 <artifactId>hutool-bom</artifactId>
                 <version>${hutool.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- SMS4J、x-file-storage 等第三方组件依赖的 Hutool 5 -->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-bom</artifactId>
+                <version>${hutool5.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

@@ -44,7 +44,7 @@ public interface SysFileService {
     List<SysFileVo> queryList(SysFileQuery query);
 
     /**
-     * 批量删除代码生成模板信息
+     * 批量删除文件信息
      *
      * @param ids 文件记录主键列表
      * @return {@link Integer } 删除成功条数
@@ -54,6 +54,14 @@ public interface SysFileService {
     Page<SysOssVo> queryOssPageList(SysFileQuery query, PageQuery pageQuery);
 
     List<SysOssVo> queryOssByIds(Collection<String> ids);
+
+    /**
+     * 将逗号分隔的 OSS ID 转换为可访问地址。
+     *
+     * @param ids OSS ID，多个值使用逗号分隔
+     * @return 可访问地址，多个值使用逗号分隔
+     */
+    String selectUrlByIds(String ids);
 
     DownloadedFile download(String id);
 

@@ -7,8 +7,10 @@ import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Condition;
 import org.noear.solon.annotation.Configuration;
 import org.noear.solon.annotation.Inject;
-import org.noear.solon.core.util.RunUtil;
 import org.noear.solon.web.sse.SseEvent;
+
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * SSE 自动装配
@@ -25,8 +27,8 @@ public class SseAutoConfig {
      * @return SSE emitters 管理器
      */
     @Bean
-    public SseEmitterManager sseEmitterManager() {
-        return new SseEmitterManager();
+    public SseEmitterManager sseEmitterManager(@Inject ScheduledExecutorService scheduledExecutorService) {
+        return new SseEmitterManager(scheduledExecutorService);
     }
 
     /**
@@ -43,12 +45,13 @@ public class SseAutoConfig {
      * @param sseEmitterManager SSE emitters 管理器
      */
     @Bean
-    @Condition(onExpression = "${sse.heartbeat:false} == true")
-    public void registerSseHeartbeat(@Inject SseEmitterManager sseEmitterManager){
-        long heartbeatInterval = Solon.cfg().getLong("sse.heartbeatInterval", 10000L);
-        RunUtil.scheduleWithFixedDelay(() -> {
-            sseEmitterManager.sendEvent(new SseEvent().name("ping"));
-        }, 3000, heartbeatInterval);
+    @Condition(onExpression = "${sse.heartbeat:true} == true")
+    public void registerSseHeartbeat(@Inject SseEmitterManager sseEmitterManager,
+                                     @Inject ScheduledExecutorService scheduledExecutorService) {
+        long heartbeatInterval = Solon.cfg().getLong("sse.heartbeatInterval", 60000L);
+        scheduledExecutorService.scheduleWithFixedDelay(() -> {
+            sseEmitterManager.sendEvent(new SseEvent().comment("heartbeat"));
+        }, heartbeatInterval, heartbeatInterval, TimeUnit.MILLISECONDS);
     }
 
 }

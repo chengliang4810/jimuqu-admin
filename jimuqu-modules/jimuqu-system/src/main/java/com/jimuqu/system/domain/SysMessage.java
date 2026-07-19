@@ -9,12 +9,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.dromara.autotable.annotation.AutoColumn;
+import org.dromara.autotable.annotation.TableIndex;
 import org.dromara.autotable.annotation.mysql.MysqlTypeConstant;
 
 @Data
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
 @Table("sys_message")
+@TableIndex(name = "sys_message_category_time", fields = {"category", "createTime"})
 public class SysMessage extends BaseEntity {
 
     @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)

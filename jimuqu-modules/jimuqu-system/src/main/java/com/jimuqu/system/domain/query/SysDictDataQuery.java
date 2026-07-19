@@ -41,11 +41,11 @@ public class SysDictDataQuery implements Serializable, ObjectConditionLifeCycle 
      * 字典排序
      */
     @Condition(value = EQ)
-    private Long dictSort;
+    private Integer dictSort;
     /**
      * 字典标签
      */
-    @Condition(value = EQ)
+    @Condition(value = LIKE)
     private String dictLabel;
     /**
      * 字典键值

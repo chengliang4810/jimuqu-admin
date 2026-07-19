@@ -26,9 +26,9 @@ solon.dataSources.jimuqu!: #数据源（!结尾表示 typed=true）
 # 表自动配置 注意删除列会导致列数据一起删除，如果比较敏感请自行关闭配置
 auto-table:
   # 自动删除数据库中多余的列
-  auto-drop-column: true
+  auto-drop-column: false
   # 自动删除数据库中多余的索引
-  auto-drop-index: true
+  auto-drop-index: false
 
 # 记录器级别的配置示例
 solon.logging.logger:

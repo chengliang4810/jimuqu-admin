@@ -1,7 +1,9 @@
 package com.jimuqu.common.satoken.config;
 
 import cn.dev33.satoken.dao.SaTokenDao;
+import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
 import cn.dev33.satoken.stp.StpInterface;
+import cn.dev33.satoken.stp.StpLogic;
 import com.jimuqu.common.satoken.core.PrefixedSaTokenDaoForRedisson;
 import com.jimuqu.common.satoken.core.SaPermissionImpl;
 import org.noear.solon.Solon;
@@ -13,6 +15,16 @@ import org.noear.solon.cache.redisson.RedissonCacheService;
 
 @Configuration
 public class SaTokenConfig {
+
+    /**
+     * 创建 Sa-Token JWT 登录逻辑。
+     *
+     * @return JWT Simple 登录逻辑
+     */
+    @Bean
+    public StpLogic getStpLogicJwt() {
+        return new StpLogicJwtForSimple();
+    }
 
     /**
      * 权限接口实现(使用bean注入方便用户替换)

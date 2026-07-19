@@ -22,6 +22,11 @@
             <groupId>cn.dev33</groupId>
             <artifactId>sa-token-solon-plugin</artifactId>
         </dependency>
+        <!-- Sa-Token 整合 JWT（Simple 模式） -->
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-jwt</artifactId>
+        </dependency>
         <!-- sa-token redisson依赖, 使用redis时加入。 -->
         <dependency>
             <groupId>cn.dev33</groupId>
@@ -38,11 +43,10 @@
 <!--            <groupId>org.noear</groupId>-->
 <!--            <artifactId>sa-token-snack4</artifactId>-->
 <!--        </dependency>-->
-
-        <!-- Sa-Token 整合 API Key -->
         <dependency>
-            <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-apikey</artifactId>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

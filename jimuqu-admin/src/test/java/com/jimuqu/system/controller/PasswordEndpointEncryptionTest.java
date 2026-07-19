@@ -13,6 +13,9 @@ class PasswordEndpointEncryptionTest {
 
     @Test
     void passwordWriteEndpointsRequireEncryptedRequests() throws NoSuchMethodException {
+        assertNotNull(AuthController.class
+                .getMethod("login", String.class)
+                .getAnnotation(ApiEncrypt.class));
         assertNotNull(SysUserController.class
                 .getMethod("resetPwd", SysUserBo.class)
                 .getAnnotation(ApiEncrypt.class));

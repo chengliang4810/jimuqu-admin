@@ -1,6 +1,6 @@
 package com.jimuqu.common.core.exception.base;
 
-import com.jimuqu.common.core.utils.StringUtil;
+import com.jimuqu.common.core.utils.MessageUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -51,7 +51,7 @@ public class BaseException extends RuntimeException {
 
     @Override
     public String getMessage() {
-        return StringUtil.format(message, args);
+        return MessageUtils.message(message, args);
     }
 
 }

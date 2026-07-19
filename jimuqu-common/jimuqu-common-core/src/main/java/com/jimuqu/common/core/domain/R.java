@@ -43,6 +43,10 @@ public class R<T> implements Serializable {
         return restResult(data, SUCCESS, "操作成功");
     }
 
+    public static <T> R<T> data(T data) {
+        return restResult(data, SUCCESS, "操作成功");
+    }
+
     public static <T> R<T> ok(String msg) {
         return restResult(null, SUCCESS, msg);
     }
@@ -105,6 +109,6 @@ public class R<T> implements Serializable {
     }
 
     public static <T> Boolean isSuccess(R<T> ret) {
-        return R.SUCCESS == ret.getCode();
+        return ret != null && R.SUCCESS == ret.getCode();
     }
 }

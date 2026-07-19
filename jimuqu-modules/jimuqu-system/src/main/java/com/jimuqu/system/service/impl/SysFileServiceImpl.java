@@ -5,16 +5,22 @@ import cn.hutool.core.lang.Dict;
 import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.StrUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
+import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.JsonUtil;
+import com.jimuqu.common.core.utils.file.FileUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.system.domain.SysFile;
 import com.jimuqu.system.domain.SysFilePart;
+import com.jimuqu.system.domain.SysOssConfig;
+import com.jimuqu.system.domain.SysUser;
 import com.jimuqu.system.domain.query.SysFileQuery;
 import com.jimuqu.system.domain.vo.SysFileVo;
 import com.jimuqu.system.domain.vo.SysOssVo;
 import com.jimuqu.system.mapper.SysFileMapper;
 import com.jimuqu.system.mapper.SysFilePartMapper;
+import com.jimuqu.system.mapper.SysOssConfigMapper;
+import com.jimuqu.system.mapper.SysUserMapper;
 import com.jimuqu.system.service.SysFileService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -27,10 +33,16 @@ import org.dromara.x.file.storage.core.upload.FilePartInfo;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.Solon;
 import org.noear.solon.core.handle.DownloadedFile;
+import org.noear.solon.core.handle.Context;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 /**
@@ -44,8 +56,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SysFileServiceImpl implements SysFileService, FileRecorder {
 
+    private static final long PRIVATE_URL_VALIDITY_MILLIS = 120_000L;
+
     private final SysFileMapper sysFileMapper;
     private final SysFilePartMapper sysFilePartMapper;
+    private final SysOssConfigMapper sysOssConfigMapper;
+    private final SysUserMapper sysUserMapper;
 
     /**
      * 查询文件记录
@@ -60,9 +76,8 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
      */
     @Override
     public Page<SysFileVo> queryPageList(SysFileQuery query, PageQuery pageQuery) {
-        return buildQueryChain(query)
-                .returnType(SysFileVo.class)
-                .paging(pageQuery.build());
+        QueryChain<SysFile> chain = buildQueryChain(query);
+        return pageQuery.applyOrder(chain).returnType(SysFileVo.class).paging(pageQuery.build());
     }
 
     /**
@@ -83,7 +98,8 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
     private QueryChain<SysFile> buildQueryChain(SysFileQuery query) {
         return QueryChain.of(sysFileMapper)
                 .forSearch(true)
-                .where(query);
+                .where(query)
+                .orderBy(SysFile::getId);
     }
 
     /**
@@ -97,7 +113,12 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
     @Override
     public Page<SysOssVo> queryOssPageList(SysFileQuery query, PageQuery pageQuery) {
         Page<SysFileVo> page = queryPageList(query, pageQuery);
-        return Page.of(page.getRows().stream().map(this::toOssVo).toList(), page.getTotal());
+        Set<String> privatePlatforms = queryPrivatePlatforms(page.getRows());
+        List<SysOssVo> rows = page.getRows().stream()
+                .map(file -> toOssVo(file, privatePlatforms, false))
+                .toList();
+        fillCreatorNames(rows);
+        return Page.of(rows, page.getTotal());
     }
 
     @Override
@@ -105,52 +126,159 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }
-        return QueryChain.of(sysFileMapper)
-                .where(where -> where.in(SysFile::getId, ids))
-                .returnType(SysFileVo.class)
-                .list()
-                .stream()
-                .map(this::toOssVo)
+        List<String> uniqueIds = ids.stream()
+                .filter(Objects::nonNull)
+                .distinct()
                 .toList();
+        if (uniqueIds.isEmpty()) {
+            return List.of();
+        }
+        List<SysFileVo> files = QueryChain.of(sysFileMapper)
+                .where(where -> where.in(SysFile::getId, uniqueIds))
+                .returnType(SysFileVo.class)
+                .list();
+        Set<String> privatePlatforms = queryPrivatePlatforms(files);
+        Map<String, SysFileVo> filesById = files.stream()
+                .collect(Collectors.toMap(SysFileVo::getId, file -> file));
+        List<SysOssVo> rows = ids.stream()
+                .map(filesById::get)
+                .filter(Objects::nonNull)
+                .map(file -> toOssVo(file, privatePlatforms, true))
+                .toList();
+        fillCreatorNames(rows);
+        return rows;
+    }
+
+    @Override
+    public String selectUrlByIds(String ids) {
+        if (StrUtil.isBlank(ids)) {
+            return "";
+        }
+        List<String> fileIds = Arrays.stream(ids.split(","))
+                .map(String::trim)
+                .filter(id -> !id.isEmpty())
+                .toList();
+        return queryOssByIds(fileIds).stream()
+                .map(SysOssVo::getUrl)
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining(","));
     }
 
     @Override
     public DownloadedFile download(String id) {
         SysFile file = sysFileMapper.getById(id);
         if (file == null) {
-            throw new IllegalArgumentException("文件数据不存在");
+            throw new ServiceException("文件数据不存在!");
         }
         byte[] content = fileStorageService().download(toFileInfo(file)).bytes();
         String contentType = StrUtil.blankToDefault(file.getContentType(), "application/octet-stream");
+        String encodedName = FileUtil.percentEncode(file.getOriginalFilename());
+        Context.current().headerSet("Access-Control-Expose-Headers", "Content-Disposition,download-filename");
+        Context.current().headerSet("download-filename", encodedName);
         return new DownloadedFile(contentType, content, file.getOriginalFilename()).asAttachment(true);
     }
 
     @Override
     public boolean deleteOssByIds(Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return false;
+        }
+        if (ids.stream().anyMatch(Objects::isNull)) {
+            throw new ServiceException("文件ID不能为空");
+        }
+        List<String> requested = ids.stream().distinct().toList();
+        List<SysFile> files = QueryChain.of(sysFileMapper)
+                .where(where -> where.in(SysFile::getId, requested))
+                .list();
+        if (files.size() != requested.size()) {
+            throw new ServiceException("文件数据不存在!");
+        }
+        Map<String, SysFile> filesById = files.stream()
+                .collect(Collectors.toMap(SysFile::getId, file -> file));
         boolean deleted = false;
-        for (String id : ids) {
-            SysFile file = sysFileMapper.getById(id);
-            if (file != null) {
-                deleted |= fileStorageService().delete(toFileInfo(file));
-            }
+        for (String id : requested) {
+            deleted |= fileStorageService().delete(toFileInfo(filesById.get(id)));
         }
         return deleted;
     }
 
-    private FileStorageService fileStorageService() {
+    FileStorageService fileStorageService() {
         return Solon.context().getBean(FileStorageService.class);
     }
 
-    private SysOssVo toOssVo(SysFileVo file) {
+    private SysOssVo toOssVo(SysFileVo file, Set<String> privatePlatforms, boolean allowUrlFallback) {
         return new SysOssVo()
                 .setOssId(file.getId())
                 .setFileName(file.getFilename())
                 .setOriginalName(file.getOriginalFilename())
-                .setFileSuffix(file.getExt())
-                .setUrl(file.getUrl())
+                .setFileSuffix(toBellFileSuffix(file.getExt()))
+                .setUrl(allowUrlFallback
+                        ? resolveAccessUrlLenient(file, privatePlatforms)
+                        : resolveAccessUrl(file, privatePlatforms))
+                .setExt1(file.getAttr())
                 .setCreateTime(file.getCreateTime())
                 .setCreateBy(file.getCreateBy())
                 .setService(file.getPlatform());
+    }
+
+    static String toBellFileSuffix(String extension) {
+        if (extension == null || extension.isBlank() || extension.startsWith(".")) {
+            return extension;
+        }
+        return "." + extension;
+    }
+
+    private Set<String> queryPrivatePlatforms(List<SysFileVo> files) {
+        List<String> platforms = files.stream()
+                .map(SysFileVo::getPlatform)
+                .filter(Objects::nonNull)
+                .filter(platform -> !platform.isBlank())
+                .distinct()
+                .toList();
+        if (platforms.isEmpty()) {
+            return Set.of();
+        }
+        return QueryChain.of(sysOssConfigMapper)
+                .select(SysOssConfig::getConfigKey)
+                .where(where -> where.in(SysOssConfig::getConfigKey, platforms)
+                        .eq(SysOssConfig::getAccessPolicy, "0"))
+                .list().stream()
+                .map(SysOssConfig::getConfigKey)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    String resolveAccessUrl(SysFileVo file, Set<String> privatePlatforms) {
+        if (!privatePlatforms.contains(file.getPlatform())) {
+            return file.getUrl();
+        }
+        FileStorageService storageService = fileStorageService();
+        if (!storageService.isSupportPresignedUrl(file.getPlatform())) {
+            return file.getUrl();
+        }
+        SysFile entity = BeanUtil.copyProperties(file, SysFile.class);
+        Date expiration = new Date(System.currentTimeMillis() + PRIVATE_URL_VALIDITY_MILLIS);
+        return storageService.generatePresignedUrl(toFileInfo(entity), expiration);
+    }
+
+    String resolveAccessUrlLenient(SysFileVo file, Set<String> privatePlatforms) {
+        try {
+            return resolveAccessUrl(file, privatePlatforms);
+        } catch (RuntimeException exception) {
+            log.debug("生成 OSS 临时访问地址失败，回退数据库地址: {}", file.getId(), exception);
+            return file.getUrl();
+        }
+    }
+
+    private void fillCreatorNames(List<SysOssVo> files) {
+        List<Long> userIds = files.stream().map(SysOssVo::getCreateBy).filter(Objects::nonNull).distinct().toList();
+        if (userIds.isEmpty()) {
+            return;
+        }
+        Map<Long, String> names = QueryChain.of(sysUserMapper)
+                .select(SysUser::getId, SysUser::getUserName)
+                .where(where -> where.in(SysUser::getId, userIds))
+                .list().stream().collect(Collectors.toMap(SysUser::getId, SysUser::getUserName));
+        files.forEach(file -> file.setCreateByName(names.get(file.getCreateBy())));
     }
 
 

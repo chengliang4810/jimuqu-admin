@@ -1,7 +1,10 @@
 package com.jimuqu.system.domain.vo;
 
+import cn.idev.excel.annotation.ExcelIgnoreUnannotated;
 import cn.idev.excel.annotation.ExcelProperty;
 import cn.xbatis.db.annotations.ResultEntity;
+import com.jimuqu.common.excel.annotation.ExcelDictFormat;
+import com.jimuqu.common.excel.convert.ExcelDictConvert;
 import com.jimuqu.system.domain.SysLoginInfo;
 import lombok.Data;
 
@@ -10,6 +13,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Data
+@ExcelIgnoreUnannotated
 @ResultEntity(SysLoginInfo.class)
 public class SysLoginInfoVo implements Serializable {
 
@@ -22,11 +26,13 @@ public class SysLoginInfoVo implements Serializable {
     private String userName;
     @ExcelProperty("客户端")
     private String clientKey;
-    @ExcelProperty("设备类型")
+    @ExcelProperty(value = "设备类型", converter = ExcelDictConvert.class)
+    @ExcelDictFormat(dictType = "sys_device_type")
     private String deviceType;
-    @ExcelProperty("状态")
+    @ExcelProperty(value = "登录状态", converter = ExcelDictConvert.class)
+    @ExcelDictFormat(dictType = "sys_common_status")
     private String status;
-    @ExcelProperty("登录IP")
+    @ExcelProperty("登录地址")
     private String ipaddr;
     @ExcelProperty("登录地点")
     private String loginLocation;
@@ -36,6 +42,6 @@ public class SysLoginInfoVo implements Serializable {
     private String os;
     @ExcelProperty("提示消息")
     private String msg;
-    @ExcelProperty("登录时间")
+    @ExcelProperty("访问时间")
     private Date loginTime;
 }

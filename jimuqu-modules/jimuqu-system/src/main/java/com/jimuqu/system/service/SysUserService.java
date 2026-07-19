@@ -3,6 +3,7 @@ package com.jimuqu.system.service;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.system.domain.bo.SysUserBo;
+import com.jimuqu.system.domain.vo.SysUserExportVo;
 import com.jimuqu.system.domain.vo.SysUserImportVo;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.domain.query.SysUserQuery;
@@ -45,18 +46,18 @@ public interface SysUserService {
     /**
      * 根据用户ID查询用户所属角色组
      *
-     * @param userName 用户名
+     * @param userId 用户ID
      * @return 结果
      */
-    String selectUserRoleGroup(String userName);
+    String selectUserRoleGroup(Long userId);
 
     /**
      * 根据用户ID查询用户所属岗位组
      *
-     * @param userName 用户名
+     * @param userId 用户ID
      * @return 结果
      */
-    String selectUserPostGroup(String userName);
+    String selectUserPostGroup(Long userId);
 
     /**
      * 根据条件分页查询已分配用户角色列表
@@ -90,6 +91,14 @@ public interface SysUserService {
      * @return {@link List }<{@link SysUserVo }> 用户信息列表
      */
     List<SysUserVo> queryList(SysUserQuery query);
+
+    /**
+     * 查询用户导出列表，并补全部门负责人账号。
+     *
+     * @param query 查询条件对象
+     * @return 用户导出列表
+     */
+    List<SysUserExportVo> selectUserExportList(SysUserQuery query);
 
     /**
      * 通过部门id查询当前部门所有用户
@@ -152,6 +161,15 @@ public interface SysUserService {
     int updateUserProfile(SysUserBo user);
 
     /**
+     * 修改当前登录用户自己的密码。
+     *
+     * @param userId   当前登录用户ID
+     * @param password 密码
+     * @return 结果
+     */
+    boolean resetOwnUserPwd(Long userId, String password);
+
+    /**
      * 修改用户状态
      *
      * @param userId 用户ID
@@ -179,7 +197,7 @@ public interface SysUserService {
     boolean resetUserPwd(Long userId, String password);
 
     /**
-     * 批量删除代码生成模板信息
+     * 批量删除用户信息
      *
      * @param ids 用户信息主键列表
      * @return {@link Integer } 删除成功条数

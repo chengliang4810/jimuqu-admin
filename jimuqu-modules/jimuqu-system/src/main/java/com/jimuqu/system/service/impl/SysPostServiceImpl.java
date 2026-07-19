@@ -9,6 +9,7 @@ import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.common.mybatis.model.DataScopeRule;
 import com.jimuqu.common.mybatis.service.ISysDataScopeService;
 import com.jimuqu.common.satoken.utils.LoginHelper;
+import com.jimuqu.system.domain.SysDept;
 import com.jimuqu.system.domain.SysPost;
 import com.jimuqu.system.domain.SysUserPost;
 import com.jimuqu.system.domain.bo.SysPostBo;
@@ -25,8 +26,13 @@ import cn.hutool.v7.core.util.ObjUtil;
 import org.noear.solon.annotation.Component;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 /**
@@ -50,7 +56,12 @@ public class SysPostServiceImpl implements SysPostService {
      */
     @Override
     public SysPostVo queryById(Long id) {
-        return sysPostMapper.getVoById(id);
+        QueryChain<SysPost> queryChain = QueryChain.of(sysPostMapper)
+                .eq(SysPost::getPostId, id);
+        applyDataScope(queryChain);
+        SysPostVo post = queryChain.returnType(SysPostVo.class).get();
+        enrichDeptNames(post == null ? List.of() : List.of(post));
+        return post;
     }
 
     /**
@@ -58,9 +69,11 @@ public class SysPostServiceImpl implements SysPostService {
      */
     @Override
     public Page<SysPostVo> queryPageList(SysPostQuery query, PageQuery pageQuery) {
-        return buildQueryChain(query)
+        Page<SysPostVo> page = pageQuery.applyOrder(buildQueryChain(query))
                 .returnType(SysPostVo.class)
                 .paging(pageQuery.build());
+        enrichDeptNames(page.getRows());
+        return page;
     }
 
     /**
@@ -69,7 +82,25 @@ public class SysPostServiceImpl implements SysPostService {
     @Override
     public List<SysPostVo> queryList(SysPostQuery query) {
         QueryChain<SysPost> queryChain = buildQueryChain(query);
-        return queryChain.returnType(SysPostVo.class).list();
+        List<SysPostVo> posts = queryChain.returnType(SysPostVo.class).list();
+        enrichDeptNames(posts);
+        return posts;
+    }
+
+    private void enrichDeptNames(List<SysPostVo> posts) {
+        Set<Long> deptIds = posts.stream().map(SysPostVo::getDeptId)
+                .filter(ObjUtil::isNotNull).collect(Collectors.toSet());
+        if (deptIds.isEmpty()) {
+            return;
+        }
+        Map<Long, SysDept> depts = QueryChain.of(sysDeptMapper)
+                .select(SysDept::getId, SysDept::getDeptName)
+                .in(SysDept::getId, deptIds)
+                .list().stream().collect(Collectors.toMap(SysDept::getId, Function.identity()));
+        posts.forEach(post -> {
+            SysDept dept = depts.get(post.getDeptId());
+            post.setDeptName(dept == null ? null : dept.getDeptName());
+        });
     }
 
     /**
@@ -81,24 +112,38 @@ public class SysPostServiceImpl implements SysPostService {
     private QueryChain<SysPost> buildQueryChain(SysPostQuery query) {
         QueryChain<SysPost> queryChain = QueryChain.of(sysPostMapper)
                 .forSearch(true)
-                .where(query);
+                .where(query)
+                .orderBy(SysPost::getPostSort, SysPost::getPostId);
 
         if (ObjUtil.isNotNull(query.getBelongDeptId())){
             List<Long> deptIds = sysDeptMapper.selectListByParentId(query.getBelongDeptId());
             deptIds.add(query.getBelongDeptId());
             queryChain.in(SysPost::getDeptId, deptIds);
         }
-        if (!LoginHelper.isSuperAdmin()) {
-            DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
-            if (!rule.allAccess()) {
-                if (rule.departmentIds().isEmpty()) {
-                    queryChain.eq(SysPost::getPostId, -1L);
-                } else {
-                    queryChain.in(SysPost::getDeptId, rule.departmentIds());
-                }
-            }
-        }
+        applyDataScope(queryChain);
         return queryChain;
+    }
+
+    private void applyDataScope(QueryChain<SysPost> queryChain) {
+        if (LoginHelper.isSuperAdmin()) {
+            return;
+        }
+        DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
+        if (rule.allAccess()) {
+            return;
+        }
+        boolean hasDepartments = !rule.departmentIds().isEmpty();
+        boolean hasSelf = rule.selfAccess() && rule.userId() != null;
+        if (hasDepartments && hasSelf) {
+            queryChain.andNested(scope -> scope.in(SysPost::getDeptId, rule.departmentIds())
+                    .or().eq(SysPost::getCreateBy, rule.userId()));
+        } else if (hasDepartments) {
+            queryChain.in(SysPost::getDeptId, rule.departmentIds());
+        } else if (hasSelf) {
+            queryChain.eq(SysPost::getCreateBy, rule.userId());
+        } else {
+            queryChain.eq(SysPost::getPostId, -1L);
+        }
     }
 
     /**
@@ -106,6 +151,8 @@ public class SysPostServiceImpl implements SysPostService {
      */
     @Override
     public Boolean insertByBo(SysPostBo bo) {
+        assertDepartmentExists(bo.getDeptId());
+        assertWriteScope(LoginHelper.getUserId(), bo.getDeptId());
         SysPost sysPost = MapstructUtil.convert(bo, SysPost.class);
         boolean flag = sysPostMapper.save(sysPost) > 0;
         bo.setPostId(sysPost.getPostId());
@@ -117,6 +164,10 @@ public class SysPostServiceImpl implements SysPostService {
      */
     @Override
     public Boolean updateByBo(SysPostBo bo) {
+        SysPost current = getAccessiblePosts(List.of(bo.getPostId())).stream().findFirst()
+                .orElseThrow(() -> new ServiceException("岗位不存在或无权访问"));
+        assertDepartmentExists(bo.getDeptId());
+        assertWriteScope(current.getCreateBy(), bo.getDeptId());
         SysPost sysPost = MapstructUtil.convert(bo, SysPost.class);
         return sysPostMapper.update(sysPost) > 0;
     }
@@ -126,12 +177,40 @@ public class SysPostServiceImpl implements SysPostService {
      */
     @Override
     public Integer deleteByIds(Collection<Long> ids) {
-        for (SysPost post : QueryChain.of(sysPostMapper).in(SysPost::getPostId, ids).list()) {
+        Set<Long> requested = new HashSet<>(ids);
+        List<SysPost> posts = getAccessiblePosts(requested);
+        if (posts.size() != requested.size()) {
+            throw new ServiceException("岗位不存在或无权访问");
+        }
+        for (SysPost post : posts) {
             if (countUserPostById(post.getPostId()) > 0) {
-                throw new ServiceException(post.getPostName() + "已分配，不能删除");
+                throw new ServiceException(post.getPostName() + "已分配，不能删除!");
             }
         }
-        return sysPostMapper.deleteByIds(ids);
+        return sysPostMapper.deleteByIds(requested);
+    }
+
+    private List<SysPost> getAccessiblePosts(Collection<Long> ids) {
+        QueryChain<SysPost> queryChain = QueryChain.of(sysPostMapper)
+                .in(SysPost::getPostId, ids);
+        applyDataScope(queryChain);
+        return queryChain.list();
+    }
+
+    private void assertDepartmentExists(Long deptId) {
+        if (deptId == null || sysDeptMapper.getById(deptId) == null) {
+            throw new ServiceException("部门不存在");
+        }
+    }
+
+    private void assertWriteScope(Long recordUserId, Long deptId) {
+        if (LoginHelper.isSuperAdmin()) {
+            return;
+        }
+        DataScopeRule rule = dataScopeService.resolveUserDataScope(LoginHelper.getUserId());
+        if (!rule.permits(recordUserId, deptId)) {
+            throw new ServiceException("没有权限访问岗位数据");
+        }
     }
 
 
@@ -154,12 +233,25 @@ public class SysPostServiceImpl implements SysPostService {
     }
 
     @Override
-    public List<SysPostVo> selectPostByIds(Collection<Long> postIds) {
+    public List<SysPostVo> selectPostsByUserId(Long userId) {
         return QueryChain.of(sysPostMapper)
+                .select(SysPost.class)
+                .leftJoin(SysPost::getPostId, SysUserPost::getPostId)
+                .eq(SysUserPost::getUserId, userId)
+                .orderBy(SysPost::getPostSort, SysPost::getPostId)
+                .returnType(SysPostVo.class)
+                .list();
+    }
+
+    @Override
+    public List<SysPostVo> selectPostByIds(Collection<Long> postIds) {
+        QueryChain<SysPost> queryChain = QueryChain.of(sysPostMapper)
                 .select(SysPost::getPostId, SysPost::getPostName, SysPost::getPostCode)
                 .eq(SysPost::getStatus, "0")
                 .in(postIds != null && !postIds.isEmpty(), SysPost::getPostId, postIds)
-                .orderBy(SysPost::getPostSort, SysPost::getPostId)
+                .orderBy(SysPost::getPostSort, SysPost::getPostId);
+        applyDataScope(queryChain);
+        return queryChain
                 .returnType(SysPostVo.class)
                 .list();
     }
@@ -174,6 +266,7 @@ public class SysPostServiceImpl implements SysPostService {
     public boolean checkPostNameUnique(SysPostBo post) {
         boolean exists = sysPostMapper.exists(Where.create()
                 .eq(SysPost::getPostName, post.getPostName())
+                .eq(SysPost::getDeptId, post.getDeptId())
                 .ne(ObjUtil.isNotNull(post.getPostId()), SysPost::getPostId, post.getPostId()));
         return !exists;
     }

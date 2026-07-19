@@ -43,7 +43,7 @@ public class CacheController extends BaseController {
         });
         CacheListInfoVo result = new CacheListInfoVo();
         result.setInfo(info);
-        result.setDbSize(Math.toIntExact(client.getKeys().count()));
+        result.setDbSize(client.getKeys().count());
         result.setCommandStats(commandStats);
         return result;
     }

@@ -6,6 +6,7 @@ import com.jimuqu.Application;
 import com.jimuqu.common.core.encrypt.annotation.ApiEncrypt;
 import com.jimuqu.common.core.encrypt.utils.ApiCryptoUtil;
 import com.jimuqu.common.core.utils.JsonUtil;
+import com.jimuqu.test.coverage.RuntimeRouteCoverage;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -32,7 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -74,19 +74,15 @@ public class HttpAuthorizationCoverageTest {
     }
 
     @Test
-    void everyPermissionMarkerRejectsUnprivilegedRequests() throws Exception {
-        Map<String, SecuredRoute> representatives = new TreeMap<>();
-        for (SecuredRoute route : securedRoutes()) {
-            for (String permission : route.permissions()) {
-                representatives.merge(permission, route, HttpAuthorizationCoverageTest::preferSimpleBinding);
-            }
-        }
-        assertFalse(representatives.isEmpty(), "运行时没有发现权限标记");
-        for (Map.Entry<String, SecuredRoute> entry : representatives.entrySet()) {
-            Response response = request(entry.getValue(), deniedToken);
-            assertEquals(403, response.status(), () -> entry.getKey() + " 未返回 403，路由 "
-                    + entry.getValue().key() + ": " + response.body());
-            assertEquals(403, response.code(), () -> entry.getKey() + " 响应码错误: " + response.body());
+    void everyPermissionProtectedOperationRejectsUnprivilegedRequests() throws Exception {
+        List<SecuredRoute> permissionRoutes = securedRoutes().stream()
+                .filter(route -> !route.permissions().isEmpty())
+                .toList();
+        assertFalse(permissionRoutes.isEmpty(), "运行时没有发现权限标记");
+        for (SecuredRoute route : permissionRoutes) {
+            Response response = request(route, deniedToken);
+            assertEquals(403, response.status(), () -> route.key() + " 未返回 403: " + response.body());
+            assertEquals(403, response.code(), () -> route.key() + " 响应码错误: " + response.body());
         }
     }
 
@@ -98,7 +94,7 @@ public class HttpAuthorizationCoverageTest {
                 continue;
             }
             String method = routing.method().name();
-            if (!Set.of("GET", "POST", "PUT", "DELETE", "PATCH").contains(method)) {
+            if (!RuntimeRouteCoverage.supportsHttpMethod(routing.method())) {
                 continue;
             }
             boolean ignored = action.controller().clz().isAnnotationPresent(SaIgnore.class)
@@ -111,7 +107,9 @@ public class HttpAuthorizationCoverageTest {
                 continue;
             }
             SaCheckPermission check = action.method().getAnnotation(SaCheckPermission.class);
-            routes.add(new SecuredRoute(method, routing.path(), action.method().getAnnotation(ApiEncrypt.class) != null,
+            String requestMethod = Set.of("HTTP", "ALL").contains(method) ? "GET" : method;
+            routes.add(new SecuredRoute(method, requestMethod, routing.path(),
+                    action.method().getAnnotation(ApiEncrypt.class) != null,
                     check == null ? List.of() : List.of(check.value())));
         }
         return routes.stream().sorted(Comparator.comparing(SecuredRoute::key)).toList();
@@ -122,7 +120,8 @@ public class HttpAuthorizationCoverageTest {
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.noBody();
         String contentType = null;
         String body = JSON_BODY;
-        if (route.method().equals("POST") || route.method().equals("PUT") || route.method().equals("PATCH")) {
+        if (route.requestMethod().equals("POST") || route.requestMethod().equals("PUT")
+                || route.requestMethod().equals("PATCH")) {
             if (route.path().endsWith("/importData") || route.path().endsWith("/upload")) {
                 String boundary = "jimu-auth-boundary";
                 body = "--" + boundary + "\r\nContent-Disposition: form-data; name=\"file\"; filename=\"test.txt\"\r\n"
@@ -153,7 +152,7 @@ public class HttpAuthorizationCoverageTest {
                     ApiCryptoUtil.encryptByRsa(Base64.getEncoder().encodeToString(aesKey.getBytes()), publicKey));
             publisher = HttpRequest.BodyPublishers.ofString(ApiCryptoUtil.encryptByAes(body, aesKey));
         }
-        request.method(route.method(), publisher);
+        request.method(route.requestMethod(), publisher);
         HttpResponse<String> response = client.send(request.build(), HttpResponse.BodyHandlers.ofString());
         Object code = JsonUtil.toMap(response.body()).get("code");
         return new Response(response.statusCode(), code instanceof Number number ? number.intValue() : -1,
@@ -166,19 +165,6 @@ public class HttpAuthorizationCoverageTest {
                 .generatePrivate(new PKCS8EncodedKeySpec(encoded));
         return Base64.getEncoder().encodeToString(KeyFactory.getInstance("RSA")
                 .generatePublic(new RSAPublicKeySpec(privateKey.getModulus(), privateKey.getPublicExponent())).getEncoded());
-    }
-
-    private static SecuredRoute preferSimpleBinding(SecuredRoute left, SecuredRoute right) {
-        return methodRank(left.method()) <= methodRank(right.method()) ? left : right;
-    }
-
-    private static int methodRank(String method) {
-        return switch (method) {
-            case "GET" -> 0;
-            case "DELETE" -> 1;
-            case "POST" -> 2;
-            default -> 3;
-        };
     }
 
     private static Map<String, Object> validBindingBody() {
@@ -209,7 +195,8 @@ public class HttpAuthorizationCoverageTest {
         return body;
     }
 
-    private record SecuredRoute(String method, String path, boolean encrypted, List<String> permissions) {
+    private record SecuredRoute(String method, String requestMethod, String path,
+                                boolean encrypted, List<String> permissions) {
         String key() { return method + " " + path; }
     }
 

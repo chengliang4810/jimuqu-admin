@@ -16,7 +16,7 @@ import org.noear.solon.Solon;
 public class SseMessageUtil {
 
     private final static Boolean SSE_ENABLE = Solon.cfg().getBool("sse.enabled",false);
-    private static SseEmitterManager MANAGER;
+    private static volatile SseEmitterManager MANAGER;
 
     static {
         if (isEnable() && MANAGER == null) {
@@ -53,7 +53,10 @@ public class SseMessageUtil {
         if (!isEnable()) {
             return;
         }
-        MANAGER.sendMessage(userId, JsonUtil.toString(payload));
+        SseEmitterManager manager = getManager();
+        if (manager != null) {
+            manager.sendMessage(userId, JsonUtil.toString(payload));
+        }
     }
 
     /**
@@ -65,7 +68,19 @@ public class SseMessageUtil {
         if (!isEnable()) {
             return;
         }
-        MANAGER.sendMessage(JsonUtil.toString(payload));
+        SseEmitterManager manager = getManager();
+        if (manager != null) {
+            manager.sendMessage(JsonUtil.toString(payload));
+        }
+    }
+
+    private static SseEmitterManager getManager() {
+        SseEmitterManager manager = MANAGER;
+        if (manager == null) {
+            manager = Solon.context().getBean(SseEmitterManager.class);
+            MANAGER = manager;
+        }
+        return manager;
     }
 
 //    /**

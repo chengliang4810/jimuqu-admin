@@ -1,6 +1,8 @@
 package com.jimuqu.system.service.impl;
 
 import cn.xbatis.core.sql.executor.chain.QueryChain;
+import com.jimuqu.common.core.constant.CacheConstants;
+import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import com.jimuqu.common.mybatis.core.Page;
 import com.jimuqu.common.mybatis.core.page.PageQuery;
@@ -15,9 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import cn.hutool.v7.core.collection.ListUtil;
 import cn.hutool.v7.core.text.StrUtil;
 import org.noear.solon.annotation.Component;
+import org.noear.solon.data.cache.CacheService;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -31,7 +35,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SysDictDataServiceImpl implements SysDictDataService {
 
+    private static final int CACHE_TTL_SECONDS = 0;
+
     private final SysDictDataMapper sysDictDataMapper;
+    private final CacheService cacheService;
 
     /**
      * 查询字典数据
@@ -46,7 +53,7 @@ public class SysDictDataServiceImpl implements SysDictDataService {
      */
     @Override
     public Page<SysDictDataVo> queryPageList(SysDictDataQuery query, PageQuery pageQuery) {
-        return buildQueryChain(query)
+        return pageQuery.applyOrder(buildQueryChain(query))
                 .returnType(SysDictDataVo.class)
                 .paging(pageQuery.build());
     }
@@ -71,9 +78,15 @@ public class SysDictDataServiceImpl implements SysDictDataService {
         if (StrUtil.isBlank(dictTypeKey)) {
             return ListUtil.zero();
         }
-        return QueryChain.of(sysDictDataMapper)
-                .returnType(SysDictDataVo.class)
-                .eq(SysDictData::getDictTypeKey, dictTypeKey).list();
+        SysDictDataVo[] values = cacheService.getOrStore(
+                cacheKey(dictTypeKey), SysDictDataVo[].class, CACHE_TTL_SECONDS,
+                () -> QueryChain.of(sysDictDataMapper)
+                        .returnType(SysDictDataVo.class)
+                        .eq(SysDictData::getDictTypeKey, dictTypeKey)
+                        .orderBy(SysDictData::getDictSort, SysDictData::getId)
+                        .list()
+                        .toArray(SysDictDataVo[]::new));
+        return List.of(values);
     }
 
     /**
@@ -84,7 +97,8 @@ public class SysDictDataServiceImpl implements SysDictDataService {
     private QueryChain<SysDictData> buildQueryChain(SysDictDataQuery query) {
         return QueryChain.of(sysDictDataMapper)
                 .forSearch(true)
-                .where(query);
+                .where(query)
+                .orderBy(SysDictData::getDictSort, SysDictData::getId);
     }
 
     /**
@@ -95,6 +109,9 @@ public class SysDictDataServiceImpl implements SysDictDataService {
         SysDictData sysDictData = MapstructUtil.convert(bo, SysDictData.class);
         boolean flag = sysDictDataMapper.save(sysDictData) > 0;
         bo.setId(sysDictData.getId());
+        if (flag) {
+            evictDictCache(sysDictData.getDictTypeKey());
+        }
         return flag;
     }
 
@@ -103,8 +120,16 @@ public class SysDictDataServiceImpl implements SysDictDataService {
      */
     @Override
     public Boolean updateByBo(SysDictDataBo bo) {
+        SysDictData old = bo.getId() == null ? null : sysDictDataMapper.getById(bo.getId());
         SysDictData sysDictData = MapstructUtil.convert(bo, SysDictData.class);
-        return sysDictDataMapper.update(sysDictData) > 0;
+        boolean updated = sysDictDataMapper.update(sysDictData) > 0;
+        if (updated) {
+            if (old != null) {
+                evictDictCache(old.getDictTypeKey());
+            }
+            evictDictCache(sysDictData.getDictTypeKey());
+        }
+        return updated;
     }
 
     @Override
@@ -121,6 +146,28 @@ public class SysDictDataServiceImpl implements SysDictDataService {
      */
     @Override
     public Integer deleteByIds(Collection<Long> ids) {
-        return sysDictDataMapper.deleteByIds(ids);
+        List<Long> requested = ids.stream().distinct().toList();
+        List<SysDictData> dictData = QueryChain.of(sysDictDataMapper)
+                .in(SysDictData::getId, requested)
+                .list();
+        if (dictData.size() != requested.size()) {
+            throw new ServiceException("字典数据不存在");
+        }
+        int rows = sysDictDataMapper.deleteByIds(requested);
+        if (rows > 0) {
+            dictData.stream().map(SysDictData::getDictTypeKey)
+                    .filter(Objects::nonNull).distinct().forEach(this::evictDictCache);
+        }
+        return rows;
+    }
+
+    private void evictDictCache(String dictTypeKey) {
+        if (StrUtil.isNotBlank(dictTypeKey)) {
+            cacheService.remove(cacheKey(dictTypeKey));
+        }
+    }
+
+    private String cacheKey(String dictTypeKey) {
+        return CacheConstants.SYS_DICT_KEY + dictTypeKey;
     }
 }

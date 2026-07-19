@@ -2,8 +2,29 @@
 server.port: ${JIMU_TEST_SERVER_PORT}
 solon.threads.virtual.enabled: false
 
+sse:
+  heartbeatInterval: 1000
+
 captcha:
   enable: false
+
+auth:
+  verification:
+    local-code: "1234"
+
+# 使用与生产相同的 JustAuth 调用链，仅将外部 Gitee 提供器替换为本地确定性响应。
+justauth:
+  enabled: true
+  type:
+    gitee:
+      client-id: "http-contract-client"
+      client-secret: "http-contract-secret"
+      redirect-uri: "http://127.0.0.1:15555/social-callback?source=gitee"
+      local-code: "http-contract-code"
+      local-user-id: "http-contract-user"
+      local-username: "http_contract_social"
+      local-nickname: "HTTP Contract Social"
+      local-email: "http-contract-social@jimuqu.test"
 
 solon.dataSources.jimuqu!:
   class: "org.noear.solon.data.dynamicds.DynamicDataSource"
@@ -20,6 +41,7 @@ jimuqu.cache:
   driverType: "redis"
   server: "${JIMU_TEST_REDIS_HOST}:${JIMU_TEST_REDIS_PORT}"
   db: ${JIMU_TEST_REDIS_DB}
+  password: ${JIMU_TEST_REDIS_PASSWORD:}
   keyHeader: ${JIMU_TEST_REDIS_PREFIX}
 
 jimuqu:

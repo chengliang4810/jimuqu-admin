@@ -160,7 +160,7 @@ public interface SysRoleService {
     int updateRolePermission(SysRoleBo bo);
 
     /**
-     * 批量删除代码生成模板信息
+     * 批量删除角色信息
      *
      * @param ids 角色信息主键列表
      * @return {@link Integer } 删除成功条数

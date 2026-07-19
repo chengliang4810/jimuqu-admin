@@ -61,7 +61,7 @@ public interface SysDictDataService {
     boolean checkDictDataUnique(SysDictDataBo bo);
 
     /**
-     * 批量删除代码生成模板信息
+     * 批量删除字典数据
      *
      * @param ids 字典数据主键列表
      * @return {@link Integer } 删除成功条数

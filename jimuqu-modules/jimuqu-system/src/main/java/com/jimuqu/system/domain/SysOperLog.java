@@ -7,6 +7,7 @@ import cn.xbatis.db.annotations.TableId;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.dromara.autotable.annotation.AutoColumn;
+import org.dromara.autotable.annotation.Index;
 import org.dromara.autotable.annotation.mysql.MysqlTypeConstant;
 
 import java.io.Serial;
@@ -30,6 +31,7 @@ public class SysOperLog implements Serializable {
     @AutoColumn(comment = "操作模块", length = 100)
     private String title;
     @AutoColumn(comment = "业务类型")
+    @Index(name = "sys_oper_log_bt")
     private Integer businessType;
     @AutoColumn(comment = "请求方法", length = 500)
     private String method;
@@ -40,6 +42,7 @@ public class SysOperLog implements Serializable {
     @AutoColumn(comment = "操作人员", length = 100)
     private String operName;
     @AutoColumn(comment = "操作用户ID")
+    @Index(name = "sys_oper_log_uid")
     private Long userId;
     @AutoColumn(comment = "操作部门ID")
     private Long deptId;
@@ -64,10 +67,12 @@ public class SysOperLog implements Serializable {
     @AutoColumn(comment = "返回参数", type = MysqlTypeConstant.TEXT)
     private String jsonResult;
     @AutoColumn(comment = "状态")
+    @Index(name = "sys_oper_log_s")
     private Integer status;
     @AutoColumn(comment = "错误消息", type = MysqlTypeConstant.TEXT)
     private String errorMsg;
     @AutoColumn(comment = "操作时间")
+    @Index(name = "sys_oper_log_ot")
     private Date operTime;
     @AutoColumn(comment = "耗时")
     private Long costTime;

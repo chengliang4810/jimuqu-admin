@@ -4,6 +4,7 @@ import com.jimuqu.common.core.constant.Constants;
 import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.encrypt.utils.ApiCryptoUtil;
 import com.jimuqu.common.core.utils.JsonUtil;
+import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.common.web.config.properties.CaptchaProperties;
 import com.jimuqu.test.coverage.RuntimeRouteCoverage;
 import org.noear.solon.Solon;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -85,10 +87,10 @@ public final class HttpApiTestSupport {
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
                 .timeout(Duration.ofSeconds(20))
                 .header("Accept", "text/event-stream")
+                .header("clientid", PC_CLIENT_ID)
                 .GET();
         if (token != null && !token.isBlank()) {
             builder.header("Authorization", token.startsWith("Bearer ") ? token : "Bearer " + token);
-            builder.header("clientid", PC_CLIENT_ID);
         }
 
         try {
@@ -139,6 +141,10 @@ public final class HttpApiTestSupport {
         return encryptedJsonRequest("POST", path, body, token);
     }
 
+    public Response postEncryptedJsonWithHeaders(String path, Object body, Map<String, String> headers) {
+        return encryptedJsonRequest("POST", path, body, null, headers);
+    }
+
     public Response putEncryptedJson(String path, Object body, String token) {
         return encryptedJsonRequest("PUT", path, body, token);
     }
@@ -152,10 +158,15 @@ public final class HttpApiTestSupport {
     }
 
     public Response request(String method, String path, String body, String contentType, String token) {
+        return requestWithHeaders(method, path, body, contentType, token, Map.of());
+    }
+
+    public Response requestWithHeaders(String method, String path, String body, String contentType, String token,
+                                       Map<String, String> headers) {
         HttpRequest.BodyPublisher publisher = body == null
                 ? HttpRequest.BodyPublishers.noBody()
                 : HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8);
-        return sendRequest(method, path, publisher, contentType, token);
+        return sendRequest(method, path, publisher, contentType, token, headers);
     }
 
     public Response requestBytes(String method, String path, byte[] body, String contentType, String token) {
@@ -179,9 +190,13 @@ public final class HttpApiTestSupport {
         if (contentType != null) {
             builder.header("Content-Type", contentType);
         }
+        boolean hasClientId = headers.keySet().stream()
+                .anyMatch(name -> LoginHelper.CLIENT_KEY.equalsIgnoreCase(name));
+        if (!hasClientId) {
+            builder.header(LoginHelper.CLIENT_KEY, PC_CLIENT_ID);
+        }
         if (token != null && !token.isBlank()) {
             builder.header("Authorization", token.startsWith("Bearer ") ? token : "Bearer " + token);
-            builder.header("clientid", PC_CLIENT_ID);
         }
         headers.forEach(builder::header);
 
@@ -193,7 +208,7 @@ public final class HttpApiTestSupport {
                     HttpResponse.BodyHandlers.ofByteArray()
             );
             return new Response(response.statusCode(), response.headers().firstValue("Content-Type").orElse(""),
-                    response.body(), coverageRecorder(method, uri.getPath()));
+                    response.headers(), response.body(), coverageRecorder(method, uri.getPath()));
         } catch (IOException exception) {
             throw new AssertionError("HTTP 请求失败: " + method + " " + uri, exception);
         } catch (InterruptedException exception) {
@@ -225,16 +240,22 @@ public final class HttpApiTestSupport {
     }
 
     private Response encryptedJsonRequest(String method, String path, Object body, String token) {
+        return encryptedJsonRequest(method, path, body, token, Map.of());
+    }
+
+    private Response encryptedJsonRequest(String method, String path, Object body, String token,
+                                          Map<String, String> headers) {
         String json = jsonBody(body);
         try {
             String aesKey = ApiCryptoUtil.randomAesKey();
             String encryptedKey = ApiCryptoUtil.encryptByRsa(
                     Base64.getEncoder().encodeToString(aesKey.getBytes(StandardCharsets.UTF_8)), requestPublicKey());
+            Map<String, String> requestHeaders = new LinkedHashMap<>(headers);
+            requestHeaders.put(Solon.cfg().get("api-decrypt.headerFlag", "encrypt-key"), encryptedKey);
             return sendRequest(method, path,
                     HttpRequest.BodyPublishers.ofString(ApiCryptoUtil.encryptByAes(json, aesKey),
                             StandardCharsets.UTF_8),
-                    "application/json", token,
-                    Map.of(Solon.cfg().get("api-decrypt.headerFlag", "encrypt-key"), encryptedKey));
+                    "application/json", token, requestHeaders);
         } catch (Exception exception) {
             throw new IllegalStateException("无法构造 Bell 加密请求: " + method + " " + path, exception);
         }
@@ -350,14 +371,17 @@ public final class HttpApiTestSupport {
     public static final class Response {
         private final int statusCode;
         private final String contentType;
+        private final HttpHeaders headers;
         private final byte[] bytes;
         private final Runnable coverageRecorder;
         private Map<String, Object> json;
         private boolean validated;
 
-        private Response(int statusCode, String contentType, byte[] bytes, Runnable coverageRecorder) {
+        private Response(int statusCode, String contentType, HttpHeaders headers, byte[] bytes,
+                         Runnable coverageRecorder) {
             this.statusCode = statusCode;
             this.contentType = contentType;
+            this.headers = headers;
             this.bytes = bytes == null ? new byte[0] : bytes.clone();
             this.coverageRecorder = coverageRecorder;
         }
@@ -368,6 +392,10 @@ public final class HttpApiTestSupport {
 
         public String contentType() {
             return contentType;
+        }
+
+        public String header(String name) {
+            return String.join(",", headers.allValues(name));
         }
 
         public byte[] bytes() {
@@ -412,7 +440,7 @@ public final class HttpApiTestSupport {
         public Response expectCode(int expected) {
             expectEnvelope();
             assertEquals(expected, code(), "业务状态不符合预期，响应: " + body());
-            markValidated();
+            markValidated(expected == 200);
             return this;
         }
 
@@ -424,7 +452,7 @@ public final class HttpApiTestSupport {
                 assertTrue(String.valueOf(json().get("msg")).contains(messagePart),
                         "错误消息缺少预期内容 '" + messagePart + "': " + body());
             }
-            markValidated();
+            markValidated(false);
             return this;
         }
 
@@ -478,7 +506,15 @@ public final class HttpApiTestSupport {
             assertFalse("application/json".equals(mediaType(contentType)),
                     "二进制下载不得返回 JSON 错误响应: " + body());
             assertTrue(bytes.length > 0, "下载内容不能为空");
-            markValidated();
+            assertTrue(header("Content-Disposition").toLowerCase().contains("attachment"),
+                    "下载必须使用 attachment Content-Disposition");
+            assertFalse(header("download-filename").isBlank(),
+                    "下载必须返回 Bell 可读取的 download-filename");
+            String exposedHeaders = header("Access-Control-Expose-Headers").toLowerCase();
+            assertTrue(exposedHeaders.contains("content-disposition")
+                            && exposedHeaders.contains("download-filename"),
+                    "下载文件名响应头必须通过 CORS 暴露: " + exposedHeaders);
+            markValidated(true);
             return this;
         }
 
@@ -489,9 +525,11 @@ public final class HttpApiTestSupport {
             return this;
         }
 
-        private void markValidated() {
+        private void markValidated(boolean successfulOperation) {
             if (!validated) {
-                coverageRecorder.run();
+                if (successfulOperation) {
+                    coverageRecorder.run();
+                }
                 validated = true;
             }
         }
@@ -528,21 +566,45 @@ public final class HttpApiTestSupport {
         public SseSubscription expectBellMessage(String expectedType, String expectedSource,
                                                  String expectedMessage) {
             expectReady();
-            SseEvent event = readEvent(Duration.ofSeconds(8));
-            assertEquals("message", event.name(), "Bell SSE 事件名必须为 message");
-            Object parsed = JsonUtil.toObject(event.data(), Map.class);
-            assertInstanceOf(Map.class, parsed, "Bell SSE data 必须是 JSON 对象: " + event.data());
-            @SuppressWarnings("unchecked")
-            Map<String, Object> payload = (Map<String, Object>) parsed;
-            assertTrue(payload.get("messageId") instanceof String messageId && !messageId.isBlank(),
-                    "Bell SSE messageId 必须是非空字符串");
+            Map<String, Object> payload = readBellPayload(Duration.ofSeconds(8));
             assertEquals(expectedMessage, payload.get("message"), "Bell SSE message 不符合预期");
             assertEquals(expectedType, payload.get("type"), "Bell SSE type 不符合预期");
             assertEquals(expectedSource, payload.get("source"), "Bell SSE source 不符合预期");
-            assertInstanceOf(Number.class, payload.get("timestamp"),
-                    "Bell SSE timestamp 必须是 JSON Number");
             markValidated();
             return this;
+        }
+
+        public SseSubscription expectBellMessageAfterLoginWelcome(String expectedType, String expectedSource,
+                                                                  String expectedMessage) {
+            expectReady();
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(8);
+            while (System.nanoTime() < deadline) {
+                Map<String, Object> payload = readBellPayload(
+                        Duration.ofNanos(Math.max(1L, deadline - System.nanoTime())));
+                if (expectedMessage.equals(payload.get("message"))) {
+                    assertEquals(expectedType, payload.get("type"), "Bell SSE type 不符合预期");
+                    assertEquals(expectedSource, payload.get("source"), "Bell SSE source 不符合预期");
+                    markValidated();
+                    return this;
+                }
+                assertTrue(String.valueOf(payload.get("message")).contains("欢迎登录积木区后台管理系统"),
+                        "等待目标消息时收到非登录欢迎消息: " + payload);
+            }
+            throw new AssertionError("等待 Bell SSE 目标消息超时: " + expectedMessage);
+        }
+
+        @SuppressWarnings("unchecked")
+        private Map<String, Object> readBellPayload(Duration timeout) {
+            SseEvent event = readEvent(timeout);
+            assertEquals("message", event.name(), "Bell SSE 事件名必须为 message");
+            Object parsed = JsonUtil.toObject(event.data(), Map.class);
+            assertInstanceOf(Map.class, parsed, "Bell SSE data 必须是 JSON 对象: " + event.data());
+            Map<String, Object> payload = (Map<String, Object>) parsed;
+            assertTrue(payload.get("messageId") instanceof String messageId && !messageId.isBlank(),
+                    "Bell SSE messageId 必须是非空字符串");
+            assertInstanceOf(Number.class, payload.get("timestamp"),
+                    "Bell SSE timestamp 必须是 JSON Number");
+            return payload;
         }
 
         private void expectReady() {

@@ -43,6 +43,14 @@ public interface SysPostService {
     List<Long> selectPostListByUserId(Long userId);
 
     /**
+     * 根据用户ID查询其关联的岗位列表。
+     *
+     * @param userId 用户ID
+     * @return 岗位列表
+     */
+    List<SysPostVo> selectPostsByUserId(Long userId);
+
+    /**
      * 根据岗位ID集合查询正常岗位。
      */
     List<SysPostVo> selectPostByIds(Collection<Long> postIds);
@@ -101,7 +109,7 @@ public interface SysPostService {
     Boolean updateByBo(SysPostBo bo);
 
     /**
-     * 批量删除代码生成模板信息
+     * 批量删除岗位信息
      *
      * @param ids 岗位信息主键列表
      * @return {@link Integer } 删除成功条数

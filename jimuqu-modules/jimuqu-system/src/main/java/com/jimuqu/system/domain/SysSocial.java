@@ -9,6 +9,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.dromara.autotable.annotation.AutoColumn;
+import org.dromara.autotable.annotation.Index;
+import org.dromara.autotable.annotation.TableIndex;
+import org.dromara.autotable.annotation.enums.IndexTypeEnum;
 import org.dromara.autotable.annotation.mysql.MysqlTypeConstant;
 
 /**
@@ -18,6 +21,8 @@ import org.dromara.autotable.annotation.mysql.MysqlTypeConstant;
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = true)
 @Table("sys_social")
+@TableIndex(name = "uk_sys_social_user_source", type = IndexTypeEnum.UNIQUE,
+        fields = {"userId", "source"})
 public class SysSocial extends BaseEntity {
 
     @TableId(value = IdAutoType.GENERATOR, generator = IdentifierGeneratorType.DEFAULT)
@@ -28,6 +33,7 @@ public class SysSocial extends BaseEntity {
     private Long userId;
 
     @AutoColumn(comment = "平台和平台唯一ID", length = 255, notNull = true)
+    @Index(name = "uk_sys_social_auth_id", type = IndexTypeEnum.UNIQUE)
     private String authId;
 
     @AutoColumn(comment = "用户来源", length = 64, notNull = true)
@@ -37,7 +43,7 @@ public class SysSocial extends BaseEntity {
     private String accessToken;
 
     @AutoColumn(comment = "授权令牌有效期")
-    private Integer expireIn;
+    private int expireIn;
 
     @AutoColumn(comment = "刷新令牌", type = MysqlTypeConstant.TEXT)
     private String refreshToken;

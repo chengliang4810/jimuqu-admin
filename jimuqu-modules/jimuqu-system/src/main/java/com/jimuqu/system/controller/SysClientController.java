@@ -16,6 +16,7 @@ import com.jimuqu.system.domain.query.SysClientQuery;
 import com.jimuqu.system.domain.vo.SysClientVo;
 import com.jimuqu.system.service.SysClientService;
 import lombok.RequiredArgsConstructor;
+import org.noear.solon.annotation.Body;
 import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Delete;
 import org.noear.solon.annotation.Get;
@@ -83,14 +84,14 @@ public class SysClientController extends BaseController {
     @Mapping
     @NoRepeatSubmit
     @SaCheckPermission("system:client:add")
-    @Log(title = "新增授权管理对象 sys_client", businessType = BusinessType.ADD)
-    public R<Long> add(@Validated(AddGroup.class) SysClientBo bo) {
+    @Log(title = "客户端管理", businessType = BusinessType.ADD)
+    public R<Void> add(@Body @Validated(AddGroup.class) SysClientBo bo) {
         if (!sysClientService.checkClientKeyUnique(bo)) {
             return R.fail("新增客户端'" + bo.getClientKey() + "'失败，客户端key已存在");
         }
         boolean result = sysClientService.insertByBo(bo);
         Assert.isTrue(result, "新增授权管理对象 sys_client失败");
-        return R.ok(bo.getId());
+        return R.ok();
     }
 
     /**
@@ -100,8 +101,8 @@ public class SysClientController extends BaseController {
     @Put
     @Mapping
     @SaCheckPermission("system:client:edit")
-    @Log(title = "更新授权管理对象 sys_client", businessType = BusinessType.UPDATE)
-    public R<Void> edit(@Validated(UpdateGroup.class) SysClientBo bo) {
+    @Log(title = "客户端管理", businessType = BusinessType.UPDATE)
+    public R<Void> edit(@Body @Validated(UpdateGroup.class) SysClientBo bo) {
         if (!sysClientService.checkClientKeyUnique(bo)) {
             return R.fail("修改客户端'" + bo.getClientKey() + "'失败，客户端key已存在");
         }
@@ -116,8 +117,8 @@ public class SysClientController extends BaseController {
     @Put
     @Mapping("/changeStatus")
     @SaCheckPermission("system:client:edit")
-    @Log(title = "客户端状态修改", businessType = BusinessType.UPDATE)
-    public void changeStatus(SysClientBo bo) {
+    @Log(title = "客户端管理", businessType = BusinessType.UPDATE)
+    public void changeStatus(@Body SysClientBo bo) {
         Assert.isTrue(sysClientService.updateClientStatus(bo.getClientId(), bo.getStatus()), "修改客户端状态失败");
     }
 
@@ -127,11 +128,11 @@ public class SysClientController extends BaseController {
     @Delete
     @Mapping("/{ids}")
     @SaCheckPermission("system:client:remove")
-    @Log(title = "删除授权管理对象 sys_client", businessType = BusinessType.DELETE)
-    public Integer delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
+    @Log(title = "客户端管理", businessType = BusinessType.DELETE)
+    public R<Void> delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
         Integer num = sysClientService.deleteByIds(ids);
         Assert.gtZero(num, "删除授权管理对象 sys_client失败");
-        return num;
+        return R.ok();
     }
 
 }

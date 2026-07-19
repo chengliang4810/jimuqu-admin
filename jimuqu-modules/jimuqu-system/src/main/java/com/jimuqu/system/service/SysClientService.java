@@ -87,7 +87,7 @@ public interface SysClientService {
     boolean checkClientKeyUnique(SysClientBo bo);
 
     /**
-     * 批量删除代码生成模板信息
+     * 批量删除客户端信息
      *
      * @param ids 授权管理对象 sys_client主键列表
      * @return {@link Integer } 删除成功条数

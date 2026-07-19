@@ -1,13 +1,12 @@
 package com.jimuqu.common.web.validation;
 
+import com.jimuqu.common.core.utils.MessageUtils;
 import org.noear.solon.validation.BeanValidateInfo;
 import org.noear.solon.validation.ValidatorException;
 import org.noear.solon.validation.annotation.Length;
+import org.noear.solon.validation.annotation.NoRepeatSubmit;
 
 import java.lang.annotation.Annotation;
-import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,31 +15,45 @@ import java.util.regex.Pattern;
  */
 public final class ValidationMessageResolver {
 
-    private static final String BUNDLE_NAME = "i18n.messages";
     private static final Pattern MESSAGE_KEY = Pattern.compile("^\\{([\\w.]+)}$");
 
     private ValidationMessageResolver() {
     }
 
     public static String resolve(ValidatorException exception, String acceptLanguage) {
+        return resolve(exception, null, acceptLanguage);
+    }
+
+    /**
+     * 按 Bell/Jimu 契约优先使用 Content-Language，缺失时兼容 Accept-Language。
+     */
+    public static String resolve(ValidatorException exception, String contentLanguage, String acceptLanguage) {
         String message = exception.getMessage();
+        Annotation annotation = validationAnnotation(exception);
+        if (annotation instanceof NoRepeatSubmit
+                && (message == null || message.isBlank() || message.startsWith("@NoRepeatSubmit"))) {
+            message = "{repeat.submit.message}";
+        }
         Matcher matcher = MESSAGE_KEY.matcher(message == null ? "" : message);
         if (!matcher.matches()) {
             return message;
         }
 
-        try {
-            ResourceBundle bundle = ResourceBundle.getBundle(BUNDLE_NAME, localeOf(acceptLanguage));
-            String resolved = bundle.getString(matcher.group(1));
-            Annotation annotation = validationAnnotation(exception);
-            if (annotation instanceof Length length) {
-                return resolved.replace("{min}", String.valueOf(length.min()))
-                        .replace("{max}", String.valueOf(length.max()));
-            }
-            return resolved;
-        } catch (MissingResourceException ignored) {
+        String resolved = MessageUtils.message(matcher.group(1),
+                MessageUtils.resolveLocale(contentLanguage, acceptLanguage));
+        if (resolved.equals(matcher.group(1))) {
             return message;
         }
+        if (annotation instanceof Length length) {
+            return resolved.replace("{min}", String.valueOf(length.min()))
+                    .replace("{max}", String.valueOf(length.max()));
+        }
+        return resolved;
+    }
+
+    /** 上游 Bean、方法参数和重复提交校验均使用默认失败码 500。 */
+    public static int errorCode(ValidatorException exception) {
+        return 500;
     }
 
     private static Annotation validationAnnotation(ValidatorException exception) {
@@ -53,18 +66,4 @@ public final class ValidationMessageResolver {
         return null;
     }
 
-    private static Locale localeOf(String acceptLanguage) {
-        if (acceptLanguage != null) {
-            for (String languageRange : acceptLanguage.split(",")) {
-                String language = languageRange.trim().toLowerCase(Locale.ROOT);
-                if (language.startsWith("zh")) {
-                    return Locale.SIMPLIFIED_CHINESE;
-                }
-                if (language.startsWith("en")) {
-                    return Locale.US;
-                }
-            }
-        }
-        return Locale.SIMPLIFIED_CHINESE;
-    }
 }

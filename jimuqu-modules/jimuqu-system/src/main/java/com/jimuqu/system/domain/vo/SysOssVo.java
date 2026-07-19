@@ -22,6 +22,7 @@ public class SysOssVo implements Serializable {
     private String originalName;
     private String fileSuffix;
     private String url;
+    private String ext1;
     private Date createTime;
     private Long createBy;
     private String createByName;

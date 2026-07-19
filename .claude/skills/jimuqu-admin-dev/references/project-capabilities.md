@@ -6,7 +6,7 @@
 
 - 后台接口权限使用 Sa-Token 的 `@SaCheckPermission`。
 - 登录用户、用户 id、超级管理员判断优先使用 `LoginHelper`。
-- API Key 场景先查 `SysApiKey`、`ISysApiKeyService`、`SysApiKeyServiceImpl` 与 Sa-Token API Key 用法，不要新建平行密钥体系。
+- 登录客户端、授权类型和会话策略优先复用 `SysClient` 与现有认证策略。
 
 ## 操作日志与审计
 
@@ -31,12 +31,6 @@
 - 文件或图片保存必须使用 `x-file-storage`：`FileStorageService` + Solon `UploadedFile`。
 - 参考 `docs/文件上传示例.md` 和 `SysFileController`。
 - 需要关联业务对象时设置 objectId/objectType 或在业务表保存文件 id/url；不要直接写固定本地路径。
-
-## 定时任务与异步处理
-
-- 定时任务先查 `SysJob`、`SysJobLog`、`SysJobHandler`、`SysJobScheduler` 等现有实现。
-- 不要直接套 Spring `@Scheduled` 或新引入 Quartz 风格抽象。
-- 执行结果、失败原因、耗时应进入项目任务日志或业务状态字段。
 
 ## Excel 与导出
 

@@ -1,5 +1,5 @@
 jimuqu.cache:
-  keyHeader: "jimuqu" #默认为 ${solon.app.name} ，可不配置
+  # keyHeader 由应用配置，公共模块不得覆盖环境隔离前缀。
   defSeconds: 30 #默认为 30，可不配置
   idleConnectionTimeout: 10000
   connectTimeout: 10000

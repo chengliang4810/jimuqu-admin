@@ -33,14 +33,14 @@ public class LoginVo {
      */
     @JsonProperty("expire_in")
     @ONodeAttr(name = "expire_in")
-    private Integer expireIn;
+    private Long expireIn;
 
     /**
      * 刷新令牌 refresh_token 的有效期
      */
     @JsonProperty("refresh_expire_in")
     @ONodeAttr(name = "refresh_expire_in")
-    private Integer refreshExpireIn;
+    private Long refreshExpireIn;
 
     /**
      * 应用id

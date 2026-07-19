@@ -2,14 +2,18 @@ package com.jimuqu.system.mapper;
 
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.mybatis.core.mapper.BaseMapperPlus;
+import com.jimuqu.common.mybatis.model.DataScopeRule;
+import com.jimuqu.common.mybatis.model.DataScopeWriteRule;
 import com.jimuqu.system.domain.SysDept;
 import com.jimuqu.system.domain.SysRole;
 import com.jimuqu.system.domain.SysUser;
 import com.jimuqu.system.domain.SysUserRole;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import org.apache.ibatis.annotations.Mapper;
+import db.sql.api.impl.cmd.struct.Where;
 
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -19,6 +23,55 @@ import java.util.List;
  */
 @Mapper
 public interface SysUserMapper extends BaseMapperPlus<SysUser, SysUserVo> {
+
+    /**
+     * 使用 typed WHERE 原子应用逐角色写数据权限。
+     */
+    default int updateWithDataScope(SysUser user, DataScopeWriteRule writeRule) {
+        if (user == null || user.getId() == null) {
+            throw new IllegalArgumentException("用户ID不能为空");
+        }
+        return update(user, where -> {
+            where.eq(SysUser::getId, user.getId());
+            applyWriteDataScope(where, writeRule);
+        });
+    }
+
+    static void applyWriteDataScope(Where where, DataScopeWriteRule writeRule) {
+        Objects.requireNonNull(where, "更新条件不能为空");
+        Objects.requireNonNull(writeRule, "写数据权限规则不能为空");
+        if (writeRule.allAccess()) {
+            return;
+        }
+        if (writeRule.denyAll()) {
+            appendDenyCondition(where);
+            return;
+        }
+        for (DataScopeRule roleRule : writeRule.roleRules()) {
+            boolean hasDepartments = !roleRule.departmentIds().isEmpty();
+            boolean hasSelf = roleRule.selfAccess() && roleRule.userId() != null;
+            if (hasDepartments && hasSelf) {
+                where.andNested(scope -> scope
+                        .in(SysUser::getDeptId, roleRule.departmentIds())
+                        .or()
+                        .eq(SysUser::getCreateBy, roleRule.userId()));
+            } else if (hasDepartments) {
+                where.andNested(scope -> scope.in(SysUser::getDeptId, roleRule.departmentIds()));
+            } else if (hasSelf) {
+                where.andNested(scope -> scope.eq(SysUser::getCreateBy, roleRule.userId()));
+            } else {
+                appendDenyCondition(where);
+                return;
+            }
+        }
+    }
+
+    private static void appendDenyCondition(Where where) {
+        where.andNested(scope -> scope
+                .eq(SysUser::getId, 0L)
+                .and()
+                .ne(SysUser::getId, 0L));
+    }
 
 
     /**

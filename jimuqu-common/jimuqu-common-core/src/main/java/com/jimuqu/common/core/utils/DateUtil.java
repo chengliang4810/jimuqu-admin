@@ -42,6 +42,23 @@ public class DateUtil {
     }
 
     /**
+     * 根据时间返回凌晨、上午、中午、下午或晚上。
+     */
+    public static String getTodayHour(Date date) {
+        int hour = cn.hutool.v7.core.date.DateUtil.hour(date, true);
+        if (hour <= 6) {
+            return "凌晨";
+        } else if (hour < 12) {
+            return "上午";
+        } else if (hour == 12) {
+            return "中午";
+        } else if (hour <= 18) {
+            return "下午";
+        }
+        return "晚上";
+    }
+
+    /**
      * 获取当前日期, 默认格式为yyyy-MM-dd
      *
      * @return String

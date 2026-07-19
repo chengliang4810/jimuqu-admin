@@ -30,6 +30,23 @@
             <artifactId>minio</artifactId>
         </dependency>
 
+        <!-- x-file-storage 2.3.0 的 Amazon S3 V2 实现所需运行时 SDK。 -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.29.29</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>aws-crt-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>netty-nio-client</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- 静态文件web访问支持, 线上环境推荐使用nginx等专业web服务器 -->
         <dependency>
             <groupId>org.noear</groupId>

@@ -11,6 +11,8 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.dromara.autotable.annotation.AutoColumn;
+import org.dromara.autotable.annotation.Index;
+import org.dromara.autotable.annotation.enums.IndexTypeEnum;
 
 import java.io.Serial;
 
@@ -41,6 +43,7 @@ public class SysDictType extends BaseEntity {
      * 字典key
      */
     @AutoColumn(comment = "字典key", length = 100)
+    @Index(name = "uk_sys_dict_type_dict_key", type = IndexTypeEnum.UNIQUE)
     private String dictKey;
     /**
      * 字典名称

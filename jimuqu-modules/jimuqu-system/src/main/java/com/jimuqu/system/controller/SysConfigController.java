@@ -74,14 +74,14 @@ public class SysConfigController extends BaseController {
     @Mapping
     @NoRepeatSubmit
     @SaCheckPermission("system:config:add")
-    @Log(title = "新增参数配置", businessType = BusinessType.ADD)
-    public Long add(@Body @Validated(AddGroup.class) SysConfigBo bo) {
+    @Log(title = "参数管理", businessType = BusinessType.ADD)
+    public R<Void> add(@Body @Validated(AddGroup.class) SysConfigBo bo) {
         if (!sysConfigService.checkConfigKeyUnique(bo)) {
             throw new ServiceException("新增参数'" + bo.getConfigName() + "'失败，参数键名已存在");
         }
         boolean result = sysConfigService.insertByBo(bo);
         Assert.isTrue(result, "新增参数配置失败");
-        return bo.getId();
+        return R.ok();
     }
 
     /**
@@ -91,7 +91,7 @@ public class SysConfigController extends BaseController {
     @Put
     @Mapping
     @SaCheckPermission("system:config:edit")
-    @Log(title = "更新参数配置", businessType = BusinessType.UPDATE)
+    @Log(title = "参数管理", businessType = BusinessType.UPDATE)
     public void edit(@Body @Validated(UpdateGroup.class) SysConfigBo bo) {
         if (!sysConfigService.checkConfigKeyUnique(bo)) {
             throw new ServiceException("修改参数'" + bo.getConfigName() + "'失败，参数键名已存在");
@@ -106,18 +106,18 @@ public class SysConfigController extends BaseController {
     @Delete
     @Mapping("/{ids}")
     @SaCheckPermission("system:config:remove")
-    @Log(title = "删除参数配置", businessType = BusinessType.DELETE)
-    public Integer delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
+    @Log(title = "参数管理", businessType = BusinessType.DELETE)
+    public R<Void> delete(@NotEmpty(message = "主键不能为空") List<Long> ids) {
         Integer num = sysConfigService.deleteByIds(ids);
         Assert.gtZero(num, "删除参数配置失败");
-        return num;
+        return R.ok();
     }
 
     @NoRepeatSubmit
     @Put
     @Mapping("/updateByKey")
     @SaCheckPermission("system:config:edit")
-    @Log(title = "更新参数配置", businessType = BusinessType.UPDATE)
+    @Log(title = "参数管理", businessType = BusinessType.UPDATE)
     public void updateByKey(@Body SysConfigBo bo) {
         Assert.isTrue(sysConfigService.updateByKey(bo), "参数不存在");
     }
@@ -125,18 +125,13 @@ public class SysConfigController extends BaseController {
     @Get
     @Mapping("/configKey/{configKey}")
     public R<String> getByKey(String configKey) {
-        SysConfigQuery query = new SysConfigQuery();
-        query.setConfigKey(configKey);
-        List<SysConfigVo> configs = sysConfigService.queryList(query);
-        if (configs.isEmpty()) {
-            return R.fail("参数不存在");
-        }
-        return R.ok("操作成功", configs.get(0).getConfigValue());
+        return R.data(sysConfigService.selectConfigByKey(configKey));
     }
 
     @Post
     @Mapping("/export")
     @SaCheckPermission("system:config:export")
+    @Log(title = "参数管理", businessType = BusinessType.EXPORT)
     public DownloadedFile export(SysConfigQuery query) {
         return ExcelUtil.exportExcel(sysConfigService.queryList(query), "参数数据", SysConfigVo.class);
     }
@@ -144,7 +139,9 @@ public class SysConfigController extends BaseController {
     @Delete
     @Mapping("/refreshCache")
     @SaCheckPermission("system:config:remove")
+    @Log(title = "参数管理", businessType = BusinessType.CLEAN)
     public R<Void> refreshCache() {
+        sysConfigService.resetConfigCache();
         return R.ok();
     }
 

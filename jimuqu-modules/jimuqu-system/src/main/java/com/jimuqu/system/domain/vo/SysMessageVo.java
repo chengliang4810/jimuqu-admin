@@ -5,7 +5,6 @@ import lombok.experimental.Accessors;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -27,6 +26,6 @@ public class SysMessageVo implements Serializable {
     private String content;
     private Object data;
     private String path;
-    private BigDecimal timestamp;
+    private Long timestamp;
     private Date createTime;
 }

@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-/** Records application routes reached by passing HTTP integration cases. */
+/** Records application routes reached by successful real HTTP integration cases. */
 public final class RuntimeRouteCoverage {
 
     private static final Set<MethodType> HTTP_METHODS = Set.of(
@@ -47,6 +47,10 @@ public final class RuntimeRouteCoverage {
                         .thenComparing(Routing::path))
                 .toList();
         return new RuntimeRouteCoverage(routes, Set.copyOf(exclusions));
+    }
+
+    public static boolean supportsHttpMethod(MethodType method) {
+        return HTTP_METHODS.contains(method);
     }
 
     public void record(String method, String requestPath) {
@@ -89,10 +93,13 @@ public final class RuntimeRouteCoverage {
     }
 
     private static boolean isApplicationHttpRoute(Routing<Handler> route) {
-        if (!HTTP_METHODS.contains(route.method()) || !(route.target() instanceof Action action)) {
+        if (!supportsHttpMethod(route.method())) {
             return false;
         }
-        return action.controller().clz().getName().startsWith("com.jimuqu.");
+        if (route.target() instanceof Action action) {
+            return action.controller().clz().getName().startsWith("com.jimuqu.");
+        }
+        return route.target().getClass().getName().startsWith("com.jimuqu.");
     }
 
     private static RouteKey keyOf(Routing<Handler> route) {

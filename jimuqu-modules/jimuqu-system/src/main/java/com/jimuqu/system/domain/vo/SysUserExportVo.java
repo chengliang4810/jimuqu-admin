@@ -3,8 +3,8 @@ package com.jimuqu.system.domain.vo;
 import cn.idev.excel.annotation.ExcelProperty;
 import com.jimuqu.common.excel.annotation.ExcelDictFormat;
 import com.jimuqu.common.excel.convert.ExcelDictConvert;
+import com.jimuqu.system.listener.DeptExcelConverter;
 import io.github.linpeilie.annotations.AutoMapper;
-import io.github.linpeilie.annotations.ReverseAutoMapping;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -35,13 +35,19 @@ public class SysUserExportVo implements Serializable {
     /**
      * 用户账号
      */
-    @ExcelProperty(value = "登录名称")
+    @ExcelProperty(value = "用户账号")
     private String userName;
+
+    /**
+     * 部门ID，导出时转换为完整部门路径
+     */
+    @ExcelProperty(value = "部门名称", converter = DeptExcelConverter.class)
+    private Long deptId;
 
     /**
      * 用户昵称
      */
-    @ExcelProperty(value = "用户名称")
+    @ExcelProperty(value = "用户昵称")
     private String nickName;
 
     /**
@@ -60,13 +66,13 @@ public class SysUserExportVo implements Serializable {
      * 用户性别
      */
     @ExcelProperty(value = "用户性别", converter = ExcelDictConvert.class)
-    @ExcelDictFormat(dictType = "sys_user_sex")
+    @ExcelDictFormat(dictType = "sys_user_gender")
     private String sex;
 
     /**
      * 帐号状态（0正常 1停用）
      */
-    @ExcelProperty(value = "帐号状态", converter = ExcelDictConvert.class)
+    @ExcelProperty(value = "账号状态", converter = ExcelDictConvert.class)
     @ExcelDictFormat(dictType = "sys_normal_disable")
     private String status;
 
@@ -83,16 +89,8 @@ public class SysUserExportVo implements Serializable {
     private Date loginDate;
 
     /**
-     * 部门名称
-     */
-    @ReverseAutoMapping(target = "deptName", source = "dept.deptName")
-    @ExcelProperty(value = "部门名称")
-    private String deptName;
-
-    /**
      * 负责人
      */
-    @ReverseAutoMapping(target = "leaderName", source = "dept.leaderName")
     @ExcelProperty(value = "部门负责人")
     private String leaderName;
 

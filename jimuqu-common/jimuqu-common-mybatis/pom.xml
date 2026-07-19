@@ -72,6 +72,12 @@
             <artifactId>therapi-runtime-javadoc</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 

@@ -1,18 +1,24 @@
 package com.jimuqu.auth.controller;
 
 import cn.dev33.satoken.annotation.SaIgnore;
+import cn.hutool.v7.swing.captcha.generator.CodeGenerator;
+import cn.hutool.v7.swing.captcha.generator.MathGenerator;
+import cn.hutool.v7.swing.captcha.generator.RandomGenerator;
 import com.jimuqu.auth.domain.vo.CaptchaVo;
 import com.jimuqu.auth.service.VerificationCodeService;
 import com.jimuqu.common.core.constant.Constants;
 import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.domain.R;
+import com.jimuqu.common.core.utils.MessageUtils;
 import com.jimuqu.common.core.utils.StringUtil;
+import com.jimuqu.common.core.utils.regex.RegexValidator;
 import com.jimuqu.common.ratelimit.core.RateLimitConfig;
 import com.jimuqu.common.ratelimit.core.RateLimiter;
 import com.jimuqu.common.ratelimit.enums.RateLimitAlgorithm;
 import com.jimuqu.common.ratelimit.exception.RateLimitException;
 import com.jimuqu.common.web.config.properties.CaptchaProperties;
 import com.jimuqu.common.web.core.BaseController;
+import com.jimuqu.common.web.core.WaveAndCircleCaptcha;
 import lombok.RequiredArgsConstructor;
 import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Get;
@@ -21,18 +27,8 @@ import org.noear.solon.Solon;
 import org.noear.solon.core.handle.Context;
 import org.noear.solon.data.cache.CacheService;
 
-import javax.imageio.ImageIO;
-import java.awt.Color;
 import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.security.SecureRandom;
-import java.util.Base64;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 /**
  * 登录验证码接口。
@@ -41,11 +37,6 @@ import java.util.regex.Pattern;
 @Controller
 @RequiredArgsConstructor
 public class CaptchaController extends BaseController {
-
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
-    private static final String CAPTCHA_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final CaptchaProperties captchaProperties;
     private final CacheService cacheService;
@@ -56,13 +47,13 @@ public class CaptchaController extends BaseController {
     @Get
     @Mapping("/resource/sms/code")
     public R<Void> smsCode(String phoneNumber) {
-        checkRate("captcha:sms:" + phoneNumber, 1);
         if (StringUtil.isBlank(phoneNumber)) {
-            return R.fail("用户手机号不能为空");
+            return R.fail(MessageUtils.message("user.phonenumber.not.blank"));
         }
-        if (!PHONE_PATTERN.matcher(phoneNumber).matches()) {
+        if (!RegexValidator.isMobile(phoneNumber)) {
             return R.fail("请输入正确的手机号！");
         }
+        checkRate("captcha:sms:" + phoneNumber, 1);
         verificationCodeService.sendSms(phoneNumber);
         return R.ok();
     }
@@ -71,12 +62,12 @@ public class CaptchaController extends BaseController {
     @Mapping("/resource/email/code")
     public R<Void> emailCode(String email) {
         if (StringUtil.isBlank(email)) {
-            return R.fail("邮箱不能为空");
+            return R.fail(MessageUtils.message("user.email.not.blank"));
         }
         if (!emailEnabled()) {
             return R.fail("当前系统没有开启邮箱功能！");
         }
-        if (!EMAIL_PATTERN.matcher(email).matches()) {
+        if (!RegexValidator.isEmail(email)) {
             return R.fail("请输入正确的邮箱地址！");
         }
         checkRate("captcha:email:" + email, 1);
@@ -86,23 +77,23 @@ public class CaptchaController extends BaseController {
 
     @Get
     @Mapping("/auth/code")
-    public R<CaptchaVo> getCode() throws IOException {
+    public R<CaptchaVo> getCode() {
         if (!Boolean.TRUE.equals(captchaProperties.getEnable())) {
             return R.ok(new CaptchaVo().setCaptchaEnabled(false));
         }
         checkRate("captcha:image:" + Context.current().realIp(), 10);
 
         String uuid = UUID.randomUUID().toString().replace("-", "");
-        CaptchaChallenge challenge = createChallenge();
+        CaptchaImage captchaImage = createCaptchaImage();
         cacheService.store(
                 GlobalConstants.CAPTCHA_CODE_KEY + uuid,
-                challenge.answer(),
+                captchaImage.challenge().answer(),
                 Constants.CAPTCHA_EXPIRATION * 60
         );
         CaptchaVo captcha = new CaptchaVo()
                 .setCaptchaEnabled(true)
                 .setUuid(uuid)
-                .setImg(renderPng(challenge.display()));
+                .setImg(captchaImage.imageBase64());
         return R.ok(captcha);
     }
 
@@ -126,61 +117,42 @@ public class CaptchaController extends BaseController {
     }
 
     CaptchaChallenge createChallenge() {
+        return createChallenge(codeGenerator().generate());
+    }
+
+    CaptchaImage createCaptchaImage() {
+        WaveAndCircleCaptcha captcha = new WaveAndCircleCaptcha(160, 60);
+        captcha.setFont(new Font("Arial", Font.BOLD, 45));
+        captcha.setGenerator(codeGenerator());
+        captcha.createCode();
+        return new CaptchaImage(createChallenge(captcha.getCode()), captcha.getImageBase64());
+    }
+
+    private CodeGenerator codeGenerator() {
         if ("math".equals(captchaProperties.getType())) {
-            int limit = (int) Math.pow(10, captchaProperties.getNumberLength());
-            int left = RANDOM.nextInt(limit);
-            int right = RANDOM.nextInt(limit);
-            char operator = "+-*".charAt(RANDOM.nextInt(3));
-            int answer = switch (operator) {
-                case '+' -> left + right;
-                case '-' -> left - right;
-                default -> left * right;
-            };
-            return new CaptchaChallenge(left + String.valueOf(operator) + right + "=", String.valueOf(answer));
+            return new MathGenerator(captchaProperties.getNumberLength(), false);
         }
-        String code = randomCode(captchaProperties.getCharLength());
-        return new CaptchaChallenge(code, code);
+        return new RandomGenerator(captchaProperties.getCharLength());
     }
 
-    private String randomCode(int length) {
-        StringBuilder code = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            code.append(CAPTCHA_CHARS.charAt(RANDOM.nextInt(CAPTCHA_CHARS.length())));
+    private CaptchaChallenge createChallenge(String code) {
+        if (!"math".equals(captchaProperties.getType())) {
+            return new CaptchaChallenge(code, code);
         }
-        return code.toString();
-    }
-
-    private String renderPng(String code) throws IOException {
-        BufferedImage image = new BufferedImage(160, 60, BufferedImage.TYPE_INT_RGB);
-        Graphics2D graphics = image.createGraphics();
-        try {
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            graphics.setColor(Color.WHITE);
-            graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
-            graphics.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 34));
-            int step = image.getWidth() / (code.length() + 1);
-            for (int i = 0; i < code.length(); i++) {
-                graphics.setColor(new Color(30 + RANDOM.nextInt(120), 30 + RANDOM.nextInt(120), 30 + RANDOM.nextInt(120)));
-                graphics.drawString(String.valueOf(code.charAt(i)), step * i + 12, 42 + RANDOM.nextInt(6));
-            }
-            for (int i = 0; i < 8; i++) {
-                graphics.setColor(new Color(RANDOM.nextInt(200), RANDOM.nextInt(200), RANDOM.nextInt(200)));
-                graphics.drawLine(
-                        RANDOM.nextInt(image.getWidth()),
-                        RANDOM.nextInt(image.getHeight()),
-                        RANDOM.nextInt(image.getWidth()),
-                        RANDOM.nextInt(image.getHeight())
-                );
-            }
-        } finally {
-            graphics.dispose();
-        }
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            ImageIO.write(image, "png", output);
-            return Base64.getEncoder().encodeToString(output.toByteArray());
-        }
+        int numberLength = captchaProperties.getNumberLength();
+        int left = Integer.parseInt(code.substring(0, numberLength).trim());
+        int right = Integer.parseInt(code.substring(numberLength + 1, numberLength * 2 + 1).trim());
+        int answer = switch (code.charAt(numberLength)) {
+            case '+' -> left + right;
+            case '-' -> left - right;
+            default -> left * right;
+        };
+        return new CaptchaChallenge(code, String.valueOf(answer));
     }
 
     record CaptchaChallenge(String display, String answer) {
+    }
+
+    record CaptchaImage(CaptchaChallenge challenge, String imageBase64) {
     }
 }

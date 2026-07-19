@@ -3,7 +3,7 @@ package com.jimuqu.common.core.config;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Configuration;
-import org.noear.solon.core.util.RunUtil;
+import org.noear.solon.core.util.NamedThreadFactory;
 
 import java.util.concurrent.*;
 
@@ -22,17 +22,20 @@ public class ThreadPoolConfig {
      * JDK21自动开启虚拟线程
      * @return 线程池
      */
-    @Bean
+    @Bean(destroyMethod = "shutdown")
     public ExecutorService executorService() {
-        return RunUtil.io();
+        return Executors.newCachedThreadPool(
+                new NamedThreadFactory("jimuqu-async-").daemon(true));
     }
 
     /**
      * 执行周期性或定时任务，使用定时线程池
      */
-    @Bean
+    @Bean(destroyMethod = "shutdown")
     public ScheduledExecutorService scheduledExecutorService() {
-        return RunUtil.timer();
+        return Executors.newScheduledThreadPool(
+                Runtime.getRuntime().availableProcessors() + 1,
+                new NamedThreadFactory("jimuqu-schedule-").daemon(true));
     }
 
 }

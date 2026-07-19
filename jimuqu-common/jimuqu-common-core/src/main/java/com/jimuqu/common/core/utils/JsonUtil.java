@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.noear.snack4.Feature;
 import org.noear.snack4.ONode;
+import org.noear.snack4.Options;
 import org.noear.snack4.codec.TypeRef;
 
 import java.lang.reflect.Type;
@@ -24,6 +25,9 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class JsonUtil {
 
+    private static final Options WRITE_OPTIONS = createWriteOptions();
+    private static final Options PRETTY_WRITE_OPTIONS = createWriteOptions(Feature.Write_PrettyFormat);
+
     /**
      * 对象转 JsonString
      *
@@ -34,7 +38,7 @@ public class JsonUtil {
         if (ObjUtil.isNull(object)) {
             return null;
         }
-        return ONode.serialize(object);
+        return ONode.serialize(object, WRITE_OPTIONS);
     }
 
     /**
@@ -47,7 +51,7 @@ public class JsonUtil {
         if (ObjUtil.isNull(object)) {
             return StrPool.EMPTY_JSON;
         }
-        return ONode.serialize(object, Feature.Write_PrettyFormat);
+        return ONode.serialize(object, PRETTY_WRITE_OPTIONS);
     }
 
     /**
@@ -75,7 +79,7 @@ public class JsonUtil {
         if (StringUtil.isEmpty(jsonString)) {
             return ListUtil.zero();
         }
-        return ONode.deserialize(jsonString, new TypeRef<List<T>>(){}.getType());
+        return ONode.deserialize(jsonString, TypeRef.listOf(type));
     }
 
     /**
@@ -89,7 +93,7 @@ public class JsonUtil {
         if (StringUtil.isEmpty(jsonString)) {
             return SetUtil.zero();
         }
-        return ONode.deserialize(jsonString, new TypeRef<Set<T>>(){}.getType());
+        return ONode.deserialize(jsonString, TypeRef.setOf(type));
     }
 
     /**
@@ -103,6 +107,12 @@ public class JsonUtil {
             return Dict.of();
         }
         return ONode.deserialize(jsonString, Dict.class);
+    }
+
+    private static Options createWriteOptions(Feature... features) {
+        Options options = Options.of(features);
+        JsonNumberCodec.configure(options);
+        return options;
     }
 
 }

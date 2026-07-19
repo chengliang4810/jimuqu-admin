@@ -71,7 +71,6 @@ public interface SysMenuMapper extends BaseMapperPlus<SysMenu, SysMenuVo> {
                 .leftJoin(SysRoleMenu::getRoleId, SysUserRole::getRoleId)
                 .leftJoin(SysRoleMenu::getRoleId, SysRole::getId)
                 .eq(SysUserRole::getUserId, userId)
-                .eq(SysMenu::getStatus, UserConstants.MENU_NORMAL)
                 .eq(SysRole::getStatus, UserConstants.ROLE_NORMAL)
                 .eq(SysRole::getDelFlag, "0")
                 .returnType(String.class)
@@ -83,8 +82,10 @@ public interface SysMenuMapper extends BaseMapperPlus<SysMenu, SysMenuVo> {
                 .selectDistinct()
                 .select(SysMenu::getPerms)
                 .leftJoin(SysMenu::getId, SysRoleMenu::getMenuId)
+                .leftJoin(SysRoleMenu::getRoleId, SysRole::getId)
                 .eq(SysRoleMenu::getRoleId, roleId)
-                .eq(SysMenu::getStatus, UserConstants.MENU_NORMAL)
+                .eq(SysRole::getStatus, UserConstants.ROLE_NORMAL)
+                .eq(SysRole::getDelFlag, "0")
                 .returnType(String.class)
                 .list();
     }
@@ -93,7 +94,10 @@ public interface SysMenuMapper extends BaseMapperPlus<SysMenu, SysMenuVo> {
         List<SysMenu> selected = QueryChain.of(this)
                 .select(SysMenu::getId, SysMenu::getParentId)
                 .leftJoin(SysMenu::getId, SysRoleMenu::getMenuId)
+                .leftJoin(SysRoleMenu::getRoleId, SysRole::getId)
                 .eq(SysRoleMenu::getRoleId, roleId)
+                .eq(SysRole::getStatus, UserConstants.ROLE_NORMAL)
+                .eq(SysRole::getDelFlag, "0")
                 .orderBy(SysMenu::getParentId, SysMenu::getOrderNum)
                 .list();
         Set<Long> selectedParentIds = new HashSet<>();
