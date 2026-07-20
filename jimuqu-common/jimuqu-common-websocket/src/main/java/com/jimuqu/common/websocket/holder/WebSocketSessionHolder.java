@@ -99,6 +99,10 @@ public class WebSocketSessionHolder {
             return;
         }
         sessions.entrySet().removeIf(entry -> {
+            if (!isValid(entry.getValue())) {
+                close(entry.getValue());
+                return true;
+            }
             try {
                 entry.getValue().send(message);
                 return false;
@@ -109,6 +113,36 @@ public class WebSocketSessionHolder {
         });
         if (sessions.isEmpty()) {
             USER_SESSION_MAP.remove(userId, sessions);
+        }
+    }
+
+    /**
+     * 周期清理已失效的会话，避免静默断网后会话长期滞留。
+     */
+    public static void sessionMonitor() {
+        USER_SESSION_MAP.forEach((userId, sessions) -> {
+            sessions.entrySet().removeIf(entry -> {
+                WebSocket session = entry.getValue();
+                if (isValid(session)) {
+                    return false;
+                }
+                close(session);
+                return true;
+            });
+            if (sessions.isEmpty()) {
+                USER_SESSION_MAP.remove(userId, sessions);
+            }
+        });
+    }
+
+    private static boolean isValid(WebSocket session) {
+        if (session == null) {
+            return false;
+        }
+        try {
+            return session.isValid();
+        } catch (RuntimeException ignored) {
+            return false;
         }
     }
 

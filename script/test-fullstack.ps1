@@ -795,7 +795,7 @@ try {
     $redisArgs = @('--raw', '-h', $redisHost, '-p', $redisPort, '-n', "$redisDatabase")
     $redisDefaultArgs = @('--raw', '-h', $redisHost, '-p', $redisPort, '-n', '0')
 
-    # AutoTable must create the database itself to trigger its database-level seed script.
+    # Maven verifies AutoTable's automatic database creation; the packaged JAR later verifies a pre-created empty database.
     $databaseCreated = $true
 
     $pingOutput = @(Invoke-CapturedChecked $redisCli ($redisArgs + 'PING') $repoRoot (Join-Path $artifactRoot 'redis.log'))
@@ -858,6 +858,9 @@ try {
         'verify'
     ) $repoRoot (Join-Path $artifactRoot 'maven.log')
     Assert-MavenTestsRan $repoRoot $mavenStartedAt $expectedHttpOperationCount
+    if (Select-String -LiteralPath (Join-Path $artifactRoot 'maven.log') -SimpleMatch '执行 SQL 文件失败' -Quiet) {
+        throw 'AutoTable automatic-database initialization logged a seed-script failure during Maven verification.'
+    }
 
     $jarPath = Join-Path $repoRoot 'jimuqu-admin\target\jimuqu-admin.jar'
     Assert-PackagedArtifactPolicy $jarPath
@@ -865,8 +868,8 @@ try {
     if ($databaseName -notmatch '^jimuqu_it_\d{17}_\d+$') {
         throw "Refusing to reset database with an unexpected generated name: $databaseName"
     }
-    Write-Host 'Resetting the Maven-mutated database, Redis namespace and OSS directory before browser E2E.'
-    Invoke-Checked $mysql ($mysqlArgs + "--execute=DROP DATABASE $databaseName;") $repoRoot (Join-Path $artifactRoot 'mysql-reset.log')
+    Write-Host 'Resetting the Maven-mutated database, then pre-creating an empty database for packaged-JAR initialization.'
+    Invoke-Checked $mysql ($mysqlArgs + "--execute=DROP DATABASE $databaseName; CREATE DATABASE $databaseName CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;") $repoRoot (Join-Path $artifactRoot 'mysql-reset.log')
     $removedRedisKeys = Remove-OwnedRedisKeys $redisCli $redisArgs $redisPrefix
     Assert-NoRedisKeyLeaks $redisCli $redisArgs $redisBaselineKeys 'Maven verification'
     Reset-OwnedOssPath $artifactRoot $ossPath
@@ -904,6 +907,11 @@ try {
     $seedUserCount = [int](($seedUserCountOutput | Where-Object { $_ -is [string] -and $_ -match '^\d+$' } | Select-Object -Last 1).Trim())
     if ($seedUserCount -ne 7) {
         throw "Fresh E2E database must contain exactly 7 seed users, actual: $seedUserCount"
+    }
+    $precreatedDatabaseInitMessages = @(Select-String -LiteralPath @($backendOutLog, $backendErrorLog) `
+        -SimpleMatch 'AutoTable 已为预先创建的空数据库写入初始化数据')
+    if ($precreatedDatabaseInitMessages.Count -ne 1) {
+        throw "Packaged JAR must initialize the pre-created empty database exactly once, actual log count: $($precreatedDatabaseInitMessages.Count)"
     }
     $forbiddenTableOutput = @(Invoke-CapturedChecked $mysql ($mysqlArgs + @(
         "--execute=SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = '$databaseName' AND (TABLE_NAME IN ('sys_job','sys_job_log','sys_plugin','sys_api_key') OR TABLE_NAME REGEXP '^(wf_|flow_|ai_|gen_)');"
@@ -947,6 +955,31 @@ try {
     Start-Sleep -Milliseconds 250
     Assert-PortAvailable $backendPort
 
+    $relationCardinalitySql = "SELECT CONCAT((SELECT COUNT(*) FROM $databaseName.sys_role_dept), ':', (SELECT COUNT(*) FROM $databaseName.sys_role_menu), ':', (SELECT COUNT(*) FROM $databaseName.sys_user_post), ':', (SELECT COUNT(*) FROM $databaseName.sys_user_role));"
+    $relationCardinalityOutput = @(Invoke-CapturedChecked $mysql ($mysqlArgs + "--execute=$relationCardinalitySql") $repoRoot (Join-Path $artifactRoot 'mysql-relation-counts-before-upgrade.log'))
+    $relationCardinality = ($relationCardinalityOutput |
+        Where-Object { $_ -is [string] -and $_ -match '^\d+:\d+:\d+:\d+$' } |
+        Select-Object -Last 1).Trim()
+    $legacyRelationSql = @"
+ALTER TABLE $databaseName.sys_role_dept DROP PRIMARY KEY;
+ALTER TABLE $databaseName.sys_role_menu DROP PRIMARY KEY;
+ALTER TABLE $databaseName.sys_user_post DROP PRIMARY KEY;
+ALTER TABLE $databaseName.sys_user_role DROP PRIMARY KEY;
+ALTER TABLE $databaseName.sys_role_dept MODIFY role_id BIGINT NULL, MODIFY dept_id BIGINT NULL;
+ALTER TABLE $databaseName.sys_role_menu MODIFY role_id BIGINT NULL, MODIFY menu_id BIGINT NULL;
+ALTER TABLE $databaseName.sys_user_post MODIFY user_id BIGINT NULL, MODIFY post_id BIGINT NULL;
+ALTER TABLE $databaseName.sys_user_role MODIFY user_id BIGINT NULL, MODIFY role_id BIGINT NULL;
+INSERT INTO $databaseName.sys_role_dept SELECT * FROM $databaseName.sys_role_dept;
+INSERT INTO $databaseName.sys_role_menu SELECT * FROM $databaseName.sys_role_menu;
+INSERT INTO $databaseName.sys_user_post SELECT * FROM $databaseName.sys_user_post;
+INSERT INTO $databaseName.sys_user_role SELECT * FROM $databaseName.sys_user_role;
+INSERT INTO $databaseName.sys_role_dept VALUES (NULL, NULL);
+INSERT INTO $databaseName.sys_role_menu VALUES (NULL, NULL);
+INSERT INTO $databaseName.sys_user_post VALUES (NULL, NULL);
+INSERT INTO $databaseName.sys_user_role VALUES (NULL, NULL);
+"@
+    Invoke-Checked $mysql ($mysqlArgs + "--execute=$legacyRelationSql") $repoRoot (Join-Path $artifactRoot 'mysql-legacy-relation-fixture.log')
+
     $backendRestartOutLog = Join-Path $artifactRoot 'backend.restart.out.log'
     $backendRestartErrorLog = Join-Path $artifactRoot 'backend.restart.err.log'
     $backendProcess = Start-Process -FilePath $java `
@@ -965,7 +998,32 @@ try {
     if ($secondSeedCardinality -ne $firstSeedCardinality) {
         throw "Second startup changed AutoTable seed cardinality: first=$firstSeedCardinality second=$secondSeedCardinality"
     }
-    Write-Host "AutoTable first/second startup seed cardinality is stable: $secondSeedCardinality"
+    $initDataErrors = @(Select-String -LiteralPath @(
+        $backendOutLog,
+        $backendErrorLog,
+        $backendRestartOutLog,
+        $backendRestartErrorLog
+    ) -SimpleMatch '执行 SQL 文件失败')
+    if ($initDataErrors.Count -gt 0) {
+        throw "AutoTable initialization logged $($initDataErrors.Count) seed-script failure(s) across first and second JAR startup."
+    }
+    $upgradedRelationCardinalityOutput = @(Invoke-CapturedChecked $mysql ($mysqlArgs + "--execute=$relationCardinalitySql") $repoRoot (Join-Path $artifactRoot 'mysql-relation-counts-after-upgrade.log'))
+    $upgradedRelationCardinality = ($upgradedRelationCardinalityOutput |
+        Where-Object { $_ -is [string] -and $_ -match '^\d+:\d+:\d+:\d+$' } |
+        Select-Object -Last 1).Trim()
+    if ($upgradedRelationCardinality -ne $relationCardinality) {
+        throw "AutoTable legacy relation upgrade changed logical cardinality: before=$relationCardinality after=$upgradedRelationCardinality"
+    }
+    $upgradedPrimaryKeyOutput = @(Invoke-CapturedChecked $mysql ($mysqlArgs + @(
+        "--execute=SELECT CONCAT(TABLE_NAME, ':', GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX SEPARATOR ',')) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = '$databaseName' AND INDEX_NAME = 'PRIMARY' AND TABLE_NAME IN ('sys_role_dept','sys_role_menu','sys_user_post','sys_user_role') GROUP BY TABLE_NAME ORDER BY TABLE_NAME;"
+    )) $repoRoot (Join-Path $artifactRoot 'mysql-legacy-upgrade-schema-check.log'))
+    $upgradedPrimaryKeys = @($upgradedPrimaryKeyOutput |
+        Where-Object { $_ -is [string] -and $_ -match '^sys_[a-z_]+:' } |
+        ForEach-Object { $_.Trim() })
+    if (($upgradedPrimaryKeys -join '|') -ne ($expectedPrimaryKeys -join '|')) {
+        throw "AutoTable did not restore legacy RBAC composite primary keys: $($upgradedPrimaryKeys -join ', ')"
+    }
+    Write-Host "AutoTable restart upgraded legacy relation tables and preserved seed cardinality: $secondSeedCardinality"
 
     Invoke-Checked $corepack @('pnpm', 'install', '--frozen-lockfile') $FrontendDir (Join-Path $artifactRoot 'pnpm-install.log')
     Invoke-Checked $corepack @('pnpm', 'exec', 'playwright', 'install', 'chromium') $FrontendDir (Join-Path $artifactRoot 'playwright-install.log')

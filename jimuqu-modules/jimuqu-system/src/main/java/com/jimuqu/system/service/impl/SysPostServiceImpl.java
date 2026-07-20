@@ -115,13 +115,17 @@ public class SysPostServiceImpl implements SysPostService {
                 .where(query)
                 .orderBy(SysPost::getPostSort, SysPost::getPostId);
 
-        if (ObjUtil.isNotNull(query.getBelongDeptId())){
+        applyDepartmentFilter(queryChain, query);
+        applyDataScope(queryChain);
+        return queryChain;
+    }
+
+    void applyDepartmentFilter(QueryChain<SysPost> queryChain, SysPostQuery query) {
+        if (ObjUtil.isNull(query.getDeptId()) && ObjUtil.isNotNull(query.getBelongDeptId())) {
             List<Long> deptIds = sysDeptMapper.selectListByParentId(query.getBelongDeptId());
             deptIds.add(query.getBelongDeptId());
             queryChain.in(SysPost::getDeptId, deptIds);
         }
-        applyDataScope(queryChain);
-        return queryChain;
     }
 
     private void applyDataScope(QueryChain<SysPost> queryChain) {

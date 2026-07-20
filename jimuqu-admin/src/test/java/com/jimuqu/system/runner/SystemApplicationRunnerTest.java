@@ -10,7 +10,7 @@ class SystemApplicationRunnerTest {
     @Test
     void restoresOssPlatforms() {
         boolean[] initialized = {false};
-        SysOssConfigService oss = new SysOssConfigService(null, null) {
+        SysOssConfigService oss = new SysOssConfigService(null, null, null) {
             @Override
             public void initPlatforms() {
                 initialized[0] = true;

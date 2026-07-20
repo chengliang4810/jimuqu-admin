@@ -1,6 +1,8 @@
 package com.jimuqu.system.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.jimuqu.common.translation.annotation.Trans;
+import com.jimuqu.common.translation.enums.TransType;
 import lombok.Data;
 import org.noear.snack4.annotation.ONodeAttr;
 
@@ -28,8 +30,10 @@ public class ProfileUserVo implements Serializable {
     private String phonenumber;
     private String sex;
     private Long avatar;
+    @Trans(type = TransType.OSS_URL, field = "avatar")
     private String avatarUrl;
     private String loginIp;
     private Date loginDate;
+    @Trans(type = TransType.DEPT_NAME, field = "deptId")
     private String deptName;
 }

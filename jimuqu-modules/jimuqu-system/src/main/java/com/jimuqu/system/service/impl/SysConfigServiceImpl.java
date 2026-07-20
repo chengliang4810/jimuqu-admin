@@ -3,6 +3,7 @@ package com.jimuqu.system.service.impl;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import cn.hutool.v7.core.util.ObjUtil;
 import cn.hutool.v7.core.text.StrUtil;
+import com.jimuqu.common.cache.VersionedCacheNamespace;
 import com.jimuqu.common.core.constant.CacheConstants;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.MapstructUtil;
@@ -126,7 +127,7 @@ public class SysConfigServiceImpl implements SysConfigService {
         if (StrUtil.isBlank(configKey)) {
             return "";
         }
-        return cacheService.getOrStore(cacheKey(configKey), String.class, CACHE_TTL_SECONDS, () -> {
+        return configCache().getOrStore(configKey, String.class, CACHE_TTL_SECONDS, () -> {
             SysConfig config = QueryChain.of(sysConfigMapper)
                     .eq(SysConfig::getConfigKey, configKey)
                     .select(SysConfig::getConfigValue)
@@ -172,26 +173,22 @@ public class SysConfigServiceImpl implements SysConfigService {
 
     @Override
     public void resetConfigCache() {
-        QueryChain.of(sysConfigMapper)
-                .select(SysConfig::getConfigKey)
-                .returnType(String.class)
-                .list()
-                .forEach(this::evictConfigCache);
+        configCache().refresh();
     }
 
     private void storeConfigCache(String configKey, String configValue) {
         if (StrUtil.isNotBlank(configKey)) {
-            cacheService.store(cacheKey(configKey), configValue == null ? "" : configValue, CACHE_TTL_SECONDS);
+            configCache().store(configKey, configValue == null ? "" : configValue, CACHE_TTL_SECONDS);
         }
     }
 
     private void evictConfigCache(String configKey) {
         if (StrUtil.isNotBlank(configKey)) {
-            cacheService.remove(cacheKey(configKey));
+            configCache().remove(configKey);
         }
     }
 
-    private String cacheKey(String configKey) {
-        return CacheConstants.SYS_CONFIG_KEY + configKey;
+    private VersionedCacheNamespace configCache() {
+        return new VersionedCacheNamespace(cacheService, CacheConstants.SYS_CONFIG_KEY);
     }
 }

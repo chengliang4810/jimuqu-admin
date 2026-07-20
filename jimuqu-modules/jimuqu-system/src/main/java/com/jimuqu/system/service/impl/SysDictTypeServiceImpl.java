@@ -1,6 +1,7 @@
 package com.jimuqu.system.service.impl;
 
 import cn.xbatis.core.sql.executor.chain.QueryChain;
+import com.jimuqu.common.cache.VersionedCacheNamespace;
 import com.jimuqu.common.core.constant.CacheConstants;
 import com.jimuqu.common.core.service.DictService;
 import com.jimuqu.common.core.exception.ServiceException;
@@ -154,11 +155,7 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
 
     @Override
     public void resetDictCache() {
-        QueryChain.of(sysDictTypeMapper)
-                .select(SysDictType::getDictKey)
-                .returnType(String.class)
-                .list()
-                .forEach(this::evictDictCache);
+        dictCache().refresh();
     }
 
     @Override
@@ -239,7 +236,11 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
 
     private void evictDictCache(String dictTypeKey) {
         if (StrUtil.isNotBlank(dictTypeKey)) {
-            cacheService.remove(CacheConstants.SYS_DICT_KEY + dictTypeKey);
+            dictCache().remove(dictTypeKey);
         }
+    }
+
+    private VersionedCacheNamespace dictCache() {
+        return new VersionedCacheNamespace(cacheService, CacheConstants.SYS_DICT_KEY);
     }
 }

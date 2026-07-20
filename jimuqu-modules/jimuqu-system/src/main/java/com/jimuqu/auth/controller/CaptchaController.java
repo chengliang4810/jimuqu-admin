@@ -103,10 +103,8 @@ public class CaptchaController extends BaseController {
     }
 
     void checkRate(String key, int count) {
-        if (!globalRateLimitConfig.isEnabled()) {
-            return;
-        }
         RateLimitConfig config = new RateLimitConfig();
+        config.setEnabled(true);
         config.setAlgorithm(RateLimitAlgorithm.FIXED_WINDOW);
         config.setWindow(60);
         config.setMaxBurst(count);

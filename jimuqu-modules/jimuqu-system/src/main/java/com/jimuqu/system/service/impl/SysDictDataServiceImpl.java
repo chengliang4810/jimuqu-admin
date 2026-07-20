@@ -1,6 +1,8 @@
 package com.jimuqu.system.service.impl;
 
 import cn.xbatis.core.sql.executor.chain.QueryChain;
+import com.jimuqu.auth.service.MiniProgramIdentityAdapter;
+import com.jimuqu.common.cache.VersionedCacheNamespace;
 import com.jimuqu.common.core.constant.CacheConstants;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.MapstructUtil;
@@ -22,6 +24,7 @@ import org.noear.solon.data.cache.CacheService;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 
 /**
@@ -39,6 +42,7 @@ public class SysDictDataServiceImpl implements SysDictDataService {
 
     private final SysDictDataMapper sysDictDataMapper;
     private final CacheService cacheService;
+    private final MiniProgramIdentityAdapter miniProgramIdentityAdapter;
 
     /**
      * 查询字典数据
@@ -78,15 +82,16 @@ public class SysDictDataServiceImpl implements SysDictDataService {
         if (StrUtil.isBlank(dictTypeKey)) {
             return ListUtil.zero();
         }
-        SysDictDataVo[] values = cacheService.getOrStore(
-                cacheKey(dictTypeKey), SysDictDataVo[].class, CACHE_TTL_SECONDS,
+        SysDictDataVo[] values = dictCache().getOrStore(
+                dictTypeKey, SysDictDataVo[].class, CACHE_TTL_SECONDS,
                 () -> QueryChain.of(sysDictDataMapper)
                         .returnType(SysDictDataVo.class)
                         .eq(SysDictData::getDictTypeKey, dictTypeKey)
                         .orderBy(SysDictData::getDictSort, SysDictData::getId)
                         .list()
                         .toArray(SysDictDataVo[]::new));
-        return List.of(values);
+        return hideUnavailableMiniProgramOptions(
+                dictTypeKey, List.of(values), miniProgramIdentityAdapter.isAvailable());
     }
 
     /**
@@ -163,11 +168,22 @@ public class SysDictDataServiceImpl implements SysDictDataService {
 
     private void evictDictCache(String dictTypeKey) {
         if (StrUtil.isNotBlank(dictTypeKey)) {
-            cacheService.remove(cacheKey(dictTypeKey));
+            dictCache().remove(dictTypeKey);
         }
     }
 
-    private String cacheKey(String dictTypeKey) {
-        return CacheConstants.SYS_DICT_KEY + dictTypeKey;
+    private VersionedCacheNamespace dictCache() {
+        return new VersionedCacheNamespace(cacheService, CacheConstants.SYS_DICT_KEY);
+    }
+
+    static List<SysDictDataVo> hideUnavailableMiniProgramOptions(
+            String dictTypeKey, List<SysDictDataVo> values, boolean miniProgramAvailable) {
+        if (miniProgramAvailable
+                || !Set.of("sys_grant_type", "sys_device_type").contains(dictTypeKey)) {
+            return values;
+        }
+        return values.stream()
+                .filter(value -> !"xcx".equals(value.getDictValue()))
+                .toList();
     }
 }

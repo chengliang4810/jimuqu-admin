@@ -4,6 +4,7 @@ import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.domain.dto.RoleDTO;
 import com.jimuqu.common.core.utils.StringUtil;
+import com.jimuqu.common.satoken.service.PermissionProvider;
 import com.jimuqu.system.mapper.SysMenuMapper;
 import com.jimuqu.system.mapper.SysRoleMapper;
 import com.jimuqu.system.service.ISysPermissionService;
@@ -20,9 +21,9 @@ import java.util.Map;
 import java.util.Set;
 
 @Slf4j
-@Component
+@Component(typed = true)
 @RequiredArgsConstructor
-public class SysPermissionServiceImpl implements ISysPermissionService {
+public class SysPermissionServiceImpl implements ISysPermissionService, PermissionProvider {
 
     private final SysRoleMapper roleMapper;
     private final SysMenuService menuService;

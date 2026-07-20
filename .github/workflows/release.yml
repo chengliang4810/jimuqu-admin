@@ -11,6 +11,43 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: P@ssw0rd
+          MYSQL_ROOT_HOST: "%"
+          MYSQL_DATABASE: jimuqu_release_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pP@ssw0rd"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      JIMU_TEST_SERVER_PORT: 15320
+      JIMU_TEST_MYSQL_HOST: 127.0.0.1
+      JIMU_TEST_MYSQL_PORT: 3306
+      JIMU_TEST_MYSQL_DATABASE: jimuqu_release_test
+      JIMU_TEST_MYSQL_USER: root
+      JIMU_TEST_MYSQL_PASSWORD: P@ssw0rd
+      JIMU_TEST_REDIS_HOST: 127.0.0.1
+      JIMU_TEST_REDIS_PORT: 6379
+      JIMU_TEST_REDIS_DB: 15
+      JIMU_TEST_REDIS_PASSWORD: ""
+      JIMU_TEST_REDIS_PREFIX: "jimu:it:${{ github.run_id }}:${{ github.run_attempt }}:"
+      JIMU_TEST_OSS_DOMAIN: http://127.0.0.1:15320/file/
+      JIMU_TEST_OSS_PATH: ./target/release-test-oss
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,8 +62,8 @@ jobs:
       - name: Calculate release version
         run: echo "RELEASE_VERSION=v$(TZ=Asia/Shanghai git show -s --format=%cd --date=format-local:%Y.%m.%d $GITHUB_SHA)-${GITHUB_SHA:0:7}" >> "$GITHUB_ENV"
 
-      - name: Build release JAR
-        run: mvn clean package -DskipTests
+      - name: Verify and build release JAR
+        run: mvn --batch-mode clean verify -DskipTests=false -DforkCount=0
 
       - name: Prepare release assets
         run: |

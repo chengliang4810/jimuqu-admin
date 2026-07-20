@@ -31,4 +31,25 @@ class SysUserRelationUpdateParityTest {
         roles.invoke(service, 42L, null, true);
         verifyNoInteractions(userPostMapper, userRoleMapper);
     }
+
+    @Test
+    void explicitEmptyRelationsPreserveExistingAssignments() throws Exception {
+        SysUserPostMapper userPostMapper = mock(SysUserPostMapper.class);
+        SysUserRoleMapper userRoleMapper = mock(SysUserRoleMapper.class);
+        SysUserServiceImpl service = new SysUserServiceImpl(
+                null, null, null, userPostMapper, userRoleMapper,
+                null, null, null, null, null);
+        Method posts = SysUserServiceImpl.class.getDeclaredMethod(
+                "insertUserPost", SysUserBo.class, boolean.class);
+        Method roles = SysUserServiceImpl.class.getDeclaredMethod(
+                "insertUserRole", Long.class, List.class, boolean.class);
+        posts.setAccessible(true);
+        roles.setAccessible(true);
+
+        SysUserBo user = new SysUserBo(42L);
+        user.setPostIds(List.of());
+        posts.invoke(service, user, true);
+        roles.invoke(service, 42L, List.of(), true);
+        verifyNoInteractions(userPostMapper, userRoleMapper);
+    }
 }

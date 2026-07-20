@@ -36,7 +36,7 @@ class SysOssConfigServiceTest {
             return null;
         });
 
-        SysOssConfigService service = new SysOssConfigService(mapper, null);
+        SysOssConfigService service = new SysOssConfigService(mapper, null, null);
 
         assertThrows(RuntimeException.class, () -> service.delete(List.of(2L, 999L)));
         assertFalse(deleteInvoked.get(), "存在任一无效 ID 时不得删除有效 OSS 配置");
@@ -63,7 +63,7 @@ class SysOssConfigServiceTest {
         bo.setConfigKey("missing");
         bo.setStatus("Y");
 
-        assertThrows(RuntimeException.class, () -> new SysOssConfigService(mapper, null).update(bo));
+        assertThrows(RuntimeException.class, () -> new SysOssConfigService(mapper, null, null).update(bo));
         assertFalse(updateInvoked.get(), "确认目标存在之前不得关闭当前默认 OSS 配置");
     }
 

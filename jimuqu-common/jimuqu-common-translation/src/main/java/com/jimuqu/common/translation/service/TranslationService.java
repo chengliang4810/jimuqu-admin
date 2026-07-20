@@ -19,6 +19,8 @@ import java.util.Collections;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,10 +40,13 @@ public class TranslationService {
      * @param object
      */
     public void translate(Object object) {
-        translate(object, Collections.newSetFromMap(new IdentityHashMap<>()));
+        Map<TranslationGroup, List<TranslationTask>> groups = new LinkedHashMap<>();
+        collect(object, Collections.newSetFromMap(new IdentityHashMap<>()), groups);
+        groups.forEach(this::translateBatch);
     }
 
-    private void translate(Object object, Set<Object> visited) {
+    private void collect(Object object, Set<Object> visited,
+                         Map<TranslationGroup, List<TranslationTask>> groups) {
         if (ObjUtil.isNull(object)) {
             return;
         }
@@ -53,34 +58,34 @@ public class TranslationService {
 
         if (object instanceof Collection<?> collection) {
             for (Object item : collection) {
-                translate(item, visited);
+                collect(item, visited, groups);
             }
             return;
         }
 
         if (object instanceof Map<?, ?> map) {
             for (Object value : map.values()) {
-                translate(value, visited);
+                collect(value, visited, groups);
             }
             return;
         }
 
         if (object instanceof IPager<?> iPager) {
             for (Object value : iPager.get(PagerField.RESULTS)) {
-                translate(value, visited);
+                collect(value, visited, groups);
             }
             return;
         }
 
         if (object instanceof PageResult<?> pageResult) {
-            translate(pageResult.getRows(), visited);
+            collect(pageResult.getRows(), visited, groups);
             return;
         }
 
         if (objectType.isArray()) {
             int length = Array.getLength(object);
             for (int i = 0; i < length; i++) {
-                translate(Array.get(object, i), visited);
+                collect(Array.get(object, i), visited, groups);
             }
             return;
         }
@@ -89,26 +94,22 @@ public class TranslationService {
             return;
         }
 
-        // 开始处理对象字段
         Field[] fields = ReflectUtil.getDeclaredFields(objectType);
         for (Field field : fields) {
-            // 1. 处理带有 @Trans 注解的字段
             if (field.isAnnotationPresent(Trans.class)) {
                 try {
                     field.setAccessible(true);
                     Trans trans = field.getAnnotation(Trans.class);
-
-                    // 获取源字段的值进行翻译
                     String sourceField = ObjUtil.isEmpty(trans.field()) ? field.getName() : trans.field();
                     Object sourceValue = BeanUtil.getProperty(object, sourceField);
-
                     if (ObjUtil.isNotNull(sourceValue)) {
-                        String translatedValue = doTranslate(sourceValue, trans);
-                        // 将翻译结果设置到当前字段
-                        if (ObjUtil.isNotEmpty(translatedValue)) {
-                            field.set(object, translatedValue);
-                        } else if (ObjUtil.isNotEmpty(trans.defaultValue())) {
-                            field.set(object, trans.defaultValue());
+                        TranslationInterface translator = transMap.get(trans.type().getTranslatorName());
+                        if (translator == null) {
+                            setTranslatedValue(object, field, trans, trans.defaultValue());
+                        } else {
+                            TranslationGroup group = TranslationGroup.of(translator, trans);
+                            groups.computeIfAbsent(group, key -> new java.util.ArrayList<>())
+                                    .add(new TranslationTask(object, field, sourceValue, trans));
                         }
                     }
                 } catch (Exception e) {
@@ -116,13 +117,62 @@ public class TranslationService {
                 }
             }
 
-            // 2. 按字段实际值递归，确保 List、Map、PageResult 等容器字段可被处理。
             try {
                 field.setAccessible(true);
-                translate(field.get(object), visited);
+                collect(field.get(object), visited, groups);
             } catch (Exception e) {
                 log.warn("遍历待翻译字段失败, objectType: {}, field: {}", objectType.getName(), field.getName(), e);
             }
+        }
+    }
+
+    private void translateBatch(TranslationGroup group, List<TranslationTask> tasks) {
+        Trans trans = tasks.get(0).trans();
+        try {
+            List<Object> values = tasks.stream()
+                    .map(TranslationTask::sourceValue)
+                    .distinct()
+                    .toList();
+            List<String> translatedValues = group.translator().translateBatch(values, trans);
+            if (translatedValues.size() != values.size()) {
+                throw new IllegalStateException("批量翻译结果数量与输入不一致");
+            }
+            Map<Object, String> translations = new HashMap<>();
+            for (int index = 0; index < values.size(); index++) {
+                translations.put(values.get(index), translatedValues.get(index));
+            }
+            for (TranslationTask task : tasks) {
+                setTranslatedValue(task.object(), task.field(), task.trans(),
+                        translations.get(task.sourceValue()));
+            }
+        } catch (Exception e) {
+            log.warn("批量翻译失败，回退单值翻译, type: {}", group.type(), e);
+            translateOneByOne(group.translator(), tasks);
+        }
+    }
+
+    private void translateOneByOne(TranslationInterface translator, List<TranslationTask> tasks) {
+        for (TranslationTask task : tasks) {
+            try {
+                setTranslatedValue(task.object(), task.field(), task.trans(),
+                        translator.translate(task.sourceValue(), task.trans()));
+            } catch (Exception e) {
+                log.warn("单值翻译失败，使用默认值, objectType: {}, field: {}",
+                        task.object().getClass().getName(), task.field().getName(), e);
+                setTranslatedValue(task.object(), task.field(), task.trans(), task.trans().defaultValue());
+            }
+        }
+    }
+
+    private void setTranslatedValue(Object object, Field field, Trans trans, String translatedValue) {
+        try {
+            if (ObjUtil.isNotEmpty(translatedValue)) {
+                field.set(object, translatedValue);
+            } else if (ObjUtil.isNotEmpty(trans.defaultValue())) {
+                field.set(object, trans.defaultValue());
+            }
+        } catch (Exception e) {
+            log.warn("设置翻译字段失败, objectType: {}, field: {}", object.getClass().getName(), field.getName(), e);
         }
     }
 
@@ -147,13 +197,15 @@ public class TranslationService {
                 || java.lang.reflect.Proxy.isProxyClass(type);
     }
 
-    private String doTranslate(Object value, Trans trans) {
-        TransType type = trans.type();
-        TranslationInterface translator = transMap.get(type.name().toLowerCase() + "Translator");
-        if (translator != null) {
-            return translator.translate(value, trans);
+    private record TranslationGroup(TranslationInterface translator, TransType type, String value,
+                                    Class<?> enumClass, String defaultValue) {
+
+        private static TranslationGroup of(TranslationInterface translator, Trans trans) {
+            return new TranslationGroup(translator, trans.type(), trans.value(),
+                    trans.enumClass(), trans.defaultValue());
         }
-        // 如果没有找到对应的翻译器，可以返回默认值或原始值
-        return trans.defaultValue();
+    }
+
+    private record TranslationTask(Object object, Field field, Object sourceValue, Trans trans) {
     }
 }

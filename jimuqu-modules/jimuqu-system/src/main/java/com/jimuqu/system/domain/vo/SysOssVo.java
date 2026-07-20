@@ -1,5 +1,7 @@
 package com.jimuqu.system.domain.vo;
 
+import com.jimuqu.common.translation.annotation.Trans;
+import com.jimuqu.common.translation.enums.TransType;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -25,6 +27,7 @@ public class SysOssVo implements Serializable {
     private String ext1;
     private Date createTime;
     private Long createBy;
+    @Trans(type = TransType.USER_NAME, field = "createBy")
     private String createByName;
     private String service;
 }

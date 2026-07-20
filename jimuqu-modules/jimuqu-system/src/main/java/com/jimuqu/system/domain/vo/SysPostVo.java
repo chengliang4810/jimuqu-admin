@@ -6,6 +6,8 @@ import cn.xbatis.db.annotations.Ignores;
 import cn.xbatis.db.annotations.ResultEntity;
 import com.jimuqu.common.excel.annotation.ExcelDictFormat;
 import com.jimuqu.common.excel.convert.ExcelDictConvert;
+import com.jimuqu.common.translation.annotation.Trans;
+import com.jimuqu.common.translation.enums.TransType;
 import com.jimuqu.system.domain.SysPost;
 import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
@@ -84,6 +86,7 @@ public class SysPostVo implements Serializable {
     /**
      * 部门名称
      */
+    @Trans(type = TransType.DEPT_NAME, field = "deptId")
     private String deptName;
 
 }

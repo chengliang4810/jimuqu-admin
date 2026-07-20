@@ -1,5 +1,6 @@
 package com.jimuqu.system.service.impl;
 
+import com.jimuqu.common.cache.VersionedCacheNamespace;
 import com.jimuqu.common.core.constant.CacheConstants;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.system.domain.SysDictData;
@@ -13,9 +14,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.invocation.Invocation;
 import org.noear.solon.annotation.Import;
 import org.noear.solon.data.cache.CacheService;
+import org.noear.solon.data.cache.LocalCacheService;
 import org.noear.solon.test.SolonTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -77,13 +80,35 @@ public class SysDictTypeServiceImplParityTest {
         SysDictDataMapper dataMapper = mock(SysDictDataMapper.class);
         CacheService cacheService = mock(CacheService.class);
         SysDictTypeServiceImpl service = service(typeMapper, dataMapper, cacheService);
+        when(cacheService.get(CacheConstants.SYS_DICT_KEY + "__namespace_version", String.class))
+                .thenReturn("test-version");
         when(typeMapper.getById(7L)).thenReturn(existingType());
         when(typeMapper.update(any(SysDictType.class))).thenReturn(1);
 
         assertTrue(service.updateByBo(updateBo()));
 
-        verify(cacheService).remove(CacheConstants.SYS_DICT_KEY + "old-key");
-        verify(cacheService).remove(CacheConstants.SYS_DICT_KEY + "new-key");
+        verify(cacheService).remove(CacheConstants.SYS_DICT_KEY + "test-version:old-key");
+        verify(cacheService).remove(CacheConstants.SYS_DICT_KEY + "test-version:new-key");
+    }
+
+    @Test
+    void resetMakesDeletedDictionaryTypeCacheUnreachable() {
+        LocalCacheService cacheService = new LocalCacheService(3600);
+        try {
+            VersionedCacheNamespace namespace =
+                    new VersionedCacheNamespace(cacheService, CacheConstants.SYS_DICT_KEY);
+            namespace.store("deleted-type", "stale", 3600);
+            assertEquals("stale", namespace.get("deleted-type", String.class));
+
+            service(mock(SysDictTypeMapper.class), mock(SysDictDataMapper.class), cacheService)
+                    .resetDictCache();
+
+            assertNull(namespace.get("deleted-type", String.class));
+            namespace.store("deleted-type", "fresh", 3600);
+            assertEquals("fresh", namespace.get("deleted-type", String.class));
+        } finally {
+            cacheService.clear();
+        }
     }
 
     private static SysDictTypeServiceImpl service(SysDictTypeMapper typeMapper,

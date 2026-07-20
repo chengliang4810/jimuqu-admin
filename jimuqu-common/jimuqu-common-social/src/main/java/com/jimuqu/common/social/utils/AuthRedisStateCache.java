@@ -39,7 +39,15 @@ public class AuthRedisStateCache implements AuthStateCache {
      */
     @Override
     public void cache(String key, String value, long timeout) {
-        cacheService.store(GlobalConstants.SOCIAL_AUTH_CODE_KEY + key, value, Math.toIntExact(timeout / 1000));
+        cacheService.store(GlobalConstants.SOCIAL_AUTH_CODE_KEY + key, value, toCacheSeconds(timeout));
+    }
+
+    static int toCacheSeconds(long timeoutMillis) {
+        if (timeoutMillis <= 0) {
+            throw new IllegalArgumentException("授权状态缓存过期时间必须大于 0 毫秒");
+        }
+        long seconds = timeoutMillis / 1000 + (timeoutMillis % 1000 == 0 ? 0 : 1);
+        return (int) Math.min(seconds, Integer.MAX_VALUE);
     }
 
     /**

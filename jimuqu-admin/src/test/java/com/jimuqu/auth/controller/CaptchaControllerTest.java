@@ -148,6 +148,29 @@ class CaptchaControllerTest {
     }
 
     @Test
+    void globalSwitchDoesNotDisableExplicitCaptchaLimits() {
+        AtomicReference<RateLimitConfig> applied = new AtomicReference<>();
+        RateLimiter limiter = (RateLimiter) Proxy.newProxyInstance(
+                RateLimiter.class.getClassLoader(), new Class<?>[]{RateLimiter.class},
+                (proxy, method, args) -> {
+                    if ("tryAcquire".equals(method.getName())) {
+                        applied.set((RateLimitConfig) args[2]);
+                        return false;
+                    }
+                    return null;
+                });
+        RateLimitConfig global = new RateLimitConfig();
+        global.setEnabled(false);
+        CaptchaController controller = new CaptchaController(
+                new CaptchaProperties(), null, null, limiter, global);
+
+        assertThrows(RateLimitException.class,
+                () -> controller.checkRate("captcha:sms:13800138000", 1));
+        assertNotNull(applied.get());
+        assertTrue(applied.get().isEnabled());
+    }
+
+    @Test
     void disabledCaptchaReturnsBellDtoWithoutRateLimiting() throws Exception {
         CaptchaProperties properties = new CaptchaProperties();
         properties.setEnable(false);
@@ -200,10 +223,11 @@ class CaptchaControllerTest {
                 sentTo.set(phoneNumber);
             }
         };
-        RateLimitConfig disabled = new RateLimitConfig();
-        disabled.setEnabled(false);
+        RateLimiter limiter = (RateLimiter) Proxy.newProxyInstance(
+                RateLimiter.class.getClassLoader(), new Class<?>[]{RateLimiter.class},
+                (proxy, method, args) -> "tryAcquire".equals(method.getName()) ? true : null);
         CaptchaController controller = new CaptchaController(
-                new CaptchaProperties(), null, verificationCodes, null, disabled);
+                new CaptchaProperties(), null, verificationCodes, limiter, new RateLimitConfig());
 
         assertEquals(200, controller.smsCode("+8613800138000").getCode());
         assertEquals("+8613800138000", sentTo.get());

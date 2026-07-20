@@ -6,6 +6,7 @@ import cn.dev33.satoken.stp.StpInterface;
 import cn.dev33.satoken.stp.StpLogic;
 import com.jimuqu.common.satoken.core.PrefixedSaTokenDaoForRedisson;
 import com.jimuqu.common.satoken.core.SaPermissionImpl;
+import com.jimuqu.common.satoken.service.PermissionProvider;
 import org.noear.solon.Solon;
 import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Condition;
@@ -30,8 +31,8 @@ public class SaTokenConfig {
      * 权限接口实现(使用bean注入方便用户替换)
      */
     @Bean
-    public StpInterface stpInterface() {
-        return new SaPermissionImpl();
+    public StpInterface stpInterface(@Inject PermissionProvider permissionProvider) {
+        return new SaPermissionImpl(permissionProvider);
     }
 
     /**

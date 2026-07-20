@@ -60,7 +60,9 @@ public class MetaVo {
         this.title = title;
         this.icon = icon;
         this.noCache = noCache;
-        this.activeMenu = activeMenu;
+        if (activeMenu != null && activeMenu.startsWith("/")) {
+            this.activeMenu = activeMenu;
+        }
         if (StringUtil.isHttp(link)) {
             this.link = link;
         }

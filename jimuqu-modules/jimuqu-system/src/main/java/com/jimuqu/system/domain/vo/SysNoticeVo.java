@@ -2,6 +2,8 @@ package com.jimuqu.system.domain.vo;
 
 import cn.xbatis.db.annotations.ResultEntity;
 import cn.xbatis.db.annotations.ResultEntityField;
+import com.jimuqu.common.translation.annotation.Trans;
+import com.jimuqu.common.translation.enums.TransType;
 import com.jimuqu.system.domain.SysNotice;
 import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
@@ -31,6 +33,7 @@ public class SysNoticeVo implements Serializable {
     private String remark;
     private Long createBy;
     @ResultEntityField(property = "createBy")
+    @Trans(type = TransType.USER_NAME, field = "createBy")
     private String createByName;
     private Date createTime;
 }

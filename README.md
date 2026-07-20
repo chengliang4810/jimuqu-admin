@@ -84,7 +84,7 @@ java -jar jimuqu-admin.jar --solon.env=prod
 
 服务默认监听 `5320`。生产环境必须提供 `JIMU_DB_USERNAME` 和 `JIMU_DB_PASSWORD`；数据库地址可通过 `JIMU_DB_URL` 覆盖，Redis 可通过 `JIMU_REDIS_SERVER`、`JIMU_REDIS_DB`、`JIMU_REDIS_PASSWORD` 和 `JIMU_REDIS_PREFIX` 配置。
 
-首次部署时请让目标数据库保持不存在，并授予数据库账号建库权限。AutoTable 会自动创建数据库和表结构，然后执行唯一的 `sql/MySQL/jimuqu.sql` 初始化数据文件；第二次及后续启动不会重复写入种子数据。
+首次部署既可以让目标数据库不存在并授予数据库账号建库权限，也可以预先创建一个完全空的 MySQL 数据库。AutoTable 会自动创建表结构并执行唯一的 `sql/MySQL/jimuqu.sql` 初始化数据文件；已有业务数据的数据库及第二次、后续启动不会重复写入种子数据。
 
 生产上线前必须修改初始化管理员密码和客户端密钥，并替换前后端成对的 RSA 配置；Redis、OSS 与数据库账号均应采用最小权限和独立凭据。
 

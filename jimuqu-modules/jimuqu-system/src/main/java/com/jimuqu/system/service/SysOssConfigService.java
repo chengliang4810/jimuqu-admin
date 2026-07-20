@@ -9,6 +9,7 @@ import com.jimuqu.system.domain.bo.SysOssConfigBo;
 import com.jimuqu.system.domain.query.SysOssConfigQuery;
 import com.jimuqu.system.domain.vo.SysOssConfigVo;
 import com.jimuqu.system.mapper.SysOssConfigMapper;
+import com.jimuqu.system.service.impl.AfterCommitTaskExecutor;
 import lombok.RequiredArgsConstructor;
 import org.dromara.x.file.storage.core.FileStorageService;
 import org.dromara.x.file.storage.core.FileStorageProperties;
@@ -44,6 +45,7 @@ public class SysOssConfigService {
 
     private final SysOssConfigMapper mapper;
     private final FileStorageService fileStorageService;
+    private final AfterCommitTaskExecutor afterCommitTaskExecutor;
 
     public void initPlatforms() {
         QueryChain.of(mapper).list().forEach(config -> {
@@ -80,10 +82,7 @@ public class SysOssConfigService {
         }
         int rows = mapper.save(entity);
         if (rows > 0) {
-            registerPlatform(entity);
-            if ("Y".equals(entity.getStatus())) {
-                useDefaultPlatform(entity);
-            }
+            refreshPlatformAfterCommit(null, entity, "Y".equals(entity.getStatus()));
         }
         bo.setOssConfigId(entity.getOssConfigId());
         return rows;
@@ -100,18 +99,12 @@ public class SysOssConfigService {
         clearOptionalFields(entity, bo);
         int rows = mapper.update(entity);
         if (rows > 0) {
-            if (old != null && !old.getConfigKey().equals(entity.getConfigKey())) {
-                removePlatform(old.getConfigKey());
-            }
-            removePlatform(entity.getConfigKey());
-            registerPlatform(entity);
-            if ("Y".equals(entity.getStatus())) {
-                useDefaultPlatform(entity);
-            }
+            refreshPlatformAfterCommit(old.getConfigKey(), entity, "Y".equals(entity.getStatus()));
         }
         return rows;
     }
 
+    @Transaction
     public int delete(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return 0;
@@ -126,7 +119,7 @@ public class SysOssConfigService {
         List<String> configKeys = configs.stream().map(SysOssConfig::getConfigKey).toList();
         int rows = mapper.deleteByIds(requested);
         if (rows > 0) {
-            configKeys.forEach(this::removePlatform);
+            afterCommitTaskExecutor.execute(() -> configKeys.forEach(this::removePlatform));
         }
         return rows;
     }
@@ -135,15 +128,15 @@ public class SysOssConfigService {
     public int changeStatus(SysOssConfigBo bo) {
         SysOssConfig config = mapper.getById(bo.getOssConfigId());
         Assert.notNull(config, "存储配置不存在");
-        registerPlatform(config);
-        Assert.notNull(fileStorageService.getFileStorage(config.getConfigKey()),
+        Assert.isTrue(fileStorageService.getFileStorage(config.getConfigKey()) != null
+                        || config.getEndpoint() != null && !config.getEndpoint().isBlank(),
                 "存储平台未注册: " + config.getConfigKey());
         disableCurrentDefault();
         int rows = mapper.update(new SysOssConfig()
                         .setOssConfigId(bo.getOssConfigId())
                         .setStatus(bo.getStatus()));
         if (rows > 0) {
-            useDefaultPlatform(config);
+            afterCommitTaskExecutor.execute(() -> useDefaultPlatform(config));
         }
         return rows;
     }
@@ -157,6 +150,19 @@ public class SysOssConfigService {
         Assert.notNull(fileStorageService.getFileStorage(config.getConfigKey()),
                 "存储平台未注册: " + config.getConfigKey());
         fileStorageService.getProperties().setDefaultPlatform(config.getConfigKey());
+    }
+
+    private void refreshPlatformAfterCommit(String oldConfigKey, SysOssConfig config, boolean useDefault) {
+        afterCommitTaskExecutor.execute(() -> {
+            if (oldConfigKey != null && !oldConfigKey.equals(config.getConfigKey())) {
+                removePlatform(oldConfigKey);
+            }
+            removePlatform(config.getConfigKey());
+            registerPlatform(config);
+            if (useDefault) {
+                useDefaultPlatform(config);
+            }
+        });
     }
 
     private void registerPlatform(SysOssConfig config) {

@@ -7,6 +7,8 @@ import cn.xbatis.db.annotations.NestedResultEntity;
 import cn.xbatis.db.annotations.ResultEntity;
 import com.jimuqu.common.core.sensitive.annotation.Sensitive;
 import com.jimuqu.common.core.sensitive.enums.SensitiveType;
+import com.jimuqu.common.translation.annotation.Trans;
+import com.jimuqu.common.translation.enums.TransType;
 import com.jimuqu.system.domain.SysDept;
 import com.jimuqu.system.domain.SysRole;
 import com.jimuqu.system.domain.SysUser;
@@ -82,6 +84,7 @@ public class SysUserVo implements Serializable {
      * 头像可访问地址
      */
     @Ignore
+    @Trans(type = TransType.OSS_URL, field = "avatar")
     private String avatarUrl;
     /**
      * 密码
@@ -120,6 +123,7 @@ public class SysUserVo implements Serializable {
      * 部门名称
      */
     @Ignore
+    @Trans(type = TransType.DEPT_NAME, field = "deptId")
     private String deptName;
 
     /**

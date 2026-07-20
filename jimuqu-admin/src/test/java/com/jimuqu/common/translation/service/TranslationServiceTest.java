@@ -75,6 +75,55 @@ class TranslationServiceTest {
         assertEquals("高", item.levelName);
     }
 
+    @Test
+    void resolvesSystemTranslatorByExplicitTypeName() throws Exception {
+        Field transMap = TranslationService.class.getDeclaredField("transMap");
+        transMap.setAccessible(true);
+        transMap.set(service, Map.<String, TranslationInterface>of(
+                "userNameTranslator", (value, trans) -> "user-" + value));
+        SystemItem item = new SystemItem(7L);
+
+        service.translate(new PageResult<>(List.of(item), 1));
+
+        assertEquals("user-7", item.userName);
+    }
+
+    @Test
+    void batchesUniqueKeysAcrossPageRows() throws Exception {
+        BatchingTranslator translator = new BatchingTranslator();
+        Field transMap = TranslationService.class.getDeclaredField("transMap");
+        transMap.setAccessible(true);
+        transMap.set(service, Map.<String, TranslationInterface>of("userNameTranslator", translator));
+        SystemItem first = new SystemItem(7L);
+        AlternateSystemItem second = new AlternateSystemItem(8L);
+        SystemItem third = new SystemItem(7L);
+        List<Object> items = List.of(first, second, third);
+
+        service.translate(new PageResult<>(items, items.size()));
+
+        assertEquals(1, translator.batchCalls);
+        assertEquals(0, translator.singleCalls);
+        assertEquals(List.of(7L, 8L), translator.values);
+        assertEquals(List.of("user-7", "user-8", "user-7"),
+                List.of(first.userName, second.userName, third.userName));
+    }
+
+    @Test
+    void fallsBackToSingleTranslationAndDefaultValueWhenBatchFails() throws Exception {
+        FailingBatchTranslator translator = new FailingBatchTranslator();
+        Field transMap = TranslationService.class.getDeclaredField("transMap");
+        transMap.setAccessible(true);
+        transMap.set(service, Map.<String, TranslationInterface>of("userNameTranslator", translator));
+        List<FallbackItem> items = List.of(new FallbackItem(7L), new FallbackItem(8L));
+
+        service.translate(items);
+
+        assertEquals(1, translator.batchCalls);
+        assertEquals(2, translator.singleCalls);
+        assertEquals("user-7", items.get(0).userName);
+        assertEquals("未知", items.get(1).userName);
+    }
+
     private static final class Container {
         private List<Item> items;
         private Map<String, Item> index;
@@ -102,6 +151,78 @@ class TranslationServiceTest {
 
         @Trans(type = TransType.ENUM, field = "level", enumClass = Level.class)
         private String levelName;
+    }
+
+    private static final class SystemItem {
+        private final Long userId;
+
+        @Trans(type = TransType.USER_NAME, field = "userId")
+        private String userName;
+
+        private SystemItem(Long userId) {
+            this.userId = userId;
+        }
+    }
+
+    private static final class BatchingTranslator implements TranslationInterface {
+        private int singleCalls;
+        private int batchCalls;
+        private List<?> values;
+
+        @Override
+        public String translate(Object value, Trans trans) {
+            singleCalls++;
+            return "single-" + value;
+        }
+
+        @Override
+        public List<String> translateBatch(List<?> values, Trans trans) {
+            batchCalls++;
+            this.values = List.copyOf(values);
+            return values.stream().map(value -> "user-" + value).toList();
+        }
+    }
+
+    private static final class AlternateSystemItem {
+        private final Long creatorId;
+
+        @Trans(type = TransType.USER_NAME, field = "creatorId")
+        private String userName;
+
+        private AlternateSystemItem(Long creatorId) {
+            this.creatorId = creatorId;
+        }
+    }
+
+    private static final class FallbackItem {
+        private final Long userId;
+
+        @Trans(type = TransType.USER_NAME, field = "userId", defaultValue = "未知")
+        private String userName;
+
+        private FallbackItem(Long userId) {
+            this.userId = userId;
+        }
+    }
+
+    private static final class FailingBatchTranslator implements TranslationInterface {
+        private int singleCalls;
+        private int batchCalls;
+
+        @Override
+        public String translate(Object value, Trans trans) {
+            singleCalls++;
+            if (Long.valueOf(8L).equals(value)) {
+                throw new IllegalStateException("single failure");
+            }
+            return "user-" + value;
+        }
+
+        @Override
+        public List<String> translateBatch(List<?> values, Trans trans) {
+            batchCalls++;
+            throw new IllegalStateException("batch failure");
+        }
     }
 
     private enum Level implements TranslatableEnum<String> {

@@ -251,6 +251,9 @@ public class SysMenuServiceImpl implements SysMenuService {
      */
     @Override
     public List<RouterVo> buildMenus(List<SysMenu> menus) {
+        if (CollUtil.isEmpty(menus)) {
+            return Collections.emptyList();
+        }
         List<RouterVo> routers = new LinkedList<>();
         for (SysMenu menu : menus) {
             RouterVo router = new RouterVo();

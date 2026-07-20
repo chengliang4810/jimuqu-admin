@@ -1,6 +1,7 @@
 package com.jimuqu.system.service;
 
 import com.jimuqu.common.core.domain.dto.RoleDTO;
+import com.jimuqu.common.satoken.service.PermissionProvider;
 
 import java.util.List;
 import java.util.Map;
@@ -11,7 +12,7 @@ import java.util.Set;
  *
  * @author Lion Li,chengliang4810
  */
-public interface ISysPermissionService {
+public interface ISysPermissionService extends PermissionProvider {
 
     /**
      * 获取角色数据权限
