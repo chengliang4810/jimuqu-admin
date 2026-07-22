@@ -31,8 +31,12 @@
         <!-- 工具类 -->
         <hutool5.version>5.8.47</hutool5.version>
         <!-- 实体类转换工具 -->
-        <mapstruct-plus.version>1.5.0</mapstruct-plus.version>
+        <mapstruct-plus.version>1.4.3</mapstruct-plus.version>
         <mapstruct-plus.lombok.version>0.2.0</mapstruct-plus.lombok.version>
+        <!-- JSON 组件统一版本 -->
+        <jackson.version>2.21.5</jackson.version>
+        <!-- MinIO 9 使用的 HTTP 客户端版本 -->
+        <okhttp.version>5.3.2</okhttp.version>
         <!-- 数据源 -->
         <mysql.version>9.7.0</mysql.version>
         <sqlite.version>3.53.2.1</sqlite.version>
@@ -111,6 +115,15 @@
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-bom</artifactId>
                 <version>${hutool5.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Jackson 依赖配置 -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
