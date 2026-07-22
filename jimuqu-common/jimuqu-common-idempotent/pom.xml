@@ -27,7 +27,7 @@
             <artifactId>sa-token-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>cn.hutool.v7</groupId>
+            <groupId>cn.hutool</groupId>
             <artifactId>hutool-crypto</artifactId>
         </dependency>
         <dependency>

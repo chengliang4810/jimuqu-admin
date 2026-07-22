@@ -1,8 +1,8 @@
 package com.jimuqu.common.core.utils.ip;
 
-import cn.hutool.v7.core.io.file.FileUtil;
-import cn.hutool.v7.core.io.resource.ResourceUtil;
-import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.resource.ResourceUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jimuqu.common.core.exception.ServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.lionsoul.ip2region.service.Config;

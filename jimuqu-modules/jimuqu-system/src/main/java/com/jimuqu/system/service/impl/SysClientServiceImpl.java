@@ -1,7 +1,7 @@
 package com.jimuqu.system.service.impl;
 
-import cn.hutool.v7.crypto.SecureUtil;
-import cn.hutool.v7.core.collection.CollUtil;
+import cn.hutool.crypto.SecureUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.core.utils.MapstructUtil;
@@ -144,8 +144,8 @@ public class SysClientServiceImpl implements SysClientService {
     @Override
     public boolean checkClientKeyUnique(SysClientBo bo) {
         return !QueryChain.of(sysClientMapper)
-                .where(where -> where.eq(SysClient::getClientKey, bo.getClientKey())
-                        .ne(bo.getId() != null, SysClient::getId, bo.getId()))
+                .eq(SysClient::getClientKey, bo.getClientKey())
+                .ne(bo.getId() != null, SysClient::getId, bo.getId())
                 .exists();
     }
 

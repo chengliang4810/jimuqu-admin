@@ -1,10 +1,10 @@
 package com.jimuqu.system.service.impl;
 
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.collection.ListUtil;
-import cn.hutool.v7.core.text.StrUtil;
-import cn.hutool.v7.core.tree.MapTree;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.lang.tree.Tree;
+import cn.hutool.core.util.ObjectUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.exception.ServiceException;
@@ -311,17 +311,17 @@ public class SysMenuServiceImpl implements SysMenuService {
      * @return 下拉树结构列表
      */
     @Override
-    public List<MapTree<Long>> buildMenuTreeSelect(List<SysMenuVo> menus) {
+    public List<Tree<Long>> buildMenuTreeSelect(List<SysMenuVo> menus) {
         if (CollUtil.isEmpty(menus)) {
-            return ListUtil.zero();
+            return java.util.Collections.emptyList();
         }
         // 获取当前列表中每一个节点的parentId，然后在列表中查找是否有id与其parentId对应，若无对应，则表明此时节点列表中，该节点在当前列表中属于顶级节点
-        List<MapTree<Long>> treeList = new ArrayList<>();
+        List<Tree<Long>> treeList = new ArrayList<>();
         for (SysMenuVo menu : menus) {
             Long parentId = menu.getParentId();
             SysMenuVo parentMenu = StreamUtil.findFirst(menus, it -> it.getId().longValue() == parentId);
-            if (ObjUtil.isNull(parentMenu)) {
-                List<MapTree<Long>> trees = TreeBuildUtil.build(menus, parentId, (m, tree) -> {
+            if (ObjectUtil.isNull(parentMenu)) {
+                List<Tree<Long>> trees = TreeBuildUtil.build(menus, parentId, (m, tree) -> {
                     tree.setId(m.getId())
                             .setParentId(m.getParentId())
                             .setName(m.getMenuName())
@@ -332,7 +332,7 @@ public class SysMenuServiceImpl implements SysMenuService {
                     tree.putExtra("visible", m.getVisible());
                     tree.putExtra("status", m.getStatus());
                 });
-                MapTree<Long> tree = StreamUtil.findFirst(trees, it -> it.getId().longValue() == menu.getId());
+                Tree<Long> tree = StreamUtil.findFirst(trees, it -> it.getId().longValue() == menu.getId());
                 treeList.add(tree);
             }
         }

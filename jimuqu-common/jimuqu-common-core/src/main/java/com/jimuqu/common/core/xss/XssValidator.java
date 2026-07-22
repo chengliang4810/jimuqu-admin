@@ -1,6 +1,6 @@
 package com.jimuqu.common.core.xss;
 
-import cn.hutool.v7.core.regex.ReUtil;
+import cn.hutool.core.util.ReUtil;
 import com.jimuqu.common.core.utils.StringUtil;
 import org.noear.solon.Utils;
 import org.noear.solon.core.handle.Context;

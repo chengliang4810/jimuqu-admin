@@ -1,6 +1,6 @@
 package com.jimuqu.common.sse.core;
 
-import cn.hutool.v7.core.map.MapUtil;
+import cn.hutool.core.map.MapUtil;
 import org.noear.solon.web.sse.SseEmitter;
 import org.noear.solon.web.sse.SseEvent;
 

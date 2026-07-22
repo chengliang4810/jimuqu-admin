@@ -1,6 +1,6 @@
 package com.jimuqu.common.web.core;
 
-import cn.hutool.v7.core.util.RandomUtil;
+import cn.hutool.core.util.RandomUtil;
 import com.jimuqu.common.core.domain.PageResult;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.exception.ServiceException;

@@ -5,7 +5,7 @@ import com.jimuqu.system.domain.bo.SysMenuBo;
 import com.jimuqu.system.domain.query.SysMenuQuery;
 import com.jimuqu.system.domain.vo.RouterVo;
 import com.jimuqu.system.domain.vo.SysMenuVo;
-import cn.hutool.v7.core.tree.MapTree;
+import cn.hutool.core.lang.tree.Tree;
 
 import java.util.List;
 import java.util.Set;
@@ -98,7 +98,7 @@ public interface SysMenuService {
      * @param menus 菜单列表
      * @return 下拉树结构列表
      */
-    List<MapTree<Long>> buildMenuTreeSelect(List<SysMenuVo> menus);
+    List<Tree<Long>> buildMenuTreeSelect(List<SysMenuVo> menus);
 
     /**
      * 根据主键查询菜单权限

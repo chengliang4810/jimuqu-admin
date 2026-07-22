@@ -2,11 +2,11 @@ package com.jimuqu.common.core.checker;
 
 import com.jimuqu.common.core.exception.check.AssertException;
 import com.jimuqu.common.core.utils.StringUtil;
-import cn.hutool.v7.core.array.ArrayUtil;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.map.MapUtil;
-import cn.hutool.v7.core.text.StrUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.ObjectUtil;
 
 import java.util.Map;
 import java.util.function.Supplier;
@@ -1049,7 +1049,7 @@ public class Assert {
      * @throws X obj1 must be not equals obj2
      */
     public static <X extends Throwable> void notEquals(final Object obj1, final Object obj2, final Supplier<X> errorSupplier) throws X {
-        if (ObjUtil.equals(obj1, obj2)) {
+        if (ObjectUtil.equals(obj1, obj2)) {
             throw errorSupplier.get();
         }
     }
@@ -1095,7 +1095,7 @@ public class Assert {
      * @throws X obj1 must be equals obj2
      */
     public static <X extends Throwable> void equals(final Object obj1, final Object obj2, final Supplier<X> errorSupplier) throws X {
-        if (ObjUtil.notEquals(obj1, obj2)) {
+        if (ObjectUtil.notEqual(obj1, obj2)) {
             throw errorSupplier.get();
         }
     }

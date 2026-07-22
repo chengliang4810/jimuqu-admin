@@ -18,7 +18,7 @@ import java.util.List;
 @SuppressWarnings("rawtypes" )
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ReflectUtil extends cn.hutool.v7.core.reflect.method.MethodUtil {
+public class ReflectUtil extends cn.hutool.core.util.ReflectUtil {
 
     private static final String SETTER_PREFIX = "set";
 

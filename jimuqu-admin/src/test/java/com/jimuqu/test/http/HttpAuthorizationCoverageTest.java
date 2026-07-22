@@ -15,6 +15,7 @@ import org.noear.solon.core.handle.Action;
 import org.noear.solon.core.handle.Handler;
 import org.noear.solon.core.handle.MethodType;
 import org.noear.solon.core.route.Routing;
+import org.noear.solon.core.route.Version;
 import org.noear.solon.test.SolonTest;
 
 import java.net.URI;
@@ -89,7 +90,7 @@ public class HttpAuthorizationCoverageTest {
     private List<SecuredRoute> securedRoutes() {
         List<SecuredRoute> routes = new ArrayList<>();
         for (Routing<Handler> routing : Solon.app().router().findAll()) {
-            if (!(routing.target() instanceof Action action)
+            if (!(routing.target(Version.EMPTY) instanceof Action action)
                     || !action.controller().clz().getName().startsWith("com.jimuqu.")) {
                 continue;
             }

@@ -5,9 +5,9 @@ import cn.xbatis.core.sql.executor.Where;
 import com.jimuqu.common.core.utils.MapstructUtil;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.collection.ListUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.ObjectUtil;
 import org.noear.solon.core.util.GenericUtil;
 
 import java.io.Serializable;
@@ -64,7 +64,7 @@ public interface BaseMapperPlus<T, V> extends MybatisMapper<T> {
      */
     default  <C, ID extends Serializable> C getById(ID id, Class<C> voClass) {
         T obj = this.getById(id);
-        if (ObjUtil.isNull(obj)) {
+        if (ObjectUtil.isNull(obj)) {
             return null;
         }
         return MapstructUtil.convert(obj, voClass);
@@ -79,7 +79,7 @@ public interface BaseMapperPlus<T, V> extends MybatisMapper<T> {
     default <C> List<C> list(Where query, Class<C> voClass){
         List<T> list = this.list(query);
         if (CollUtil.isEmpty(list)) {
-            return ListUtil.zero();
+            return java.util.Collections.emptyList();
         }
         return MapstructUtil.convert(list, voClass);
     }

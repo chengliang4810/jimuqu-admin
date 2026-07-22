@@ -8,7 +8,7 @@ import me.zhyd.oauth.model.AuthCallback;
 import me.zhyd.oauth.model.AuthToken;
 import me.zhyd.oauth.model.AuthUser;
 import me.zhyd.oauth.request.AuthDefaultRequest;
-import cn.hutool.v7.core.map.Dict;
+import cn.hutool.core.lang.Dict;
 import org.noear.solon.Solon;
 
 /**

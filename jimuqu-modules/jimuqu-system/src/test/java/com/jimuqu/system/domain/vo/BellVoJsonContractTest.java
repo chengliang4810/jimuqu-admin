@@ -1,6 +1,6 @@
 package com.jimuqu.system.domain.vo;
 
-import cn.hutool.v7.core.map.Dict;
+import cn.hutool.core.lang.Dict;
 import com.jimuqu.auth.domain.vo.LoginVo;
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.system.domain.SysMenu;

@@ -22,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.cache.CacheService;
 import org.noear.solon.data.annotation.Transaction;
-import cn.hutool.v7.core.util.ObjUtil;
-import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -107,7 +107,7 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
         if (old == null) {
             throw new ServiceException("字典类型不存在");
         }
-        if (!ObjUtil.equals(old.getDictKey(), bo.getDictKey())) {
+        if (!ObjectUtil.equals(old.getDictKey(), bo.getDictKey())) {
             sysDictDataMapper.update(new SysDictData().setDictTypeKey(bo.getDictKey()),
                     where -> where.eq(SysDictData::getDictTypeKey, old.getDictKey()));
         }
@@ -124,7 +124,7 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
     public boolean checkDictKeyUnique(SysDictTypeBo bo) {
         return !QueryChain.of(sysDictTypeMapper)
                 .eq(SysDictType::getDictKey, bo.getDictKey())
-                .ne(ObjUtil.isNotNull(bo.getDictId()), SysDictType::getDictId, bo.getDictId())
+                .ne(ObjectUtil.isNotNull(bo.getDictId()), SysDictType::getDictId, bo.getDictId())
                 .exists();
     }
 
@@ -228,7 +228,7 @@ public class SysDictTypeServiceImpl implements SysDictTypeService, DictService {
      */
     private String getSingleDictValue(String dictType, String dictLabel) {
         return getAllDictByDictType(dictType).entrySet().stream()
-                .filter(entry -> ObjUtil.equals(entry.getValue(), dictLabel))
+                .filter(entry -> ObjectUtil.equals(entry.getValue(), dictLabel))
                 .map(Map.Entry::getKey)
                 .findFirst()
                 .orElse("");

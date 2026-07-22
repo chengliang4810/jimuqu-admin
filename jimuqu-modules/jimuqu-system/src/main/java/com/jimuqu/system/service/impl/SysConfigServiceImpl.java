@@ -1,8 +1,8 @@
 package com.jimuqu.system.service.impl;
 
 import cn.xbatis.core.sql.executor.chain.QueryChain;
-import cn.hutool.v7.core.util.ObjUtil;
-import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jimuqu.common.cache.VersionedCacheNamespace;
 import com.jimuqu.common.core.constant.CacheConstants;
 import com.jimuqu.common.core.exception.ServiceException;
@@ -102,7 +102,7 @@ public class SysConfigServiceImpl implements SysConfigService {
         SysConfig sysConfig = MapstructUtil.convert(bo, SysConfig.class);
         boolean updated = sysConfigMapper.update(sysConfig) > 0;
         if (updated) {
-            if (old != null && !ObjUtil.equals(old.getConfigKey(), sysConfig.getConfigKey())) {
+            if (old != null && !ObjectUtil.equals(old.getConfigKey(), sysConfig.getConfigKey())) {
                 evictConfigCache(old.getConfigKey());
             }
             storeConfigCache(sysConfig.getConfigKey(), sysConfig.getConfigValue());
@@ -145,7 +145,7 @@ public class SysConfigServiceImpl implements SysConfigService {
     public boolean checkConfigKeyUnique(SysConfigBo bo) {
         return !QueryChain.of(sysConfigMapper)
                 .eq(SysConfig::getConfigKey, bo.getConfigKey())
-                .ne(ObjUtil.isNotNull(bo.getId()), SysConfig::getId, bo.getId())
+                .ne(ObjectUtil.isNotNull(bo.getId()), SysConfig::getId, bo.getId())
                 .exists();
     }
 

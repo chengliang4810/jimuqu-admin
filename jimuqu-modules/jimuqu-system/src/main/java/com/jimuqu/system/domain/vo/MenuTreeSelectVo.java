@@ -1,7 +1,7 @@
 package com.jimuqu.system.domain.vo;
 
 import lombok.Data;
-import cn.hutool.v7.core.tree.MapTree;
+import cn.hutool.core.lang.tree.Tree;
 
 import java.util.List;
 
@@ -21,6 +21,6 @@ public class MenuTreeSelectVo {
     /**
      * 菜单下拉树结构列表
      */
-    private List<MapTree<Long>> menus;
+    private List<Tree<Long>> menus;
 
 }

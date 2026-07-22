@@ -5,6 +5,7 @@ import org.noear.solon.core.handle.Action;
 import org.noear.solon.core.handle.Handler;
 import org.noear.solon.core.handle.MethodType;
 import org.noear.solon.core.route.Routing;
+import org.noear.solon.core.route.Version;
 
 import java.util.Comparator;
 import java.util.List;
@@ -96,10 +97,10 @@ public final class RuntimeRouteCoverage {
         if (!supportsHttpMethod(route.method())) {
             return false;
         }
-        if (route.target() instanceof Action action) {
+        if (route.target(Version.EMPTY) instanceof Action action) {
             return action.controller().clz().getName().startsWith("com.jimuqu.");
         }
-        return route.target().getClass().getName().startsWith("com.jimuqu.");
+        return route.target(Version.EMPTY).getClass().getName().startsWith("com.jimuqu.");
     }
 
     private static RouteKey keyOf(Routing<Handler> route) {

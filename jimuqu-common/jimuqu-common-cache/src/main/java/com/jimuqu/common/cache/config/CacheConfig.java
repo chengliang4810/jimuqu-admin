@@ -1,12 +1,12 @@
 package com.jimuqu.common.cache.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.Solon;
 import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Condition;
 import org.noear.solon.annotation.Configuration;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.cache.redisson.RedissonCacheService;
-import org.noear.solon.core.util.LogUtil;
 import org.noear.solon.data.cache.CacheService;
 import org.noear.solon.data.cache.CacheServiceSupplier;
 import org.redisson.api.RedissonClient;
@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.Properties;
 
 @Configuration
+@Slf4j
 public class CacheConfig {
 
     /**
@@ -30,7 +31,7 @@ public class CacheConfig {
         removeBlankCredential(properties, "password");
 
         CacheService cacheService = new CacheServiceSupplier(properties).get();
-        LogUtil.global().info("Cache: " + cacheService.getClass().getSimpleName());
+        log.info("Cache: {}", cacheService.getClass().getSimpleName());
         return cacheService;
     }
 

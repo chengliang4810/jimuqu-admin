@@ -113,7 +113,7 @@ public class SysOssConfigService {
         List<Long> requested = ids.stream().distinct().toList();
         Assert.isFalse(requested.stream().anyMatch(SYSTEM_CONFIG_IDS::contains), "系统内置, 不可删除!");
         List<SysOssConfig> configs = QueryChain.of(mapper)
-                .where(where -> where.in(SysOssConfig::getOssConfigId, requested))
+                .in(SysOssConfig::getOssConfigId, requested)
                 .list();
         Assert.isTrue(configs.size() == requested.size(), "存储配置不存在");
         List<String> configKeys = configs.stream().map(SysOssConfig::getConfigKey).toList();
@@ -271,8 +271,8 @@ public class SysOssConfigService {
 
     private void assertConfigKeyUnique(SysOssConfigBo bo) {
         boolean exists = QueryChain.of(mapper)
-                .where(where -> where.eq(SysOssConfig::getConfigKey, bo.getConfigKey())
-                        .ne(bo.getOssConfigId() != null, SysOssConfig::getOssConfigId, bo.getOssConfigId()))
+                .eq(SysOssConfig::getConfigKey, bo.getConfigKey())
+                .ne(bo.getOssConfigId() != null, SysOssConfig::getOssConfigId, bo.getOssConfigId())
                 .exists();
         Assert.isFalse(exists, "操作配置'" + bo.getConfigKey() + "'失败, 配置key已存在!");
     }

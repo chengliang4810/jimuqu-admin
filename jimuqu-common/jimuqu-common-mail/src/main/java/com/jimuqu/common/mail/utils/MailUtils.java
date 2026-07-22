@@ -1,14 +1,13 @@
 package com.jimuqu.common.mail.utils;
 
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.bean.BeanUtil;
-import cn.hutool.v7.core.io.IoUtil;
-import cn.hutool.v7.core.map.MapUtil;
-import cn.hutool.v7.core.text.StrUtil;
-import cn.hutool.v7.core.text.split.SplitUtil;
-import cn.hutool.v7.extra.mail.Mail;
-import cn.hutool.v7.extra.mail.MailAccount;
-import cn.hutool.v7.extra.mail.UserPassMailAuthenticator;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.mail.JakartaMail;
+import cn.hutool.extra.mail.JakartaUserPassAuthenticator;
+import cn.hutool.extra.mail.MailAccount;
 import jakarta.activation.DataSource;
 import jakarta.mail.Authenticator;
 import jakarta.mail.Session;
@@ -48,10 +47,10 @@ public class MailUtils {
     static MailAccount copyWithOverrides(MailAccount source, String from, String user, String pass) {
         MailAccount account = new MailAccount();
         BeanUtil.copyProperties(source, account);
-        account.setPass(source.getPass() == null ? null : source.getPass().clone());
-        account.setFrom(StrUtil.defaultIfBlank(from, account.getFrom()));
-        account.setUser(StrUtil.defaultIfBlank(user, account.getUser()));
-        account.setPass(StrUtil.isNotBlank(pass) ? pass.toCharArray() : account.getPass());
+        account.setPass(source.getPass());
+        account.setFrom(StrUtil.isBlank(from) ? account.getFrom() : from);
+        account.setUser(StrUtil.isBlank(user) ? account.getUser() : user);
+        account.setPass(StrUtil.isNotBlank(pass) ? pass : account.getPass());
         return account;
     }
 
@@ -393,8 +392,7 @@ public class MailUtils {
     public static Session getSession(MailAccount mailAccount, boolean isSingleton) {
         Authenticator authenticator = null;
         if (mailAccount.isAuth()) {
-            // JakartaUserPassAuthenticator
-            authenticator = new UserPassMailAuthenticator(mailAccount.getUser(), new String(mailAccount.getPass()));
+            authenticator = new JakartaUserPassAuthenticator(mailAccount.getUser(), mailAccount.getPass());
         }
 
         return isSingleton ? Session.getDefaultInstance(mailAccount.getSmtpProps(), authenticator) //
@@ -422,7 +420,7 @@ public class MailUtils {
     private static String send(MailAccount mailAccount, boolean useGlobalSession, Collection<String> tos, Collection<String> ccs, Collection<String> bccs, String subject, String content,
                                Map<String, InputStream> imageMap, boolean isHtml, DataSource... files) {
         validateMessage(tos, subject, content);
-        final Mail mail = Mail.of(mailAccount).setUseGlobalSession(useGlobalSession);
+        final JakartaMail mail = JakartaMail.create(mailAccount).setUseGlobalSession(useGlobalSession);
 
         // 可选抄送人
         if (CollUtil.isNotEmpty(ccs)) {
@@ -438,7 +436,7 @@ public class MailUtils {
         mail.setContent(content);
         mail.setHtml(isHtml);
         if (files != null && files.length > 0) {
-            mail.addAttachments(files);
+            mail.setAttachments(files);
         }
         
         try {
@@ -479,7 +477,7 @@ public class MailUtils {
         if (StrUtil.isBlank(addresses)) {
             return List.of();
         }
-        return SplitUtil.splitTrim(addresses.replace(';', ','), ",").stream()
+        return StrUtil.splitTrim(addresses.replace(';', ','), ",").stream()
                 .filter(StrUtil::isNotBlank)
                 .toList();
     }

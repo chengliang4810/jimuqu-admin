@@ -2,10 +2,10 @@ package com.jimuqu.common.core.utils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.collection.ListUtil;
-import cn.hutool.v7.core.collection.set.SetUtil;
-import cn.hutool.v7.core.map.MapUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.map.MapUtil;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -58,7 +58,7 @@ public class StreamUtil {
      */
     public static <E> List<E> filter(Collection<E> collection, Predicate<E> function) {
         if (CollUtil.isEmpty(collection)) {
-            return ListUtil.zero();
+            return java.util.Collections.emptyList();
         }
         // 注意此处不要使用 .toList() 新语法 因为返回的是不可变List 会导致序列化问题
         return collection.stream().filter(function).collect(Collectors.toList());
@@ -99,7 +99,7 @@ public class StreamUtil {
      */
     public static <E> List<E> sorted(Collection<E> collection, Comparator<E> comparing) {
         if (CollUtil.isEmpty(collection)) {
-            return ListUtil.zero();
+            return java.util.Collections.emptyList();
         }
         // 注意此处不要使用 .toList() 新语法 因为返回的是不可变List 会导致序列化问题
         return collection.stream().filter(Objects::nonNull).sorted(comparing).collect(Collectors.toList());
@@ -214,7 +214,7 @@ public class StreamUtil {
      */
     public static <E, T> List<T> toList(Collection<E> collection, Function<E, T> function) {
         if (CollUtil.isEmpty(collection)) {
-            return ListUtil.zero();
+            return java.util.Collections.emptyList();
         }
         return collection
                 .stream()
@@ -236,7 +236,7 @@ public class StreamUtil {
      */
     public static <E, T> Set<T> toSet(Collection<E> collection, Function<E, T> function) {
         if (CollUtil.isEmpty(collection) || function == null) {
-            return SetUtil.zero();
+            return java.util.Collections.emptySet();
         }
         return collection
                 .stream()

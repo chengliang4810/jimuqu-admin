@@ -12,7 +12,7 @@
     <parent>
         <groupId>org.noear</groupId>
         <artifactId>solon-parent</artifactId>
-        <version>3.10.4</version>
+        <version>4.0.3</version>
         <relativePath/>
     </parent>
 
@@ -27,29 +27,27 @@
         <revision>1.0.0</revision>
         <java.version>17</java.version>
         <!-- 通用 -->
-        <lombok.version>1.18.42</lombok.version>
+        <lombok.version>1.18.46</lombok.version>
         <!-- 工具类 -->
-        <hutool.version>7.0.0-M5</hutool.version>
-        <!-- 第三方组件仍依赖的 Hutool 5，与 cn.hutool.v7 包名隔离 -->
         <hutool5.version>5.8.47</hutool5.version>
         <!-- 实体类转换工具 -->
         <mapstruct-plus.version>1.5.0</mapstruct-plus.version>
         <mapstruct-plus.lombok.version>0.2.0</mapstruct-plus.lombok.version>
         <!-- 数据源 -->
         <mysql.version>9.7.0</mysql.version>
-        <sqlite.version>3.53.0.0</sqlite.version>
+        <sqlite.version>3.53.2.1</sqlite.version>
         <p6spy.version>3.9.1</p6spy.version>
         <!-- 连接池 -->
-        <hikaricp.version>7.0.2</hikaricp.version>
+        <hikaricp.version>7.1.0</hikaricp.version>
         <!-- 实体类维护数据库表结构 -->
-        <autotable.version>2.5.15</autotable.version>
+        <autotable.version>2.6.1</autotable.version>
         <!-- ORM 框架 -->
-        <xbatis.version>1.10.1</xbatis.version>
+        <xbatis.version>1.10.7</xbatis.version>
         <!-- 权限认证框架 -->
         <sa-token.version>1.45.0</sa-token.version>
         <!-- 文件上传 -->
         <x-file-storage.version>2.3.0</x-file-storage.version>
-        <minio.version>9.0.0</minio.version>
+        <minio.version>9.0.3</minio.version>
         <!-- excel -->
         <fastexcel.version>1.3.0</fastexcel.version>
         <!-- 三方认证 -->
@@ -108,16 +106,7 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- hutool 7 的依赖配置-->
-            <dependency>
-                <groupId>cn.hutool.v7</groupId>
-                <artifactId>hutool-bom</artifactId>
-                <version>${hutool.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- SMS4J、x-file-storage 等第三方组件依赖的 Hutool 5 -->
+            <!-- Hutool 5 依赖配置 -->
             <dependency>
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-bom</artifactId>

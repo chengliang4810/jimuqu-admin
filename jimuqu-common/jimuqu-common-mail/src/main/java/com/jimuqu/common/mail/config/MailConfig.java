@@ -1,6 +1,6 @@
 package com.jimuqu.common.mail.config;
 
-import cn.hutool.v7.extra.mail.MailAccount;
+import cn.hutool.extra.mail.MailAccount;
 import com.jimuqu.common.mail.config.properties.MailProperties;
 import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Condition;
@@ -23,7 +23,7 @@ public class MailConfig {
         account.setFrom(mailProperties.getFrom());
         account.setUser(mailProperties.getUser());
         if (mailProperties.getPass() != null) {
-            account.setPass(mailProperties.getPass().toCharArray());
+            account.setPass(mailProperties.getPass());
         }
         if (mailProperties.getPort() != null) {
             account.setSocketFactoryPort(mailProperties.getPort());

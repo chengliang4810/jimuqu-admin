@@ -1,7 +1,7 @@
 package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import cn.hutool.v7.core.convert.ConvertUtil;
+import cn.hutool.core.convert.Convert;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.utils.StringUtil;
@@ -59,7 +59,7 @@ public class SysDeptController extends BaseController {
     public R<List<SysDeptVo>> excludeChild(Long deptId) {
         List<SysDeptVo> depts = deptService.queryList(new SysDeptQuery());
         depts.removeIf(dept -> dept.getId().equals(deptId)
-                || StringUtil.splitList(dept.getAncestors()).contains(ConvertUtil.toStr(deptId)));
+                || StringUtil.splitList(dept.getAncestors()).contains(Convert.toStr(deptId)));
         return R.ok(depts);
     }
 

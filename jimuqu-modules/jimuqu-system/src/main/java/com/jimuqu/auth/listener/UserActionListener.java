@@ -12,8 +12,8 @@ import com.jimuqu.common.core.utils.ip.AddressUtil;
 import com.jimuqu.auth.service.SysLoginService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.http.useragent.UserAgent;
-import cn.hutool.v7.http.useragent.UserAgentUtil;
+import cn.hutool.http.useragent.UserAgent;
+import cn.hutool.http.useragent.UserAgentUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.core.handle.Context;
 

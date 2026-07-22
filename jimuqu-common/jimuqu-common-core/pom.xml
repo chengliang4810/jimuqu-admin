@@ -40,17 +40,17 @@
         </dependency>
         <!--常用工具类 -->
         <dependency>
-            <groupId>cn.hutool.v7</groupId>
+            <groupId>cn.hutool</groupId>
             <artifactId>hutool-core</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>cn.hutool.v7</groupId>
+            <groupId>cn.hutool</groupId>
             <artifactId>hutool-http</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>cn.hutool.v7</groupId>
+            <groupId>cn.hutool</groupId>
             <artifactId>hutool-extra</artifactId>
         </dependency>
 

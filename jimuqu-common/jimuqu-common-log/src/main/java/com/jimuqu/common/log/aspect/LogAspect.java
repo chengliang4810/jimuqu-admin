@@ -11,11 +11,11 @@ import com.jimuqu.common.log.enums.BusinessStatus;
 import com.jimuqu.common.log.event.OperLogEvent;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.array.ArrayUtil;
-import cn.hutool.v7.core.date.StopWatch;
-import cn.hutool.v7.core.map.Dict;
-import cn.hutool.v7.core.map.MapUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.lang.Dict;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.ObjectUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Body;
 import org.noear.solon.core.event.EventBus;
@@ -155,7 +155,7 @@ public class LogAspect implements RouterInterceptor {
         if (!(jsonResult instanceof DownloadedFile)
                 && !(jsonResult instanceof Throwable)
                 && log.isSaveResponseData()
-                && ObjUtil.isNotNull(jsonResult)) {
+                && ObjectUtil.isNotNull(jsonResult)) {
             operLog.setJsonResult(StringUtil.substring(JsonUtil.toString(jsonResult), 0, MAX_CONTENT_LENGTH));
         }
     }
@@ -250,7 +250,7 @@ public class LogAspect implements RouterInterceptor {
             return params.toString();
         }
         for (Object o : paramsArray) {
-            if (ObjUtil.isNotNull(o) && !isFilterObject(o)) {
+            if (ObjectUtil.isNotNull(o) && !isFilterObject(o)) {
                 String str = JsonUtil.toString(o);
                 Dict dict = JsonUtil.toMap(str);
                 if (MapUtil.isNotEmpty(dict)) {

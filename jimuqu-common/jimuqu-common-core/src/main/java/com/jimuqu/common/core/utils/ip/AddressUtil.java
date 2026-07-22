@@ -1,7 +1,7 @@
 package com.jimuqu.common.core.utils.ip;
 
-import cn.hutool.v7.core.text.StrUtil;
-import cn.hutool.v7.http.html.HtmlUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HtmlUtil;
 import com.jimuqu.common.core.utils.NetUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -23,7 +23,7 @@ public class AddressUtil {
 
     public static String getRealAddressByIP(String ip) {
         // 处理空串并过滤HTML标签
-        ip = HtmlUtil.cleanHtmlTag(StrUtil.defaultIfBlank(ip,""));
+        ip = HtmlUtil.cleanHtmlTag(StrUtil.isBlank(ip) ? "" : ip);
         // 判断是否为IPv4
         boolean isIPv4 = NetUtils.isIPv4(ip);
         // 判断是否为IPv6

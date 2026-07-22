@@ -1,6 +1,6 @@
 package com.jimuqu.common.core.exception;
 
-import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

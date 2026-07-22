@@ -1,10 +1,11 @@
 package com.jimuqu.common.core.utils;
 
-import cn.hutool.v7.core.collection.ListUtil;
-import cn.hutool.v7.core.collection.set.SetUtil;
-import cn.hutool.v7.core.map.Dict;
-import cn.hutool.v7.core.text.StrPool;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.Dict;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.text.StrPool;
+import cn.hutool.core.util.ObjectUtil;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.noear.snack4.Feature;
@@ -35,7 +36,7 @@ public class JsonUtil {
      * @return JsonString
      */
     public static String toString(Object object) {
-        if (ObjUtil.isNull(object)) {
+        if (ObjectUtil.isNull(object)) {
             return null;
         }
         return ONode.serialize(object, WRITE_OPTIONS);
@@ -48,7 +49,7 @@ public class JsonUtil {
      * @return {@link String } 格式化后的json字符串
      */
     public static String toStringFormat(Object object) {
-        if (ObjUtil.isNull(object)) {
+        if (ObjectUtil.isNull(object)) {
             return StrPool.EMPTY_JSON;
         }
         return ONode.serialize(object, PRETTY_WRITE_OPTIONS);
@@ -77,7 +78,7 @@ public class JsonUtil {
      */
     public static <T> List<T> toObjectList(String jsonString, Class<T> type) {
         if (StringUtil.isEmpty(jsonString)) {
-            return ListUtil.zero();
+            return java.util.Collections.emptyList();
         }
         return ONode.deserialize(jsonString, TypeRef.listOf(type));
     }
@@ -91,7 +92,7 @@ public class JsonUtil {
      */
     public static <T> Set<T> toObjectSet(String jsonString, Class<T> type) {
         if (StringUtil.isEmpty(jsonString)) {
-            return SetUtil.zero();
+            return java.util.Collections.emptySet();
         }
         return ONode.deserialize(jsonString, TypeRef.setOf(type));
     }

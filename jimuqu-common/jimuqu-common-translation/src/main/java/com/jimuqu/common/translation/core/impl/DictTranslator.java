@@ -1,6 +1,6 @@
 package com.jimuqu.common.translation.core.impl;
 
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.jimuqu.common.core.service.DictService;
 import com.jimuqu.common.translation.annotation.Trans;
 import com.jimuqu.common.translation.core.TranslationInterface;
@@ -20,7 +20,7 @@ public class DictTranslator implements TranslationInterface {
 
     @Override
     public String translate(Object value, Trans trans) {
-        if (ObjUtil.isNull(value) || ObjUtil.isNull(dictService)) {
+        if (ObjectUtil.isNull(value) || ObjectUtil.isNull(dictService)) {
             return trans.defaultValue();
         }
         String dictType = trans.value();
@@ -28,7 +28,7 @@ public class DictTranslator implements TranslationInterface {
 
         try {
             String dictLabel = dictService.getDictLabel(dictType, dictValue);
-            if (ObjUtil.isNotEmpty(dictLabel)) {
+            if (ObjectUtil.isNotEmpty(dictLabel)) {
                 return dictLabel;
             }
         } catch (Exception e) {

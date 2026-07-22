@@ -2,7 +2,7 @@ package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.annotation.SaCheckRole;
-import cn.hutool.v7.core.tree.MapTree;
+import cn.hutool.core.lang.tree.Tree;
 import com.jimuqu.common.core.checker.Assert;
 import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.constant.UserConstants;
@@ -79,7 +79,7 @@ public class SysMenuController extends BaseController {
     @Get
     @Mapping("/treeselect")
     @SaCheckPermission("system:menu:query")
-    public R<List<MapTree<Long>>> treeselect(SysMenuQuery query) {
+    public R<List<Tree<Long>>> treeselect(SysMenuQuery query) {
         List<SysMenuVo> menus = menuService.queryListForTreeSelect(query, LoginHelper.getUserId());
         return R.ok(menuService.buildMenuTreeSelect(menus));
     }

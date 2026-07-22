@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
  * @author Lion Li,chengliang4810
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class FileUtil extends cn.hutool.v7.core.io.file.FileUtil {
+public class FileUtil extends cn.hutool.core.io.FileUtil {
 
     /**
      * 百分号编码工具方法
@@ -34,6 +34,6 @@ public class FileUtil extends cn.hutool.v7.core.io.file.FileUtil {
      * @return true 文件存在，false 文件不存在
      */
     public static boolean notExists(File file) {
-        return !exists(file);
+        return file == null || !file.exists();
     }
 }

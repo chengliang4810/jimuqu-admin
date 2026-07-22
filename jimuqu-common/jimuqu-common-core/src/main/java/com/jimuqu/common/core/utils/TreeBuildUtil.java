@@ -3,11 +3,11 @@ package com.jimuqu.common.core.utils;
 import com.jimuqu.common.core.utils.reflect.ReflectUtil;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.tree.MapTree;
-import cn.hutool.v7.core.tree.TreeNodeConfig;
-import cn.hutool.v7.core.tree.TreeUtil;
-import cn.hutool.v7.core.tree.parser.NodeParser;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.tree.Tree;
+import cn.hutool.core.lang.tree.TreeNodeConfig;
+import cn.hutool.core.lang.tree.TreeUtil;
+import cn.hutool.core.lang.tree.parser.NodeParser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ public class TreeBuildUtil extends TreeUtil {
      * @param nodeParser 解析器，用于将输入节点转换为树节点
      * @return 构建好的树形结构列表
      */
-    public static <T, K> List<MapTree<K>> build(List<T> list, NodeParser<T, K> nodeParser) {
+    public static <T, K> List<Tree<K>> build(List<T> list, NodeParser<T, K> nodeParser) {
         if (CollUtil.isEmpty(list)) {
             return new ArrayList<>();
         }
@@ -54,7 +54,7 @@ public class TreeBuildUtil extends TreeUtil {
      * @param nodeParser 解析器，用于将输入节点转换为树节点
      * @return 构建好的树形结构列表
      */
-    public static <T, K> List<MapTree<K>> build(List<T> list, K parentId, NodeParser<T, K> nodeParser) {
+    public static <T, K> List<Tree<K>> build(List<T> list, K parentId, NodeParser<T, K> nodeParser) {
         if (CollUtil.isEmpty(list)) {
             return new ArrayList<>();
         }
@@ -68,7 +68,7 @@ public class TreeBuildUtil extends TreeUtil {
      * @param nodes 节点列表
      * @return 包含所有叶子节点的列表
      */
-    public static <K> List<MapTree<K>> getLeafNodes(List<MapTree<K>> nodes) {
+    public static <K> List<Tree<K>> getLeafNodes(List<Tree<K>> nodes) {
         if (CollUtil.isEmpty(nodes)) {
             return new ArrayList<>();
         }
@@ -84,7 +84,7 @@ public class TreeBuildUtil extends TreeUtil {
      * @param node 要查找叶子节点的根节点
      * @return 包含所有叶子节点的列表
      */
-    private static <K> Stream<MapTree<K>> extractLeafNodes(MapTree<K> node) {
+    private static <K> Stream<Tree<K>> extractLeafNodes(Tree<K> node) {
         if (!node.hasChild()) {
             return Stream.of(node);
         } else {

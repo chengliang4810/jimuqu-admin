@@ -1,9 +1,8 @@
 package com.jimuqu.common.mail.utils;
 
-import cn.hutool.v7.extra.mail.MailAccount;
+import cn.hutool.extra.mail.MailAccount;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 
@@ -15,7 +14,7 @@ class MailUtilsTest {
                 .setHost("smtp.example.test")
                 .setFrom("global@example.test")
                 .setUser("global-user")
-                .setPass("global-pass".toCharArray());
+                .setPass("global-pass");
 
         MailAccount custom = MailUtils.copyWithOverrides(
                 global, "custom@example.test", "custom-user", "custom-pass");
@@ -23,10 +22,10 @@ class MailUtilsTest {
         assertNotSame(global, custom);
         assertEquals("custom@example.test", custom.getFrom());
         assertEquals("custom-user", custom.getUser());
-        assertArrayEquals("custom-pass".toCharArray(), custom.getPass());
+        assertEquals("custom-pass", custom.getPass());
         assertEquals("global@example.test", global.getFrom());
         assertEquals("global-user", global.getUser());
-        assertArrayEquals("global-pass".toCharArray(), global.getPass());
+        assertEquals("global-pass", global.getPass());
     }
 
     @Test
@@ -34,12 +33,12 @@ class MailUtilsTest {
         MailAccount global = new MailAccount()
                 .setFrom("global@example.test")
                 .setUser("global-user")
-                .setPass("global-pass".toCharArray());
+                .setPass("global-pass");
 
         MailAccount copy = MailUtils.copyWithOverrides(global, " ", null, "");
 
         assertEquals(global.getFrom(), copy.getFrom());
         assertEquals(global.getUser(), copy.getUser());
-        assertArrayEquals(global.getPass(), copy.getPass());
+        assertEquals(global.getPass(), copy.getPass());
     }
 }

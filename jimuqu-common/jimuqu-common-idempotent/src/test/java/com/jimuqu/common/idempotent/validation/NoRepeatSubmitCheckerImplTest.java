@@ -177,6 +177,7 @@ class NoRepeatSubmitCheckerImplTest {
     private static final class ExposedRedissonCacheService extends RedissonCacheService {
         private ExposedRedissonCacheService(RedissonClient client, String keyHeader) {
             super(client, keyHeader, 30);
+            enableMd5key(true);
         }
 
         private String physicalKey(String logicalKey) {

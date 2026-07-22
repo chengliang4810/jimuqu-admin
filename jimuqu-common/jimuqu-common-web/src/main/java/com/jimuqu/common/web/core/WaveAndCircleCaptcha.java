@@ -1,12 +1,12 @@
 package com.jimuqu.common.web.core;
 
-import cn.hutool.v7.core.util.ObjUtil;
-import cn.hutool.v7.core.util.RandomUtil;
-import cn.hutool.v7.swing.captcha.AbstractCaptcha;
-import cn.hutool.v7.swing.captcha.generator.CodeGenerator;
-import cn.hutool.v7.swing.captcha.generator.RandomGenerator;
-import cn.hutool.v7.swing.img.GraphicsUtil;
-import cn.hutool.v7.swing.img.color.ColorUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.captcha.AbstractCaptcha;
+import cn.hutool.captcha.generator.CodeGenerator;
+import cn.hutool.captcha.generator.RandomGenerator;
+import cn.hutool.core.img.GraphicsUtil;
+import cn.hutool.core.img.ColorUtil;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -57,7 +57,7 @@ public class WaveAndCircleCaptcha extends AbstractCaptcha {
         Graphics2D graphics = GraphicsUtil.createGraphics(image, background);
         try {
             drawString(graphics, code);
-            shear(graphics, width, height, ObjUtil.defaultIfNull(background, Color.WHITE));
+            shear(graphics, width, height, ObjectUtil.defaultIfNull(background, Color.WHITE));
             drawInterfere(graphics);
         } finally {
             graphics.dispose();

@@ -1,6 +1,6 @@
 package com.jimuqu.common.mail.utils;
 
-import cn.hutool.v7.extra.mail.MailAccount;
+import cn.hutool.extra.mail.MailAccount;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -38,7 +38,7 @@ class MailUtilsTest {
                 .setPort(465)
                 .setFrom("default@example.test")
                 .setUser("default-user")
-                .setPass("default-pass".toCharArray())
+                .setPass("default-pass")
                 .setSslEnable(true);
 
         MailAccount copy = MailUtils.copyWithOverrides(
@@ -46,15 +46,14 @@ class MailUtilsTest {
 
         assertAll(
                 () -> assertNotSame(source, copy),
-                () -> assertNotSame(source.getPass(), copy.getPass()),
                 () -> assertEquals("smtp.example.test", copy.getHost()),
                 () -> assertEquals(465, copy.getPort()),
                 () -> assertEquals("sender@example.test", copy.getFrom()),
                 () -> assertEquals("sender-user", copy.getUser()),
-                () -> assertEquals("sender-pass", new String(copy.getPass())),
+                () -> assertEquals("sender-pass", copy.getPass()),
                 () -> assertEquals("default@example.test", source.getFrom()),
                 () -> assertEquals("default-user", source.getUser()),
-                () -> assertEquals("default-pass", new String(source.getPass()))
+                () -> assertEquals("default-pass", source.getPass())
         );
     }
 }

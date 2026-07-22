@@ -4,8 +4,8 @@ import com.jimuqu.common.core.exception.ServiceException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import cn.hutool.v7.core.text.StrUtil;
-import cn.hutool.v7.core.text.split.SplitUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.StrUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -105,7 +105,7 @@ public class DropDownOptions {
      * @return 原始的参数
      */
     public static List<String> analyzeOptionValue(String option) {
-        return SplitUtil.split(option, DELIMITER, true, true);
+        return StrUtil.split(option, DELIMITER, true, true);
     }
 
     /**

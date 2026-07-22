@@ -15,7 +15,7 @@ import com.jimuqu.system.domain.vo.ProfileVo;
 import com.jimuqu.system.domain.vo.ProfileUserVo;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.service.SysUserService;
-import cn.hutool.v7.core.bean.BeanUtil;
+import cn.hutool.core.bean.BeanUtil;
 import org.noear.solon.annotation.*;
 import org.noear.solon.validation.annotation.NoRepeatSubmit;
 import org.noear.solon.validation.ValidUtils;

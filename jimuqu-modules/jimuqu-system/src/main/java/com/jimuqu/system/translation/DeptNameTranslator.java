@@ -37,7 +37,7 @@ public class DeptNameTranslator implements TranslationInterface {
         List<Long> deptIds = TranslationValueSupport.distinctLongs(values);
         Map<Long, String> names = deptIds.isEmpty() ? Map.of() : QueryChain.of(deptMapper)
                 .select(SysDept::getId, SysDept::getDeptName)
-                .where(where -> where.in(SysDept::getId, deptIds))
+                .in(SysDept::getId, deptIds)
                 .list().stream()
                 .filter(dept -> dept.getId() != null && dept.getDeptName() != null)
                 .collect(Collectors.toMap(SysDept::getId, SysDept::getDeptName,

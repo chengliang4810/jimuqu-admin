@@ -11,9 +11,9 @@ import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.excel.annotation.ExcelDictFormat;
 import com.jimuqu.common.excel.utils.ExcelUtil;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.annotation.AnnotationUtil;
-import cn.hutool.v7.core.convert.ConvertUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.annotation.AnnotationUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.ObjectUtil;
 import org.noear.solon.Solon;
 
 import java.lang.reflect.Field;
@@ -47,17 +47,17 @@ public class ExcelDictConvert implements Converter<Object> {
         } else {
             value = Solon.context().getBean(DictService.class).getDictValue(type, label, anno.separator());
         }
-        return ConvertUtil.convert(contentProperty.getField().getType(), value);
+        return Convert.convert(contentProperty.getField().getType(), value);
     }
 
     @Override
     public WriteCellData<String> convertToExcelData(Object object, ExcelContentProperty contentProperty, GlobalConfiguration globalConfiguration) {
-        if (ObjUtil.isNull(object)) {
+        if (ObjectUtil.isNull(object)) {
             return new WriteCellData<>("" );
         }
         ExcelDictFormat anno = getAnnotation(contentProperty.getField());
         String type = anno.dictType();
-        String value = ConvertUtil.toStr(object);
+        String value = Convert.toStr(object);
         String label;
         if (StringUtil.isBlank(type)) {
             label = ExcelUtil.convertByExp(value, anno.readConverterExp(), anno.separator());

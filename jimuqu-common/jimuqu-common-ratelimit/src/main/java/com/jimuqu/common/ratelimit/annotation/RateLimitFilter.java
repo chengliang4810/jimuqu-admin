@@ -1,6 +1,6 @@
 package com.jimuqu.common.ratelimit.annotation;
 
-import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jimuqu.common.ratelimit.core.RateLimitConfig;
 import com.jimuqu.common.ratelimit.core.RateLimiter;
 import com.jimuqu.common.ratelimit.enums.RateLimitType;

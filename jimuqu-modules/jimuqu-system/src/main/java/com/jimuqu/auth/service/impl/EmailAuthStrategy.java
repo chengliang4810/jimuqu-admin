@@ -24,7 +24,7 @@ import com.jimuqu.system.domain.SysUser;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.mapper.SysUserMapper;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.util.ObjectUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.data.cache.CacheService;
@@ -89,7 +89,7 @@ public class EmailAuthStrategy implements AuthStrategyService {
     private SysUserVo loadUserByEmail(String email) {
         SysUser user = userMapper.get(Where.create().eq(SysUser::getEmail, email), SysUser::getEmail, SysUser::getStatus);
 
-        if (ObjUtil.isNull(user)) {
+        if (ObjectUtil.isNull(user)) {
             log.info("登录用户：{} 不存在.", email);
             throw new UserException("user.not.exists", email);
         } else if (UserStatus.DISABLE.getCode().equals(user.getStatus())) {

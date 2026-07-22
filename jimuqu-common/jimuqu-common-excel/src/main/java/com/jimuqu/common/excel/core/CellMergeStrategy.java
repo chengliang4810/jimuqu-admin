@@ -12,11 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.reflect.FieldUtil;
+import cn.hutool.core.collection.CollUtil;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +59,9 @@ public class CellMergeStrategy extends AbstractMergeStrategy {
         if (CollUtil.isEmpty(list)) {
             return cellList;
         }
-        Field[] fields = FieldUtil.getFields(list.get(0).getClass(), field -> !"serialVersionUID".equals(field.getName()));
+        Field[] fields = Arrays.stream(ReflectUtil.getFields(list.get(0).getClass()))
+                .filter(field -> !"serialVersionUID".equals(field.getName()))
+                .toArray(Field[]::new);
 
         // 有注解的字段
         List<Field> mergeFields = new ArrayList<>();

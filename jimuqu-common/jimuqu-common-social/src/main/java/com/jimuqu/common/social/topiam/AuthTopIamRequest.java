@@ -1,6 +1,6 @@
 package com.jimuqu.common.social.topiam;
 
-import cn.hutool.v7.core.map.Dict;
+import cn.hutool.core.lang.Dict;
 import com.jimuqu.common.core.utils.JsonUtil;
 import me.zhyd.oauth.cache.AuthStateCache;
 import me.zhyd.oauth.config.AuthConfig;

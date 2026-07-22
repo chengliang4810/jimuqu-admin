@@ -9,9 +9,9 @@ import cn.idev.excel.metadata.property.ExcelContentProperty;
 import com.jimuqu.common.core.utils.reflect.ReflectUtil;
 import com.jimuqu.common.excel.annotation.ExcelEnumFormat;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.annotation.AnnotationUtil;
-import cn.hutool.v7.core.convert.ConvertUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.annotation.AnnotationUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.ObjectUtil;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -46,7 +46,7 @@ public class ExcelEnumConvert implements Converter<Object> {
             default -> throw new IllegalArgumentException("单元格类型异常!" );
         };
         // 如果是空值
-        if (ObjUtil.isNull(textValue)) {
+        if (ObjectUtil.isNull(textValue)) {
             return null;
         }
         Map<Object, String> enumCodeToTextMap = beforeConvert(contentProperty);
@@ -60,20 +60,20 @@ public class ExcelEnumConvert implements Converter<Object> {
             }
         });
         // 应该从text -> code中查找
-        Object codeValue = enumTextToCodeMap.get(ConvertUtil.toStr(textValue));
-        if (ObjUtil.isNull(codeValue)) {
+        Object codeValue = enumTextToCodeMap.get(Convert.toStr(textValue));
+        if (ObjectUtil.isNull(codeValue)) {
             throw new IllegalArgumentException("枚举值不匹配: " + textValue + "，允许值: " + enumTextToCodeMap.keySet());
         }
-        return ConvertUtil.convert(contentProperty.getField().getType(), codeValue);
+        return Convert.convert(contentProperty.getField().getType(), codeValue);
     }
 
     @Override
     public WriteCellData<String> convertToExcelData(Object object, ExcelContentProperty contentProperty, GlobalConfiguration globalConfiguration) {
-        if (ObjUtil.isNull(object)) {
+        if (ObjectUtil.isNull(object)) {
             return new WriteCellData<>("" );
         }
         Map<Object, String> enumValueMap = beforeConvert(contentProperty);
-        String value = ConvertUtil.toStr(enumValueMap.get(object), "" );
+        String value = Convert.toStr(enumValueMap.get(object), "" );
         return new WriteCellData<>(value);
     }
 
@@ -84,7 +84,7 @@ public class ExcelEnumConvert implements Converter<Object> {
         for (Enum<?> enumConstant : enumConstants) {
             Object codeValue = ReflectUtil.invokeGetter(enumConstant, anno.codeField());
             String textValue = ReflectUtil.invokeGetter(enumConstant, anno.textField());
-            if (ObjUtil.isNull(codeValue) || ObjUtil.isNull(textValue)) {
+            if (ObjectUtil.isNull(codeValue) || ObjectUtil.isNull(textValue)) {
                 throw new IllegalArgumentException("枚举字段 code/text 不能为空: " + enumConstant.name());
             }
             enumValueMap.put(codeValue, textValue);

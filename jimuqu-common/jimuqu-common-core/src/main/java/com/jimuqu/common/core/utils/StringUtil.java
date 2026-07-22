@@ -2,13 +2,13 @@ package com.jimuqu.common.core.utils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.convert.ConvertUtil;
-import cn.hutool.v7.core.lang.Validator;
-import cn.hutool.v7.core.regex.ReUtil;
-import cn.hutool.v7.core.text.AntPathMatcher;
-import cn.hutool.v7.core.text.StrUtil;
-import cn.hutool.v7.core.text.split.SplitUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.lang.Validator;
+import cn.hutool.core.util.ReUtil;
+import cn.hutool.core.text.AntPathMatcher;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.StrUtil;
 
 import java.util.*;
 import java.util.function.Function;
@@ -48,7 +48,7 @@ public class StringUtil extends StrUtil {
      * @return value 返回值
      */
     public static String defaultIfBlank(String str, String defaultValue) {
-        return StrUtil.defaultIfBlank(str, defaultValue);
+        return StrUtil.isBlank(str) ? defaultValue : str;
     }
 
     /**
@@ -293,7 +293,7 @@ public class StringUtil extends StrUtil {
      * @return 分割后的数据列表
      */
     public static List<String> splitList(String str) {
-        return splitTo(str, ConvertUtil::toStr);
+        return splitTo(str, Convert::toStr);
     }
 
     /**
@@ -304,7 +304,7 @@ public class StringUtil extends StrUtil {
      * @return 分割后的数据列表
      */
     public static List<String> splitList(String str, String separator) {
-        return splitTo(str, separator, ConvertUtil::toStr);
+        return splitTo(str, separator, Convert::toStr);
     }
 
     /**
@@ -330,7 +330,7 @@ public class StringUtil extends StrUtil {
         if (isBlank(str)) {
             return new ArrayList<>(0);
         }
-        return SplitUtil.split(str, separator)
+        return StrUtil.split(str, separator)
                 .stream()
                 .filter(Objects::nonNull)
                 .map(mapper)

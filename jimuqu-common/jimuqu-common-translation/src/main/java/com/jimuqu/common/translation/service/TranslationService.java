@@ -1,7 +1,7 @@
 package com.jimuqu.common.translation.service;
 
-import cn.hutool.v7.core.bean.BeanUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.xbatis.page.IPager;
 import cn.xbatis.page.PagerField;
 import com.jimuqu.common.core.domain.PageResult;
@@ -47,7 +47,7 @@ public class TranslationService {
 
     private void collect(Object object, Set<Object> visited,
                          Map<TranslationGroup, List<TranslationTask>> groups) {
-        if (ObjUtil.isNull(object)) {
+        if (ObjectUtil.isNull(object)) {
             return;
         }
 
@@ -100,9 +100,9 @@ public class TranslationService {
                 try {
                     field.setAccessible(true);
                     Trans trans = field.getAnnotation(Trans.class);
-                    String sourceField = ObjUtil.isEmpty(trans.field()) ? field.getName() : trans.field();
+                    String sourceField = ObjectUtil.isEmpty(trans.field()) ? field.getName() : trans.field();
                     Object sourceValue = BeanUtil.getProperty(object, sourceField);
-                    if (ObjUtil.isNotNull(sourceValue)) {
+                    if (ObjectUtil.isNotNull(sourceValue)) {
                         TranslationInterface translator = transMap.get(trans.type().getTranslatorName());
                         if (translator == null) {
                             setTranslatedValue(object, field, trans, trans.defaultValue());
@@ -166,9 +166,9 @@ public class TranslationService {
 
     private void setTranslatedValue(Object object, Field field, Trans trans, String translatedValue) {
         try {
-            if (ObjUtil.isNotEmpty(translatedValue)) {
+            if (ObjectUtil.isNotEmpty(translatedValue)) {
                 field.set(object, translatedValue);
-            } else if (ObjUtil.isNotEmpty(trans.defaultValue())) {
+            } else if (ObjectUtil.isNotEmpty(trans.defaultValue())) {
                 field.set(object, trans.defaultValue());
             }
         } catch (Exception e) {

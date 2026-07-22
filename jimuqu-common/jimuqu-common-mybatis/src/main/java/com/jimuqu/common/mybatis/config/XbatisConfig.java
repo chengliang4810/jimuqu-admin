@@ -1,6 +1,6 @@
 package com.jimuqu.common.mybatis.config;
 
-import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.xbatis.core.XbatisGlobalConfig;
 import com.jimuqu.common.core.exception.ServiceException;
 import com.jimuqu.common.mybatis.core.mapper.BaseMapper;

@@ -25,7 +25,7 @@ import com.jimuqu.system.domain.SysClient;
 import com.jimuqu.system.domain.vo.SysUserVo;
 import com.jimuqu.system.mapper.SysUserMapper;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.util.ObjectUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.data.cache.CacheService;
@@ -104,7 +104,7 @@ public class PasswordAuthStrategy implements AuthStrategyService {
 
     private SysUserVo loadUserByUsername(String username) {
         SysUserVo user = userMapper.selectUserByUserName(username);
-        if (ObjUtil.isNull(user)) {
+        if (ObjectUtil.isNull(user)) {
             log.info("登录用户：{} 不存在.", username);
             throw new UserException("user.not.exists", username);
         } else if (UserStatus.DISABLE.getCode().equals(user.getStatus())) {

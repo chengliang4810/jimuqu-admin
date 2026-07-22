@@ -1,9 +1,9 @@
 package com.jimuqu.common.idempotent.aspectj;
 
 import cn.dev33.satoken.SaManager;
-import cn.hutool.v7.core.text.StrUtil;
-import cn.hutool.v7.core.util.ObjUtil;
-import cn.hutool.v7.crypto.SecureUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.crypto.SecureUtil;
 import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.exception.ServiceException;
@@ -133,7 +133,7 @@ public class RepeatSubmitInterceptor implements RouterInterceptor {
         if (StrUtil.isNotBlank(body)) {
             params.add(body);
         }
-        if (ObjUtil.isNotNull(paramsArray) && !paramsArray.isEmpty()) {
+        if (ObjectUtil.isNotNull(paramsArray) && !paramsArray.isEmpty()) {
             params.add(JsonUtil.toString(paramsArray));
         }
         return params.toString();

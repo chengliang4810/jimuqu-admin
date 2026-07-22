@@ -144,8 +144,8 @@ public class SysMessageService {
     private List<SysMessageVo> select(String category, Long userId) {
         Date cutoff = new Date(System.currentTimeMillis() - BOX_DAYS * 24 * 60 * 60 * 1000);
         QueryChain<SysMessage> query = QueryChain.of(mapper)
-                .where(where -> where.eq(SysMessage::getCategory, category)
-                        .gte(SysMessage::getCreateTime, cutoff))
+                .eq(SysMessage::getCategory, category)
+                .gte(SysMessage::getCreateTime, cutoff)
                 .orderByDesc(SysMessage::getCreateTime, SysMessage::getMessageId);
         query.andNested(scope -> scope.eq(SysMessage::getSendUserIds, GLOBAL_USER_IDS)
                 .or(SysMessage::getSendUserIds, value -> value.mysql().findInSet(userId)));

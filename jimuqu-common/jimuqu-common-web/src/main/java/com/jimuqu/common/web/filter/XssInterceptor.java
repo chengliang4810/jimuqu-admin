@@ -1,6 +1,6 @@
 package com.jimuqu.common.web.filter;
 
-import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jimuqu.common.core.utils.StringUtil;
 import com.jimuqu.common.web.config.properties.XssProperties;
 import org.noear.solon.annotation.Component;

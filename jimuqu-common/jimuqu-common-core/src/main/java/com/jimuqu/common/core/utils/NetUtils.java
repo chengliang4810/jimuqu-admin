@@ -1,7 +1,7 @@
 package com.jimuqu.common.core.utils;
 
-import cn.hutool.v7.core.net.NetUtil;
-import cn.hutool.v7.core.regex.PatternPool;
+import cn.hutool.core.net.NetUtil;
+import cn.hutool.core.lang.PatternPool;
 import com.jimuqu.common.core.utils.regex.RegexUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

@@ -1,7 +1,7 @@
 package com.jimuqu.common.websocket.handler;
 
 import cn.dev33.satoken.stp.StpUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.jimuqu.common.core.domain.model.LoginUser;
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.redis.utils.RedisUtils;
@@ -54,7 +54,7 @@ public class WebSocketHandler implements WebSocketListener {
             return;
         }
 
-        if (ObjUtil.isNull(loginUser)) {
+        if (ObjectUtil.isNull(loginUser)) {
             socket.close(BAD_DATA_CLOSE_CODE, "invalid token");
             log.info("[connect] invalid token received. sessionId: {}", socket.id());
             return;
@@ -161,7 +161,7 @@ public class WebSocketHandler implements WebSocketListener {
     @Override
     public void onClose(WebSocket socket) {
         LoginUser loginUser = socket.attr(LOGIN_USER_KEY);
-        if (ObjUtil.isNull(loginUser)) {
+        if (ObjectUtil.isNull(loginUser)) {
             log.info("[disconnect] invalid token received. sessionId: {}", socket.id());
             return;
         }

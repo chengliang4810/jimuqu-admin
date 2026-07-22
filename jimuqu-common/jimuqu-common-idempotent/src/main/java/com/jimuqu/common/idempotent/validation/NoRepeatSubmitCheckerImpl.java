@@ -1,9 +1,9 @@
 package com.jimuqu.common.idempotent.validation;
 
 import cn.dev33.satoken.SaManager;
-import cn.hutool.v7.core.text.StrUtil;
-import cn.hutool.v7.core.util.ObjUtil;
-import cn.hutool.v7.crypto.SecureUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.crypto.SecureUtil;
 import com.jimuqu.common.core.constant.GlobalConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.Solon;
@@ -43,6 +43,9 @@ public class NoRepeatSubmitCheckerImpl implements NoRepeatSubmitChecker {
     NoRepeatSubmitCheckerImpl(CacheService cacheService, String redissonKeyHeader) {
         this.cacheService = cacheService;
         this.redissonKeyHeader = redissonKeyHeader;
+        if (cacheService instanceof RedissonCacheService redisson) {
+            redisson.enableMd5key(true);
+        }
     }
 
     @Init
@@ -121,7 +124,7 @@ public class NoRepeatSubmitCheckerImpl implements NoRepeatSubmitChecker {
     }
 
     private boolean reserveWithCache(String key, Duration duration) {
-        if (ObjUtil.isNotNull(cacheService.get(key, String.class))) {
+        if (ObjectUtil.isNotNull(cacheService.get(key, String.class))) {
             return false;
         }
         long millis = duration.toMillis();

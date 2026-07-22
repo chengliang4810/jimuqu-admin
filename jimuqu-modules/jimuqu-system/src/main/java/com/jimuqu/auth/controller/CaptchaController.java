@@ -1,9 +1,9 @@
 package com.jimuqu.auth.controller;
 
 import cn.dev33.satoken.annotation.SaIgnore;
-import cn.hutool.v7.swing.captcha.generator.CodeGenerator;
-import cn.hutool.v7.swing.captcha.generator.MathGenerator;
-import cn.hutool.v7.swing.captcha.generator.RandomGenerator;
+import cn.hutool.captcha.generator.CodeGenerator;
+import cn.hutool.captcha.generator.MathGenerator;
+import cn.hutool.captcha.generator.RandomGenerator;
 import com.jimuqu.auth.domain.vo.CaptchaVo;
 import com.jimuqu.auth.service.VerificationCodeService;
 import com.jimuqu.common.core.constant.Constants;

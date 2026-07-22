@@ -1,8 +1,8 @@
 package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import cn.hutool.v7.core.tree.MapTree;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.lang.tree.Tree;
+import cn.hutool.core.util.ObjectUtil;
 import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
@@ -116,7 +116,7 @@ public class SysPostController extends BaseController {
     @Mapping("/optionselect")
     @SaCheckPermission("system:post:query")
     public R<List<SysPostVo>> optionselect(Long[] postIds, Long deptId) {
-        if (ObjUtil.isNotNull(deptId)) {
+        if (ObjectUtil.isNotNull(deptId)) {
             return R.ok(postService.queryList(new SysPostQuery().setDeptId(deptId)));
         }
         if (postIds != null) {
@@ -128,7 +128,7 @@ public class SysPostController extends BaseController {
     @Get
     @Mapping("/deptTree")
     @SaCheckPermission("system:post:list")
-    public R<List<MapTree<Long>>> deptTree(SysDeptQuery query) {
+    public R<List<Tree<Long>>> deptTree(SysDeptQuery query) {
         return R.ok(deptService.selectDeptTreeList(query));
     }
 }

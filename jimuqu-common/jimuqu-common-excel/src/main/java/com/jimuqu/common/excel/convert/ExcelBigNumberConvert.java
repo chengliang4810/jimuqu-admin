@@ -7,8 +7,8 @@ import cn.idev.excel.metadata.data.ReadCellData;
 import cn.idev.excel.metadata.data.WriteCellData;
 import cn.idev.excel.metadata.property.ExcelContentProperty;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.convert.ConvertUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.ObjectUtil;
 
 import java.math.BigDecimal;
 
@@ -33,15 +33,15 @@ public class ExcelBigNumberConvert implements Converter<Long> {
 
     @Override
     public Long convertToJavaData(ReadCellData<?> cellData, ExcelContentProperty contentProperty, GlobalConfiguration globalConfiguration) {
-        return ConvertUtil.toLong(cellData.getStringValue());
+        return Convert.toLong(cellData.getStringValue());
     }
 
     @Override
     public WriteCellData<Object> convertToExcelData(Long object, ExcelContentProperty contentProperty, GlobalConfiguration globalConfiguration) {
-        if (ObjUtil.isNull(object)) {
+        if (ObjectUtil.isNull(object)) {
             return new WriteCellData<>("");
         }
-        String str = ConvertUtil.toStr(object);
+        String str = Convert.toStr(object);
         if (str.length() > 15) {
             return new WriteCellData<>(str);
         }

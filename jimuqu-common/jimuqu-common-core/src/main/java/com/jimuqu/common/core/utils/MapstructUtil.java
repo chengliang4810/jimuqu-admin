@@ -4,10 +4,10 @@ import com.jimuqu.common.core.checker.Assert;
 import io.github.linpeilie.Converter;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.collection.ListUtil;
-import cn.hutool.v7.core.map.MapUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.ObjectUtil;
 import org.noear.solon.Solon;
 import org.noear.solon.lang.NonNull;
 import org.noear.solon.lang.Nullable;
@@ -61,11 +61,11 @@ public class MapstructUtil {
      * @return desc
      */
     public static <T, V> List<V> convert(List<T> sourceList, Class<V> desc) {
-        if (ObjUtil.isNull(sourceList)) {
-            return ListUtil.zero();
+        if (ObjectUtil.isNull(sourceList)) {
+            return java.util.Collections.emptyList();
         }
         if (CollUtil.isEmpty(sourceList)) {
-            return ListUtil.zero();
+            return java.util.Collections.emptyList();
         }
         return CONVERTER.convert(sourceList, desc);
     }
@@ -81,7 +81,7 @@ public class MapstructUtil {
         if (MapUtil.isEmpty(map)) {
             return null;
         }
-        if (ObjUtil.isNull(beanClass)) {
+        if (ObjectUtil.isNull(beanClass)) {
             return null;
         }
         return CONVERTER.convert(map, beanClass);

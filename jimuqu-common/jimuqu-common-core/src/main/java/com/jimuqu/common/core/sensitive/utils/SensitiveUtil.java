@@ -1,6 +1,6 @@
 package com.jimuqu.common.core.sensitive.utils;
 
-import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jimuqu.common.core.sensitive.annotation.Sensitive;
 import com.jimuqu.common.core.sensitive.enums.SensitiveType;
 import lombok.AccessLevel;

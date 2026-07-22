@@ -1,6 +1,6 @@
 package com.jimuqu.common.ratelimit.utils;
 
-import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jimuqu.common.ratelimit.enums.RateLimitType;
 import com.jimuqu.common.satoken.utils.LoginHelper;
 import org.noear.solon.core.handle.Context;

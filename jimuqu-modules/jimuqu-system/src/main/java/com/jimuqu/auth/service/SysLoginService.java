@@ -26,7 +26,7 @@ import com.jimuqu.system.service.SysPostService;
 import com.jimuqu.system.service.SysRoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.util.ObjectUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.core.event.EventBus;
@@ -64,7 +64,7 @@ public class SysLoginService {
     public void logout() {
         try {
             LoginUser loginUser = LoginHelper.getLoginUser();
-            if (ObjUtil.isNull(loginUser)) {
+            if (ObjectUtil.isNull(loginUser)) {
                 return;
             }
             recordLogininfor(loginUser.getUsername(), Constants.LOGOUT,
@@ -112,8 +112,8 @@ public class SysLoginService {
                 dept = persistedDept;
             }
         }
-        loginUser.setDeptName(dept == null ? ObjUtil.defaultIfNull(user.getDeptName(), "") : dept.getDeptName());
-        loginUser.setDeptCategory(dept == null ? "" : ObjUtil.defaultIfNull(dept.getDeptCategory(), ""));
+        loginUser.setDeptName(dept == null ? ObjectUtil.defaultIfNull(user.getDeptName(), "") : dept.getDeptName());
+        loginUser.setDeptCategory(dept == null ? "" : ObjectUtil.defaultIfNull(dept.getDeptCategory(), ""));
         loginUser.setMenuPermission(permissionService.getMenuPermission(userId));
         loginUser.setRolePermission(permissionService.getRolePermission(userId));
         List<RoleDTO> roles = roleService.selectRolesByUserId(userId).stream()
@@ -168,7 +168,7 @@ public class SysLoginService {
         String loginFail = Constants.LOGIN_FAIL;
 
         // 获取用户登录错误次数，默认为0 (可自定义限制策略 例如: key + username + ip)
-        int errorNumber = ObjUtil.defaultIfNull(cacheService.get(errorKey, Integer.class), 0);
+        int errorNumber = ObjectUtil.defaultIfNull(cacheService.get(errorKey, Integer.class), 0);
         // 锁定时间内登录 则踢出
         if (errorNumber >= maxRetryCount) {
             recordLogininfor(username, loginFail,

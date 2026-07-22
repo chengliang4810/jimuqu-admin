@@ -37,7 +37,7 @@ public class NicknameTranslator implements TranslationInterface {
         List<Long> userIds = TranslationValueSupport.distinctLongs(values);
         Map<Long, String> names = userIds.isEmpty() ? Map.of() : QueryChain.of(userMapper)
                 .select(SysUser::getId, SysUser::getNickName)
-                .where(where -> where.in(SysUser::getId, userIds))
+                .in(SysUser::getId, userIds)
                 .list().stream()
                 .filter(user -> user.getId() != null && user.getNickName() != null)
                 .collect(Collectors.toMap(SysUser::getId, SysUser::getNickName,

@@ -2,7 +2,7 @@ package com.jimuqu.common.web.interceptor;
 
 import com.jimuqu.common.core.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.core.util.StrUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.core.handle.Action;
 import org.noear.solon.core.handle.Context;

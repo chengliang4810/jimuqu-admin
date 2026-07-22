@@ -5,7 +5,7 @@ import com.jimuqu.common.mybatis.core.page.PageQuery;
 import com.jimuqu.system.domain.bo.SysDeptBo;
 import com.jimuqu.system.domain.vo.SysDeptVo;
 import com.jimuqu.system.domain.query.SysDeptQuery;
-import cn.hutool.v7.core.tree.MapTree;
+import cn.hutool.core.lang.tree.Tree;
 
 import java.util.Collection;
 import java.util.List;
@@ -51,7 +51,7 @@ public interface SysDeptService {
      * @param deptQuery 部门信息
      * @return 部门树信息集合
      */
-    List<MapTree<Long>> selectDeptTreeList(SysDeptQuery deptQuery);
+    List<Tree<Long>> selectDeptTreeList(SysDeptQuery deptQuery);
 
     /**
      * 构建前端所需要下拉树结构
@@ -59,7 +59,7 @@ public interface SysDeptService {
      * @param deptVoList 部门列表
      * @return 下拉树结构列表
      */
-    List<MapTree<Long>> buildDeptTreeSelect(List<SysDeptVo> deptVoList);
+    List<Tree<Long>> buildDeptTreeSelect(List<SysDeptVo> deptVoList);
 
     /**
      * 根据角色ID查询部门树信息

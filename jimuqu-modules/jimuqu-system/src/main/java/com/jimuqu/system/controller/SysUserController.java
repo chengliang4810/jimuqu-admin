@@ -2,8 +2,8 @@ package com.jimuqu.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.secure.BCrypt;
-import cn.hutool.v7.core.util.ObjUtil;
-import cn.hutool.v7.core.tree.MapTree;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.lang.tree.Tree;
 import com.jimuqu.common.core.checker.Assert;
 import com.jimuqu.common.core.constant.UserConstants;
 import com.jimuqu.common.core.constant.GlobalConstants;
@@ -118,13 +118,13 @@ public class SysUserController extends BaseController {
         roleBo.setStatus(UserConstants.ROLE_NORMAL);
         List<SysRoleVo> roles = roleService.queryList(roleBo);
         userInfoVo.setRoles(LoginHelper.isSuperAdmin(userId) ? roles : StreamUtil.filter(roles, r -> !r.isSuperAdmin()));
-        if (ObjUtil.isNotNull(userId)) {
+        if (ObjectUtil.isNotNull(userId)) {
             SysUserVo sysUser = sysUserService.queryById(userId);
             List<Long> roleIds = StreamUtil.toList(sysUser.getRoles(), SysRoleVo::getId);
             sysUser.setRoleIds(roleIds);
             userInfoVo.setUser(sysUser);
             userInfoVo.setRoleIds(roleIds);
-            if (ObjUtil.isNotNull(sysUser.getDeptId())) {
+            if (ObjectUtil.isNotNull(sysUser.getDeptId())) {
                 userInfoVo.setPosts(postService.queryList(new SysPostQuery()
                         .setDeptId(sysUser.getDeptId()).setStatus(UserConstants.POST_NORMAL)));
                 userInfoVo.setPostIds(postService.selectPostListByUserId(userId));
@@ -144,7 +144,7 @@ public class SysUserController extends BaseController {
         UserInfoVo userInfoVo = new UserInfoVo();
         LoginUser loginUser = LoginHelper.getLoginUser();
         SysUserVo user = sysUserService.queryById(loginUser.getUserId());
-        if (ObjUtil.isNull(user)) {
+        if (ObjectUtil.isNull(user)) {
             return R.fail("没有权限访问用户数据!");
         }
         userInfoVo.setUser(user);
@@ -305,7 +305,7 @@ public class SysUserController extends BaseController {
     @Get
     @Mapping("/deptTree")
     @SaCheckPermission("system:user:list")
-    public R<List<MapTree<Long>>> deptTree(SysDeptQuery query) {
+    public R<List<Tree<Long>>> deptTree(SysDeptQuery query) {
         return R.ok(deptService.selectDeptTreeList(query));
     }
 

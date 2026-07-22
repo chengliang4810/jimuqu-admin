@@ -31,8 +31,8 @@ import com.jimuqu.system.service.SysFileService;
 import com.jimuqu.system.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
 import org.noear.solon.validation.ValidUtils;
@@ -137,16 +137,16 @@ public class SysUserServiceImpl implements SysUserService {
     }
 
     private SysUserVo enrichUser(SysUserVo userVo) {
-        if (ObjUtil.isNull(userVo)) {
+        if (ObjectUtil.isNull(userVo)) {
             return null;
         }
         userVo.setRoles(sysRoleMapper.selectRolesByUserId(userVo.getId()));
-        if (ObjUtil.isNotNull(userVo.getDeptId())) {
+        if (ObjectUtil.isNotNull(userVo.getDeptId())) {
             SysDeptVo dept = sysDeptMapper.getById(userVo.getDeptId(), SysDeptVo.class);
             userVo.setDept(dept);
-            userVo.setDeptName(ObjUtil.isNull(dept) ? null : dept.getDeptName());
+            userVo.setDeptName(ObjectUtil.isNull(dept) ? null : dept.getDeptName());
         }
-        if (ObjUtil.isNotNull(userVo.getAvatar())) {
+        if (ObjectUtil.isNotNull(userVo.getAvatar())) {
             userVo.setAvatarUrl(sysFileService.selectUrlByIds(String.valueOf(userVo.getAvatar())));
         }
         return userVo;
@@ -164,7 +164,7 @@ public class SysUserServiceImpl implements SysUserService {
                 .where(query)
                 .orderBy(SysUser::getId);
 
-        if (ObjUtil.isNotNull(query.getDeptId())) {
+        if (ObjectUtil.isNotNull(query.getDeptId())) {
             List<Long> deptIdList = sysDeptMapper.selectListByParentId(query.getDeptId());
             deptIdList.add(query.getDeptId());
             queryChain.in(SysUser::getDeptId, deptIdList);
@@ -504,7 +504,7 @@ public class SysUserServiceImpl implements SysUserService {
         QueryChain<SysUser> queryChain = QueryChain.of(sysUserMapper)
                 .select(SysUser.class)
                 .in(CollUtil.isNotEmpty(userIds), SysUser::getId, userIds)
-                .eq(ObjUtil.isNotNull(deptId), SysUser::getDeptId, deptId)
+                .eq(ObjectUtil.isNotNull(deptId), SysUser::getDeptId, deptId)
                 .eq(SysUser::getStatus, UserConstants.USER_NORMAL)
                 .orderBy(SysUser::getId);
         applyUserDataScope(queryChain);
@@ -661,7 +661,7 @@ public class SysUserServiceImpl implements SysUserService {
     @Override
     @Transaction
     public void insertUserAuth(Long userId, Long[] roleIds) {
-        if (ObjUtil.isNull(userId)) {
+        if (ObjectUtil.isNull(userId)) {
             return;
         }
         List<Long> roleList = roleIds == null ? List.of() : Arrays.asList(roleIds);
@@ -773,7 +773,7 @@ public class SysUserServiceImpl implements SysUserService {
     public boolean checkUserNameUnique(SysUserBo user) {
         return !sysUserMapper.exists(where -> where
                 .eq(SysUser::getUserName, user.getUserName())
-                .ne(ObjUtil.isNotNull(user.getId()), SysUser::getId, user.getId())
+                .ne(ObjectUtil.isNotNull(user.getId()), SysUser::getId, user.getId())
         );
     }
 
@@ -787,7 +787,7 @@ public class SysUserServiceImpl implements SysUserService {
     public boolean checkPhoneUnique(SysUserBo user) {
         return !sysUserMapper.exists(where -> where
                 .eq(SysUser::getPhonenumber, user.getPhonenumber())
-                .ne(ObjUtil.isNotNull(user.getId()), SysUser::getId, user.getId())
+                .ne(ObjectUtil.isNotNull(user.getId()), SysUser::getId, user.getId())
         );
     }
 
@@ -801,7 +801,7 @@ public class SysUserServiceImpl implements SysUserService {
     public boolean checkEmailUnique(SysUserBo user) {
         return !sysUserMapper.exists(where -> where
                 .eq(SysUser::getEmail, user.getEmail())
-                .ne(ObjUtil.isNotNull(user.getId()), SysUser::getId, user.getId())
+                .ne(ObjectUtil.isNotNull(user.getId()), SysUser::getId, user.getId())
         );
     }
 
@@ -812,7 +812,7 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public void checkUserAllowed(Long userId) {
-        if (ObjUtil.isNotNull(userId) && LoginHelper.isSuperAdmin(userId)) {
+        if (ObjectUtil.isNotNull(userId) && LoginHelper.isSuperAdmin(userId)) {
             throw new ServiceException("不允许操作超级管理员用户");
         }
     }
@@ -824,7 +824,7 @@ public class SysUserServiceImpl implements SysUserService {
      */
     @Override
     public void checkUserDataScope(Long userId) {
-        if (ObjUtil.isNull(userId)) {
+        if (ObjectUtil.isNull(userId)) {
             return;
         }
 

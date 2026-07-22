@@ -1,9 +1,9 @@
 package com.jimuqu.common.translation.core.impl;
 
-import cn.hutool.v7.core.classloader.ClassLoaderUtil;
-import cn.hutool.v7.core.convert.ConvertUtil;
-import cn.hutool.v7.core.text.StrUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.util.ClassLoaderUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.jimuqu.common.translation.annotation.Trans;
 import com.jimuqu.common.translation.core.TranslatableEnum;
 import com.jimuqu.common.translation.core.TranslationInterface;
@@ -28,7 +28,7 @@ public class EnumTranslator implements TranslationInterface {
 
     @Override
     public String translate(Object value, Trans trans) {
-        if (ObjUtil.isNull(value)) {
+        if (ObjectUtil.isNull(value)) {
             return trans.defaultValue();
         }
         try {
@@ -64,8 +64,8 @@ public class EnumTranslator implements TranslationInterface {
                         TranslatableEnum<?> translatableEnum = (TranslatableEnum<?>) enumConstant;
                         Object code = translatableEnum.getValue();
                         String label = translatableEnum.getLabel();
-                        if (ObjUtil.isNotNull(code) && StrUtil.isNotBlank(label)) {
-                            dict.put(ConvertUtil.toStr(code), label);
+                        if (ObjectUtil.isNotNull(code) && StrUtil.isNotBlank(label)) {
+                            dict.put(Convert.toStr(code), label);
                         }
                     }
                 } else {

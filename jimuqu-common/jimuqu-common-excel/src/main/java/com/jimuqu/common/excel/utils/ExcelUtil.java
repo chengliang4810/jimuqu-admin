@@ -1,8 +1,8 @@
 package com.jimuqu.common.excel.utils;
 
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.data.id.IdUtil;
-import cn.hutool.v7.core.io.resource.ClassPathResource;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.io.resource.ClassPathResource;
 import cn.idev.excel.EasyExcel;
 import cn.idev.excel.ExcelWriter;
 import cn.idev.excel.write.builder.ExcelWriterSheetBuilder;

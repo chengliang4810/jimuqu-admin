@@ -1,7 +1,7 @@
 package com.jimuqu.system.service.impl;
 
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.constant.GlobalConstants;
 import com.jimuqu.common.core.constant.UserConstants;
@@ -207,14 +207,14 @@ public class SysRoleServiceImpl implements SysRoleService {
     public boolean checkRoleNameUnique(SysRoleBo role) {
         return !roleMapper.exists(where -> where
                 .eq(SysRole::getRoleName, role.getRoleName())
-                .ne(ObjUtil.isNotNull(role.getId()), SysRole::getId, role.getId()));
+                .ne(ObjectUtil.isNotNull(role.getId()), SysRole::getId, role.getId()));
     }
 
     @Override
     public boolean checkRoleKeyUnique(SysRoleBo role) {
         return !roleMapper.exists(where -> where
                 .eq(SysRole::getRoleKey, role.getRoleKey())
-                .ne(ObjUtil.isNotNull(role.getId()), SysRole::getId, role.getId()));
+                .ne(ObjectUtil.isNotNull(role.getId()), SysRole::getId, role.getId()));
     }
 
     @Override
@@ -235,7 +235,7 @@ public class SysRoleServiceImpl implements SysRoleService {
             }
             return;
         }
-        if (!ObjUtil.equals(current.getRoleKey(), role.getRoleKey())
+        if (!ObjectUtil.equals(current.getRoleKey(), role.getRoleKey())
                 && (GlobalConstants.SUPER_ADMIN_ROLE_KEY.equals(current.getRoleKey())
                 || GlobalConstants.SUPER_ADMIN_ROLE_KEY.equals(role.getRoleKey()))) {
             throw new ServiceException("不允许修改系统内置管理员角色标识符");

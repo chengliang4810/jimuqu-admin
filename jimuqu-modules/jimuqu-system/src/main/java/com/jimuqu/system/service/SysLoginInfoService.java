@@ -1,7 +1,7 @@
 package com.jimuqu.system.service;
 
-import cn.hutool.v7.http.useragent.UserAgent;
-import cn.hutool.v7.http.useragent.UserAgentUtil;
+import cn.hutool.http.useragent.UserAgent;
+import cn.hutool.http.useragent.UserAgentUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.checker.Assert;
 import com.jimuqu.common.core.constant.Constants;
@@ -49,7 +49,7 @@ public class SysLoginInfoService {
         Assert.isFalse(ids.stream().anyMatch(java.util.Objects::isNull), "登录日志ID不能为空");
         List<Long> requested = ids.stream().distinct().toList();
         long existing = QueryChain.of(mapper)
-                .where(where -> where.in(SysLoginInfo::getInfoId, requested))
+                .in(SysLoginInfo::getInfoId, requested)
                 .count();
         Assert.isTrue(existing == requested.size(), "登录日志不存在");
         return mapper.deleteByIds(requested);

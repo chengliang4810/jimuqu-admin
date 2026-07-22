@@ -21,8 +21,8 @@ import com.jimuqu.system.mapper.SysUserPostMapper;
 import com.jimuqu.system.service.SysPostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.collection.ListUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.ObjectUtil;
 import org.noear.solon.annotation.Component;
 
 import java.util.Collection;
@@ -89,7 +89,7 @@ public class SysPostServiceImpl implements SysPostService {
 
     private void enrichDeptNames(List<SysPostVo> posts) {
         Set<Long> deptIds = posts.stream().map(SysPostVo::getDeptId)
-                .filter(ObjUtil::isNotNull).collect(Collectors.toSet());
+                .filter(ObjectUtil::isNotNull).collect(Collectors.toSet());
         if (deptIds.isEmpty()) {
             return;
         }
@@ -121,7 +121,7 @@ public class SysPostServiceImpl implements SysPostService {
     }
 
     void applyDepartmentFilter(QueryChain<SysPost> queryChain, SysPostQuery query) {
-        if (ObjUtil.isNull(query.getDeptId()) && ObjUtil.isNotNull(query.getBelongDeptId())) {
+        if (ObjectUtil.isNull(query.getDeptId()) && ObjectUtil.isNotNull(query.getBelongDeptId())) {
             List<Long> deptIds = sysDeptMapper.selectListByParentId(query.getBelongDeptId());
             deptIds.add(query.getBelongDeptId());
             queryChain.in(SysPost::getDeptId, deptIds);
@@ -233,7 +233,7 @@ public class SysPostServiceImpl implements SysPostService {
                 .list();
         return Optional.ofNullable(sysPostList)
                 .map(sysPosts -> sysPosts.stream().map(SysPost::getPostId).toList())
-                .orElse(ListUtil.zero());
+                .orElse(java.util.Collections.emptyList());
     }
 
     @Override
@@ -271,7 +271,7 @@ public class SysPostServiceImpl implements SysPostService {
         boolean exists = sysPostMapper.exists(Where.create()
                 .eq(SysPost::getPostName, post.getPostName())
                 .eq(SysPost::getDeptId, post.getDeptId())
-                .ne(ObjUtil.isNotNull(post.getPostId()), SysPost::getPostId, post.getPostId()));
+                .ne(ObjectUtil.isNotNull(post.getPostId()), SysPost::getPostId, post.getPostId()));
         return !exists;
     }
 
@@ -285,7 +285,7 @@ public class SysPostServiceImpl implements SysPostService {
     public boolean checkPostCodeUnique(SysPostBo post) {
         boolean exists = sysPostMapper.exists(Where.create()
                 .eq(SysPost::getPostCode, post.getPostCode())
-                .ne(ObjUtil.isNotNull(post.getPostId()), SysPost::getPostId, post.getPostId()));
+                .ne(ObjectUtil.isNotNull(post.getPostId()), SysPost::getPostId, post.getPostId()));
         return !exists;
     }
 

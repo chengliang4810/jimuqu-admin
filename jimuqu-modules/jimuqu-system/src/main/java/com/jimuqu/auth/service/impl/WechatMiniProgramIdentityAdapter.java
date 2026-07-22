@@ -1,6 +1,6 @@
 package com.jimuqu.auth.service.impl;
 
-import cn.hutool.v7.core.map.Dict;
+import cn.hutool.core.lang.Dict;
 import com.jimuqu.auth.config.properties.MiniProgramProperties;
 import com.jimuqu.auth.service.MiniProgramIdentityAdapter;
 import com.jimuqu.common.core.exception.ServiceException;

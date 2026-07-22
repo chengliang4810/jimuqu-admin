@@ -2,7 +2,7 @@ package com.jimuqu.auth.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.stp.parameter.SaLoginParameter;
-import cn.hutool.v7.core.bean.BeanUtil;
+import cn.hutool.core.bean.BeanUtil;
 import com.jimuqu.auth.domain.vo.LoginVo;
 import com.jimuqu.auth.service.AuthStrategy;
 import com.jimuqu.auth.service.AuthStrategyService;

@@ -73,7 +73,7 @@ public class SysNoticeService {
         Assert.isFalse(ids.stream().anyMatch(Objects::isNull), "公告ID不能为空");
         List<Long> requested = ids.stream().distinct().toList();
         long existing = QueryChain.of(noticeMapper)
-                .where(where -> where.in(SysNotice::getNoticeId, requested))
+                .in(SysNotice::getNoticeId, requested)
                 .count();
         Assert.isTrue(existing == requested.size(), "通知公告不存在");
         return noticeMapper.deleteByIds(requested);
@@ -83,9 +83,9 @@ public class SysNoticeService {
         QueryChain<SysNotice> chain = QueryChain.of(noticeMapper).forSearch(true).where(query);
         if (StringUtil.isNotBlank(query.getCreateByName())) {
             SysUser user = QueryChain.of(userMapper)
-                    .where(where -> where.eq(SysUser::getUserName, query.getCreateByName()))
+                    .eq(SysUser::getUserName, query.getCreateByName())
                     .get();
-            chain.where(where -> where.eq(SysNotice::getCreateBy, user == null ? -1L : user.getId()));
+            chain.eq(SysNotice::getCreateBy, user == null ? -1L : user.getId());
         }
         return chain.orderBy(SysNotice::getNoticeId);
     }
@@ -145,7 +145,7 @@ public class SysNoticeService {
         }
         Map<Long, String> users = QueryChain.of(userMapper)
                 .select(SysUser::getId, SysUser::getUserName)
-                .where(where -> where.in(SysUser::getId, userIds))
+                .in(SysUser::getId, userIds)
                 .list()
                 .stream()
                 .collect(Collectors.toMap(SysUser::getId, SysUser::getUserName, (left, right) -> left));

@@ -23,10 +23,10 @@ import com.jimuqu.system.mapper.SysUserMapper;
 import com.jimuqu.system.service.SysDeptService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.collection.ListUtil;
-import cn.hutool.v7.core.tree.MapTree;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.lang.tree.Tree;
+import cn.hutool.core.util.ObjectUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.annotation.Transaction;
 
@@ -109,7 +109,7 @@ public class SysDeptServiceImpl implements SysDeptService {
                 .orderBy(SysDept::getAncestors, SysDept::getParentId, SysDept::getOrderNum, SysDept::getId);
 
         Long belongDeptId = query.getBelongDeptId();
-        if (ObjUtil.isNotNull(belongDeptId)) {
+        if (ObjectUtil.isNotNull(belongDeptId)) {
             List<Long> deptList = sysDeptMapper.selectListByParentId(belongDeptId);
             deptList.add(belongDeptId);
             if (CollUtil.isNotEmpty(deptList)) {
@@ -232,7 +232,7 @@ public class SysDeptServiceImpl implements SysDeptService {
      * @return 部门树信息集合
      */
     @Override
-    public List<MapTree<Long>> selectDeptTreeList(SysDeptQuery deptQuery) {
+    public List<Tree<Long>> selectDeptTreeList(SysDeptQuery deptQuery) {
         List<SysDeptVo> deptVoList = queryList(deptQuery);
         return buildDeptTreeSelect(deptVoList);
     }
@@ -244,23 +244,23 @@ public class SysDeptServiceImpl implements SysDeptService {
      * @return 下拉树结构列表
      */
     @Override
-    public List<MapTree<Long>> buildDeptTreeSelect(List<SysDeptVo> deptVoList) {
+    public List<Tree<Long>> buildDeptTreeSelect(List<SysDeptVo> deptVoList) {
         if (CollUtil.isEmpty(deptVoList)) {
-            return ListUtil.zero();
+            return java.util.Collections.emptyList();
         }
         // 获取当前列表中每一个节点的parentId，然后在列表中查找是否有id与其parentId对应，若无对应，则表明此时节点列表中，该节点在当前列表中属于顶级节点
-        List<MapTree<Long>> treeList = new ArrayList<>();
+        List<Tree<Long>> treeList = new ArrayList<>();
         for (SysDeptVo d : deptVoList) {
             Long parentId = d.getParentId();
             SysDeptVo sysDeptVo = StreamUtil.findFirst(deptVoList, it -> it.getId().longValue() == parentId);
-            if (ObjUtil.isNull(sysDeptVo)) {
-                List<MapTree<Long>> trees = TreeBuildUtil.build(deptVoList, parentId, (dept, tree) ->
+            if (ObjectUtil.isNull(sysDeptVo)) {
+                List<Tree<Long>> trees = TreeBuildUtil.build(deptVoList, parentId, (dept, tree) ->
                         tree.setId(dept.getId())
                                 .setParentId(dept.getParentId())
                                 .setName(dept.getDeptName())
                                 .setWeight(dept.getOrderNum())
                                 .putExtra("disabled", "1".equals(dept.getStatus())));
-                MapTree<Long> tree = StreamUtil.findFirst(trees, it -> it.getId().longValue() == d.getId());
+                Tree<Long> tree = StreamUtil.findFirst(trees, it -> it.getId().longValue() == d.getId());
                 treeList.add(tree);
             }
         }
@@ -330,7 +330,7 @@ public class SysDeptServiceImpl implements SysDeptService {
         boolean exist = sysDeptMapper.exists(where -> where
                 .eq(SysDept::getDeptName, deptQuery.getDeptName())
                 .eq(SysDept::getParentId, deptQuery.getParentId())
-                .ne(ObjUtil.isNotNull(deptQuery.getId()), SysDept::getId, deptQuery.getId()));
+                .ne(ObjectUtil.isNotNull(deptQuery.getId()), SysDept::getId, deptQuery.getId()));
         return !exist;
     }
 
@@ -341,7 +341,7 @@ public class SysDeptServiceImpl implements SysDeptService {
      */
     @Override
     public void checkDeptDataScope(Long deptId) {
-        if (ObjUtil.isNull(deptId)) {
+        if (ObjectUtil.isNull(deptId)) {
             return;
         }
         if (LoginHelper.isSuperAdmin()) {

@@ -45,7 +45,7 @@ public class DateUtil {
      * 根据时间返回凌晨、上午、中午、下午或晚上。
      */
     public static String getTodayHour(Date date) {
-        int hour = cn.hutool.v7.core.date.DateUtil.hour(date, true);
+        int hour = cn.hutool.core.date.DateUtil.hour(date, true);
         if (hour <= 6) {
             return "凌晨";
         } else if (hour < 12) {
@@ -100,7 +100,7 @@ public class DateUtil {
      */
     public static String datePath() {
         Date now = new Date();
-        return cn.hutool.v7.core.date.DateUtil.format(now, "yyyy/MM/dd" );
+        return cn.hutool.core.date.DateUtil.format(now, "yyyy/MM/dd" );
     }
 
     /**
@@ -108,7 +108,7 @@ public class DateUtil {
      */
     public static String dateTime() {
         Date now = new Date();
-        return cn.hutool.v7.core.date.DateUtil.format(now, "yyyyMMdd" );
+        return cn.hutool.core.date.DateUtil.format(now, "yyyyMMdd" );
     }
 
     /**

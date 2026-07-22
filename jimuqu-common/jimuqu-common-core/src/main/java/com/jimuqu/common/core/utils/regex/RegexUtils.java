@@ -1,6 +1,6 @@
 package com.jimuqu.common.core.utils.regex;
 
-import cn.hutool.v7.core.regex.ReUtil;
+import cn.hutool.core.util.ReUtil;
 import com.jimuqu.common.core.constant.RegexConstants;
 
 /**

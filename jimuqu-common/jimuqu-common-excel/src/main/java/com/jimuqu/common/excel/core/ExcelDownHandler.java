@@ -18,12 +18,12 @@ import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFDataValidation;
-import cn.hutool.v7.core.array.ArrayUtil;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.text.StrUtil;
-import cn.hutool.v7.core.text.split.SplitUtil;
-import cn.hutool.v7.core.util.EnumUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.EnumUtil;
+import cn.hutool.core.util.ObjectUtil;
 import org.noear.solon.Solon;
 
 import java.lang.reflect.Field;
@@ -111,7 +111,7 @@ public class ExcelDownHandler implements SheetWriteHandler {
                 } else if (StrUtil.isNotBlank(converterExp)) {
                     // 如果指定了确切的值，则直接解析确切的值
                     options = StreamUtil.toList(
-                            SplitUtil.split(converterExp, ",", true, true),
+                            StrUtil.split(converterExp, ",", true, true),
                             expression -> {
                                 String[] parts = expression.split("=", 2);
                                 if (parts.length != 2) {
@@ -137,7 +137,7 @@ public class ExcelDownHandler implements SheetWriteHandler {
                     options = new ArrayList<>(providerOptions);
                 }
             }
-            if (ObjUtil.isNotEmpty(options)) {
+            if (ObjectUtil.isNotEmpty(options)) {
                 // 仅当下拉可选项不为空时执行
                 int totalCharacters = options.stream().mapToInt(String::length).sum() + options.size();
                 if (options.size() > 20 || totalCharacters > 255) {
@@ -175,10 +175,10 @@ public class ExcelDownHandler implements SheetWriteHandler {
      * @param value    下拉选可选值
      */
     private void dropDownWithSimple(DataValidationHelper helper, Sheet sheet, Integer celIndex, List<String> value) {
-        if (ObjUtil.isEmpty(value)) {
+        if (ObjectUtil.isEmpty(value)) {
             return;
         }
-        this.markOptionsToSheet(helper, sheet, celIndex, helper.createExplicitListConstraint(ArrayUtil.ofArray(value, String.class)));
+        this.markOptionsToSheet(helper, sheet, celIndex, helper.createExplicitListConstraint(value.toArray(String[]::new)));
     }
 
     /**

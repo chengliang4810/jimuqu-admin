@@ -2,7 +2,7 @@ package com.jimuqu.auth.controller;
 
 import cn.dev33.satoken.annotation.SaIgnore;
 import cn.dev33.satoken.stp.StpUtil;
-import cn.hutool.v7.core.util.ObjUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.jimuqu.auth.domain.vo.LoginVo;
 import com.jimuqu.auth.service.AuthStrategy;
 import com.jimuqu.auth.service.SysLoginService;
@@ -81,7 +81,7 @@ public class AuthController {
         String grantType = loginBody.getGrantType();
         SysClient client = clientService.queryByClientId(clientId);
         // 查询不到 client 或 client 内不包含 grantType
-        if (ObjUtil.isNull(client) || !StringUtil.contains(client.getGrantType(), grantType)) {
+        if (ObjectUtil.isNull(client) || !StringUtil.contains(client.getGrantType(), grantType)) {
             log.info("客户端id: {} 认证类型：{} 异常!.", clientId, grantType);
             return R.fail(MessageUtils.message("auth.grant.type.error"));
         } else if (!UserConstants.NORMAL.equals(client.getStatus())) {
@@ -109,7 +109,7 @@ public class AuthController {
     @Mapping("/binding/{source}" )
     public R<String> authBinding(String source) {
         SocialLoginConfigProperties obj = socialProperties.getType().get(source);
-        if (ObjUtil.isNull(obj)) {
+        if (ObjectUtil.isNull(obj)) {
             return R.fail(source + "平台账号暂不支持" );
         }
         AuthRequest authRequest = SocialUtils.getAuthRequest(source, socialProperties);

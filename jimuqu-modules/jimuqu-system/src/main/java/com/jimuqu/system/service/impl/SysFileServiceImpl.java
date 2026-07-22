@@ -134,7 +134,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
             return List.of();
         }
         List<SysFileVo> files = QueryChain.of(sysFileMapper)
-                .where(where -> where.in(SysFile::getId, uniqueIds))
+                .in(SysFile::getId, uniqueIds)
                 .returnType(SysFileVo.class)
                 .list();
         Set<String> privatePlatforms = queryPrivatePlatforms(files);
@@ -188,7 +188,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
         }
         List<String> requested = ids.stream().distinct().toList();
         List<SysFile> files = QueryChain.of(sysFileMapper)
-                .where(where -> where.in(SysFile::getId, requested))
+                .in(SysFile::getId, requested)
                 .list();
         if (files.size() != requested.size()) {
             throw new ServiceException("文件数据不存在!");
@@ -240,8 +240,8 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
         }
         return QueryChain.of(sysOssConfigMapper)
                 .select(SysOssConfig::getConfigKey)
-                .where(where -> where.in(SysOssConfig::getConfigKey, platforms)
-                        .eq(SysOssConfig::getAccessPolicy, "0"))
+                .in(SysOssConfig::getConfigKey, platforms)
+                .eq(SysOssConfig::getAccessPolicy, "0")
                 .list().stream()
                 .map(SysOssConfig::getConfigKey)
                 .collect(Collectors.toUnmodifiableSet());
@@ -276,7 +276,7 @@ public class SysFileServiceImpl implements SysFileService, FileRecorder {
         }
         Map<Long, String> names = QueryChain.of(sysUserMapper)
                 .select(SysUser::getId, SysUser::getUserName)
-                .where(where -> where.in(SysUser::getId, userIds))
+                .in(SysUser::getId, userIds)
                 .list().stream().collect(Collectors.toMap(SysUser::getId, SysUser::getUserName));
         files.forEach(file -> file.setCreateByName(names.get(file.getCreateBy())));
     }

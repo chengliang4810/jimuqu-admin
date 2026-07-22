@@ -10,8 +10,8 @@ import org.dromara.autotable.annotation.ColumnType;
 import org.dromara.autotable.annotation.enums.DefaultValueEnum;
 import org.dromara.autotable.core.AutoTableMetadataAdapter;
 import org.dromara.autotable.solon.util.AnnotatedElementUtilsPlus;
-import cn.hutool.v7.core.collection.CollUtil;
-import cn.hutool.v7.core.map.MapUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.map.MapUtil;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;

@@ -42,7 +42,7 @@ public class SysOperLogService {
         Assert.isFalse(ids.stream().anyMatch(java.util.Objects::isNull), "操作日志ID不能为空");
         List<Long> requested = ids.stream().distinct().toList();
         long existing = QueryChain.of(mapper)
-                .where(where -> where.in(SysOperLog::getOperId, requested))
+                .in(SysOperLog::getOperId, requested)
                 .count();
         Assert.isTrue(existing == requested.size(), "操作日志不存在");
         return mapper.deleteByIds(requested);

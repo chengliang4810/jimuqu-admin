@@ -17,8 +17,9 @@ import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import me.zhyd.oauth.utils.StringUtils;
 import org.dromara.autotable.annotation.AutoColumn;
-import cn.hutool.v7.core.lang.Validator;
-import cn.hutool.v7.core.text.StrPool;
+import cn.hutool.core.lang.Validator;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.text.StrPool;
 
 import java.io.Serial;
 import java.util.ArrayList;
@@ -139,7 +140,9 @@ public class SysMenu extends BaseEntity {
      * 内链域名特殊字符替换
      */
     public static String innerLinkReplaceEach(String path) {
-        path = StringUtil.removeAll(path, Constants.HTTP, Constants.HTTPS, Constants.WWW);
+        path = StringUtil.replace(path, Constants.HTTPS, "");
+        path = StringUtil.replace(path, Constants.HTTP, "");
+        path = StringUtil.replace(path, Constants.WWW, "");
         path = StringUtil.replace(path, StrPool.COLON , StrPool.SLASH);
         path = StringUtil.replace(path, StrPool.DOT , StrPool.SLASH);
         return path;

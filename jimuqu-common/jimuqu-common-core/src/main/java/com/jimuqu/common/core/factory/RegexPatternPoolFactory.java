@@ -1,6 +1,6 @@
 package com.jimuqu.common.core.factory;
 
-import cn.hutool.v7.core.regex.PatternPool;
+import cn.hutool.core.lang.PatternPool;
 import com.jimuqu.common.core.constant.RegexConstants;
 
 import java.util.regex.Pattern;

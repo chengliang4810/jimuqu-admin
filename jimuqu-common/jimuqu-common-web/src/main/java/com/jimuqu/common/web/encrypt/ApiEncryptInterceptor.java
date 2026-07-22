@@ -1,6 +1,6 @@
 package com.jimuqu.common.web.encrypt;
 
-import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jimuqu.common.core.constant.HttpStatus;
 import com.jimuqu.common.core.encrypt.annotation.ApiEncrypt;
 import com.jimuqu.common.core.encrypt.utils.ApiCryptoUtil;

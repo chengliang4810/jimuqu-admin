@@ -16,8 +16,8 @@ import com.jimuqu.system.mapper.SysDictDataMapper;
 import com.jimuqu.system.service.SysDictDataService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.v7.core.collection.ListUtil;
-import cn.hutool.v7.core.text.StrUtil;
+import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.util.StrUtil;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.data.cache.CacheService;
 
@@ -80,7 +80,7 @@ public class SysDictDataServiceImpl implements SysDictDataService {
     @Override
     public List<SysDictDataVo> queryListByTypeKey(String dictTypeKey) {
         if (StrUtil.isBlank(dictTypeKey)) {
-            return ListUtil.zero();
+            return java.util.Collections.emptyList();
         }
         SysDictDataVo[] values = dictCache().getOrStore(
                 dictTypeKey, SysDictDataVo[].class, CACHE_TTL_SECONDS,
