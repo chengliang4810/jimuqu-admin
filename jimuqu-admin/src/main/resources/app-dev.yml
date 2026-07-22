@@ -1,3 +1,9 @@
+# 开发环境关闭验证码与接口加密。
+captcha:
+  enable: false
+api-decrypt:
+  enabled: false
+
 # MySql数据库配置
 solon.dataSources.jimuqu!: #数据源（!结尾表示 typed=true）
   class: "org.noear.solon.data.dynamicds.DynamicDataSource"
