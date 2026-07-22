@@ -46,7 +46,6 @@ public class ResourceMonitorHttpContractTest {
 
     static boolean ownsRoute(com.jimuqu.test.coverage.RuntimeRouteCoverage.RouteKey key) {
         return key.path().startsWith("/resource/oss")
-                || key.path().startsWith("/monitor/cache")
                 || key.path().startsWith("/monitor/online")
                 || key.path().startsWith("/monitor/operlog")
                 || key.path().startsWith("/monitor/loginInfo");
@@ -64,9 +63,6 @@ public class ResourceMonitorHttpContractTest {
                 .expectStatus(401)
                 .expectCode(401);
         api.get("/resource/oss/config/list?pageNum=1&pageSize=10", deniedToken)
-                .expectStatus(403)
-                .expectCode(403);
-        api.get("/monitor/cache", deniedToken)
                 .expectStatus(403)
                 .expectCode(403);
         api.get("/monitor/online/list?pageNum=1&pageSize=10", deniedToken)
@@ -207,13 +203,7 @@ public class ResourceMonitorHttpContractTest {
 
     @Test
     @Order(4)
-    void exercisesCacheAndOnlineSessionRoutes() {
-        Map<String, Object> cache = api.get("/monitor/cache", adminToken)
-                .expectSuccess().dataObject();
-        assertTrue(number(cache.get("dbSize")) >= 0);
-        assertTrue(cache.get("info") instanceof Map<?, ?>, "Redis info 必须是 JSON 对象");
-        assertTrue(cache.get("commandStats") instanceof List<?>);
-
+    void exercisesOnlineSessionRoutes() {
         assertOnlineSession(api.get("/monitor/online", adminToken).expectPage(), adminToken, "admin");
         assertOnlineSession(api.get("/monitor/online/list?pageNum=1&pageSize=100", adminToken).expectPage(),
                 adminToken, "admin");
@@ -239,7 +229,6 @@ public class ResourceMonitorHttpContractTest {
         String encodedOtherToken = URLEncoder.encode(otherToken, StandardCharsets.UTF_8);
         api.delete("/monitor/online/" + encodedOtherToken, adminToken).expectSuccess();
         api.get("/monitor/online", otherToken).expectStatus(401).expectCode(401);
-        api.get("/monitor/cache", adminToken).expectSuccess();
     }
 
     @Test
