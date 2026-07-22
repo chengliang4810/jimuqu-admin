@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -102,21 +103,47 @@ class AutoTableInitDataTest {
             assertFalse(sql.contains("NULL,'1','0','"));
             assertFalse(sql.contains("'生成代码'"));
             assertFalse(sql.contains("'资源管理'"));
-            assertTrue(sql.contains("(108,1,'日志管理',9,'log','',NULL,'N','Y','M','0','0','','lucide:logs'"));
+            assertTrue(sql.contains("(108,1,'日志管理',9,'log','',NULL,'N','Y','M','0','0','','material-symbols:logo-dev-outline'"));
             assertTrue(sql.contains("(201,108,'操作日志',1,'operlog'"));
             assertTrue(sql.contains("(202,108,'登录日志',2,'logininfo'"));
-            assertTrue(sql.contains("(109,1,'客户端管理',11,'client','system/client/index',NULL,'N','Y','C','0','0','system:client:list','material-symbols:logo-dev-outline'"));
+            assertTrue(sql.contains("(109,1,'客户端管理',11,'client','system/client/index',NULL,'N','Y','C','0','0','system:client:list','solar:monitor-smartphone-outline'"));
             assertTrue(sql.contains("(105,1,'字典管理',6,'dict','system/dict/index'"),
                     "字典菜单必须加载包含类型与数据面板的 Bell 页面");
             assertFalse(sql.contains("'system/dict/type/index'"));
-            assertTrue(sql.contains("(200,2,'在线用户',1,'online','monitor/online/index',NULL,'N','Y','C','0','0','monitor:online:list','solar:monitor-smartphone-outline'"));
+            assertTrue(sql.contains("(200,2,'在线用户',1,'online','monitor/online/index',NULL,'N','Y','C','0','0','monitor:online:list','material-symbols:generating-tokens-outline'"));
             assertTrue(sql.contains("(300,1,'文件管理',10,'oss','system/oss/index'"));
             assertTrue(sql.contains("(301,1,'文件配置管理',10,'oss-config/index','system/oss/config',NULL,'N','N','C'"));
 
             int menuStart = sql.indexOf("INSERT INTO `sys_menu`");
             int menuEnd = sql.indexOf("INSERT INTO `sys_oss_config`");
-            Matcher menuMatcher = Pattern.compile("(?:VALUES\\s*)?\\((\\d+),(\\d+),'")
-                    .matcher(sql.substring(menuStart, menuEnd));
+            String menuSql = sql.substring(menuStart, menuEnd);
+            Map<Long, String> bellIcons = Map.ofEntries(
+                    Map.entry(1L, "eos-icons:system-group"),
+                    Map.entry(2L, "solar:monitor-camera-outline"),
+                    Map.entry(100L, "ant-design:user-outlined"),
+                    Map.entry(101L, "eos-icons:role-binding-outlined"),
+                    Map.entry(102L, "ic:sharp-menu"),
+                    Map.entry(103L, "mingcute:department-line"),
+                    Map.entry(104L, "icon-park-outline:appointment"),
+                    Map.entry(105L, "fluent-mdl2:dictionary"),
+                    Map.entry(106L, "ant-design:setting-outlined"),
+                    Map.entry(107L, "fe:notice-push"),
+                    Map.entry(108L, "material-symbols:logo-dev-outline"),
+                    Map.entry(109L, "solar:monitor-smartphone-outline"),
+                    Map.entry(200L, "material-symbols:generating-tokens-outline"),
+                    Map.entry(201L, "arcticons:one-hand-operation"),
+                    Map.entry(202L, "streamline:interface-login-dial-pad-finger-password-dial-pad-dot-finger"),
+                    Map.entry(203L, "devicon:redis-wordmark"),
+                    Map.entry(300L, "solar:folder-with-files-outline"),
+                    Map.entry(301L, "ant-design:setting-outlined")
+            );
+            bellIcons.forEach((menuId, icon) -> assertTrue(
+                    Pattern.compile("\\(" + menuId + ",[^;]+,'" + Pattern.quote(icon) + "',")
+                            .matcher(menuSql).find(),
+                    "默认菜单 " + menuId + " 必须使用 Bell 离线图标 " + icon
+            ));
+
+            Matcher menuMatcher = Pattern.compile("(?:VALUES\\s*)?\\((\\d+),(\\d+),'").matcher(menuSql);
             Set<Long> menuIds = new HashSet<>();
             List<Long> parentIds = new ArrayList<>();
             while (menuMatcher.find()) {
