@@ -25,8 +25,15 @@
         </dependency>
 
         <dependency>
-            <groupId>me.zhyd.oauth</groupId>
+            <groupId>cn.herodotus.opensteward</groupId>
             <artifactId>JustAuth</artifactId>
+        </dependency>
+
+        <!-- 仅供 JustAuth 内部解析参数使用 -->
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>2.0.60</version>
         </dependency>
 
     </dependencies>
