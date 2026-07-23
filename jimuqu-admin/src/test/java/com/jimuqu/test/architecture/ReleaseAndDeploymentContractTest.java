@@ -44,8 +44,10 @@ class ReleaseAndDeploymentContractTest {
     void fullStackGateRunsCompletelyOnEverySupportedOperatingSystem() throws IOException {
         String workflow = Files.readString(repositoryFile(".github/workflows/release.yml"))
                 .replace("\r\n", "\n");
-        String fullStackRunner = Files.readString(repositoryFile("script/test-fullstack.mjs"));
-        String datastorePreparation = Files.readString(repositoryFile("script/prepare-ci-datastores.mjs"));
+        String fullStackRunner = Files.readString(repositoryFile("script/test-fullstack.mjs"))
+                .replace("\r\n", "\n");
+        String datastorePreparation = Files.readString(repositoryFile("script/prepare-ci-datastores.mjs"))
+                .replace("\r\n", "\n");
         String lowerCaseWorkflow = workflow.toLowerCase(Locale.ROOT);
 
         assertTrue(workflow.contains("- ubuntu-latest"));

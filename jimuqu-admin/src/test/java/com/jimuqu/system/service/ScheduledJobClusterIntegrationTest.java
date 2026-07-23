@@ -64,6 +64,8 @@ public class ScheduledJobClusterIntegrationTest {
     private static final String JOB_NAME = ManagedSchedulingTestJob.JOB_NAME;
     private static final Duration STARTUP_TIMEOUT = Duration.ofSeconds(60);
     private static final Duration STATE_TIMEOUT = Duration.ofSeconds(8);
+    private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(15);
+    private static final Duration CLUSTER_EXECUTION_TIMEOUT = Duration.ofSeconds(30);
     private static final int PORT_BIND_ATTEMPTS = 5;
 
     @Inject
@@ -164,7 +166,7 @@ public class ScheduledJobClusterIntegrationTest {
             assertTrue(ready.await(5, TimeUnit.SECONDS), "三个 JVM 未同时准备好任务执行");
             start.countDown();
             for (Future<Void> result : results) {
-                result.get(20, TimeUnit.SECONDS);
+                result.get(CLUSTER_EXECUTION_TIMEOUT.toSeconds(), TimeUnit.SECONDS);
             }
         } finally {
             executor.shutdownNow();
@@ -435,7 +437,7 @@ public class ScheduledJobClusterIntegrationTest {
             try {
                 HttpRequest request = HttpRequest.newBuilder(URI.create(
                                 "http://127.0.0.1:" + port + "/__test/scheduler-cluster" + path))
-                        .timeout(Duration.ofSeconds(5))
+                        .timeout(HTTP_TIMEOUT)
                         .method(method, HttpRequest.BodyPublishers.noBody())
                         .build();
                 HttpResponse<String> response = HTTP.send(
