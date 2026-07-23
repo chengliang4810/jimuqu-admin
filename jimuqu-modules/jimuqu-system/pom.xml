@@ -108,6 +108,17 @@
             <artifactId>jimuqu-common-websocket</artifactId>
         </dependency>
 
+        <!-- Solon 定时调度 API，具体实现由应用模块装配 -->
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-scheduling</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>java-cron</artifactId>
+            <version>${java-cron.version}</version>
+        </dependency>
+
         <!-- 短信模块 -->
         <dependency>
             <groupId>com.jimuqu</groupId>

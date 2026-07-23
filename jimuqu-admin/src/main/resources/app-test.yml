@@ -1,4 +1,4 @@
-# Test infrastructure values are injected by script/test-fullstack.ps1.
+# Test infrastructure values are injected by script/test-fullstack.mjs.
 server.port: ${JIMU_TEST_SERVER_PORT}
 solon.threads.virtual.enabled: false
 
@@ -45,6 +45,11 @@ jimuqu.cache:
   keyHeader: ${JIMU_TEST_REDIS_PREFIX}
 
 jimuqu:
+  scheduling:
+    reconcileIntervalMs: ${JIMU_TEST_SCHEDULING_RECONCILE_INTERVAL_MS:100}
+  test:
+    schedulerClusterProbe: ${JIMU_TEST_SCHEDULER_CLUSTER_PROBE:false}
+    scheduledJobProbeEnabled: ${JIMU_TEST_SCHEDULED_JOB_PROBE_ENABLED:false}
   ratelimit:
     enabled: false
 

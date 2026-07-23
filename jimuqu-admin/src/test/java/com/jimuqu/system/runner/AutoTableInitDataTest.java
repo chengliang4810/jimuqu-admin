@@ -64,9 +64,9 @@ class AutoTableInitDataTest {
         try (InputStream input = getClass().getClassLoader().getResourceAsStream("sql/MySQL/jimuqu.sql")) {
             assertNotNull(input);
             String sql = new String(input.readAllBytes(), StandardCharsets.UTF_8);
-            assertEquals(108, CCJSqlParserUtil.parseStatements(sql).getStatements().size());
-            assertEquals(58, sql.split("'F','0','0','", -1).length - 1);
-            assertEquals(73, sql.split("NULL,'N','Y','", -1).length - 1);
+            assertEquals(111, CCJSqlParserUtil.parseStatements(sql).getStatements().size());
+            assertEquals(63, sql.split("'F','0','0','", -1).length - 1);
+            assertEquals(81, sql.split("NULL,'N','Y','", -1).length - 1);
             assertEquals(1, sql.split("INSERT INTO `sys_oss_config`", -1).length - 1);
             assertEquals(2, sql.split("INSERT INTO `sys_client`", -1).length - 1);
             assertEquals(4, sql.split("INSERT INTO `sys_post`", -1).length - 1);
@@ -74,7 +74,7 @@ class AutoTableInitDataTest {
                     .matcher(sql).results().count(), "岗位种子必须包含管理员创建部门与创建人");
             assertEquals(6, Pattern.compile("INSERT INTO `sys_role` [^;]+,NULL,103,1,CURRENT_TIMESTAMP,NULL,NULL\\);")
                     .matcher(sql).results().count(), "角色种子必须包含管理员创建部门与创建人");
-            assertEquals(146, Pattern.compile(",103,1,CURRENT_TIMESTAMP,NULL,NULL\\)")
+            assertEquals(154, Pattern.compile(",103,1,CURRENT_TIMESTAMP,NULL,NULL\\)")
                     .matcher(sql).results().count(), "管理员创建的种子必须保留完整审计字段");
             assertEquals(1, Pattern.compile("INSERT INTO `sys_user` [^;]+'self_user'[^;]+,104,5,CURRENT_TIMESTAMP,NULL,NULL\\);")
                     .matcher(sql).results().count(), "仅本人测试用户必须由自己创建");
@@ -103,10 +103,11 @@ class AutoTableInitDataTest {
             assertFalse(sql.contains("NULL,'1','0','"));
             assertFalse(sql.contains("'生成代码'"));
             assertFalse(sql.contains("'资源管理'"));
-            assertFalse(sql.contains("'日志管理'"));
-            assertTrue(sql.contains("(201,2,'操作日志',2,'operlog'"));
-            assertTrue(sql.contains("(202,2,'登录日志',3,'logininfo'"));
-            assertFalse(sql.contains("'缓存监控'"));
+            assertTrue(sql.contains("(108,1,'日志管理',9,'log','',NULL,'N','Y','M','0','0','','material-symbols:logo-dev-outline'"));
+            assertTrue(sql.contains("(201,108,'操作日志',1,'operlog'"));
+            assertTrue(sql.contains("(202,108,'登录日志',2,'logininfo'"));
+            assertTrue(sql.contains("(203,2,'缓存监控',5,'cache','monitor/cache/index'"));
+            assertTrue(sql.contains("(204,2,'定时任务',4,'job','monitor/job/index'"));
             assertTrue(sql.contains("(109,1,'客户端管理',11,'client','system/client/index',NULL,'N','Y','C','0','0','system:client:list','solar:monitor-smartphone-outline'"));
             assertTrue(sql.contains("(105,1,'字典管理',6,'dict','system/dict/index'"),
                     "字典菜单必须加载包含类型与数据面板的 Bell 页面");
@@ -129,10 +130,13 @@ class AutoTableInitDataTest {
                     Map.entry(105L, "fluent-mdl2:dictionary"),
                     Map.entry(106L, "ant-design:setting-outlined"),
                     Map.entry(107L, "fe:notice-push"),
+                    Map.entry(108L, "material-symbols:logo-dev-outline"),
                     Map.entry(109L, "solar:monitor-smartphone-outline"),
                     Map.entry(200L, "material-symbols:generating-tokens-outline"),
                     Map.entry(201L, "arcticons:one-hand-operation"),
                     Map.entry(202L, "streamline:interface-login-dial-pad-finger-password-dial-pad-dot-finger"),
+                    Map.entry(203L, "devicon:redis-wordmark"),
+                    Map.entry(204L, "solar:calendar-linear"),
                     Map.entry(300L, "solar:folder-with-files-outline"),
                     Map.entry(301L, "ant-design:setting-outlined")
             );
@@ -149,7 +153,7 @@ class AutoTableInitDataTest {
                 assertTrue(menuIds.add(Long.parseLong(menuMatcher.group(1))), "菜单 ID 不得重复");
                 parentIds.add(Long.parseLong(menuMatcher.group(2)));
             }
-            assertEquals(74, menuIds.size());
+            assertEquals(82, menuIds.size());
             assertEquals(2, parentIds.stream().filter(parentId -> parentId == 0L).count());
             assertTrue(menuIds.containsAll(parentIds.stream().filter(parentId -> parentId != 0L).toList()),
                     "所有菜单父节点必须存在");

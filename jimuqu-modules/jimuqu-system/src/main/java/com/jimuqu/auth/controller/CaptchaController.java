@@ -4,6 +4,7 @@ import cn.dev33.satoken.annotation.SaIgnore;
 import cn.hutool.captcha.generator.CodeGenerator;
 import cn.hutool.captcha.generator.MathGenerator;
 import cn.hutool.captcha.generator.RandomGenerator;
+import cn.hutool.core.util.RandomUtil;
 import com.jimuqu.auth.domain.vo.CaptchaVo;
 import com.jimuqu.auth.service.VerificationCodeService;
 import com.jimuqu.common.core.constant.Constants;
@@ -130,7 +131,7 @@ public class CaptchaController extends BaseController {
         if ("math".equals(captchaProperties.getType())) {
             return new MathGenerator(captchaProperties.getNumberLength(), false);
         }
-        return new RandomGenerator(captchaProperties.getCharLength());
+        return new RandomGenerator(RandomUtil.BASE_CHAR_NUMBER_LOWER, captchaProperties.getCharLength());
     }
 
     private CaptchaChallenge createChallenge(String code) {

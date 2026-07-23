@@ -8,6 +8,7 @@ import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Mapping;
 import org.noear.solon.annotation.SolonMain;
+import org.noear.solon.scheduling.annotation.EnableScheduling;
 
 /**
  * 应用启动类
@@ -18,6 +19,7 @@ import org.noear.solon.annotation.SolonMain;
 @SolonMain
 @Controller
 @EnableAutoTable
+@EnableScheduling
 public class Application {
 
     public static void main(String[] args) {

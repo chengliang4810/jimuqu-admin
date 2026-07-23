@@ -6,6 +6,7 @@ import com.jimuqu.common.log.annotation.Log;
 import com.jimuqu.common.log.enums.BusinessType;
 import com.jimuqu.system.controller.SysFileController;
 import com.jimuqu.system.domain.query.SysOperLogQuery;
+import com.jimuqu.system.domain.vo.CacheListInfoVo;
 import com.jimuqu.system.domain.vo.SysLoginInfoVo;
 import com.jimuqu.system.domain.vo.SysOperLogVo;
 import com.jimuqu.system.domain.vo.SysUserOnlineVo;
@@ -19,6 +20,7 @@ class ResourceMonitorDtoContractTest {
 
     @Test
     void usesUpstreamCompatibleNumericTypes() throws NoSuchFieldException {
+        assertEquals(Long.class, CacheListInfoVo.class.getDeclaredField("dbSize").getType());
         assertEquals(Long.class, SysUserOnlineVo.class.getDeclaredField("loginTime").getType());
     }
 

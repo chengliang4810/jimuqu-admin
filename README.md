@@ -120,6 +120,15 @@ java -jar jimuqu-admin.jar --solon.env=prod
 
 **🎯 适合场景**：企业后台系统、快速开发平台、教学研究项目
 
+## 全栈验证
+
+Windows、macOS 和 Linux 使用同一个 Node.js 入口：
+
+```bash
+node script/test-fullstack.mjs
+```
+
+运行前设置 `JIMU_TEST_MYSQL_PASSWORD`；前端仓库不在自动发现位置时，再设置 `JIMU_TEST_FRONTEND_DIR`。脚本会创建本次运行独占的 MySQL 数据库、Redis DB 15 键前缀和 OSS 临时目录，并在结束时只清理这些资源。GitHub Actions 会在 Windows、macOS 和 Linux 上分别执行完整的 Maven、JAR、前端构建和 Playwright 门禁。
 
 ---
 

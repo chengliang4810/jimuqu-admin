@@ -73,7 +73,7 @@ security:
     # 登录
     - /auth/login
 
-# Jimu 的在线会话与集群消息依赖 Redis。
+# Jimu 的在线会话、缓存监控与集群消息依赖 Redis。
 jimuqu.cache:
   driverType: "redis"
   server: "${JIMU_REDIS_SERVER:127.0.0.1:6379}"

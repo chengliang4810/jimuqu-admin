@@ -1,8 +1,14 @@
 package com.jimuqu.test.http;
 
 import cn.hutool.core.lang.TypeReference;
+import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.Application;
 import com.jimuqu.common.core.utils.JsonUtil;
+import com.jimuqu.system.domain.SysScheduledJobConfig;
+import com.jimuqu.system.domain.SysScheduledJobLog;
+import com.jimuqu.system.mapper.SysScheduledJobConfigMapper;
+import com.jimuqu.system.mapper.SysScheduledJobLogMapper;
+import com.jimuqu.test.support.ManagedSchedulingTestJob;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
@@ -10,13 +16,18 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.noear.solon.Solon;
+import org.noear.solon.scheduling.scheduled.JobHolder;
+import org.noear.solon.scheduling.scheduled.manager.IJobManager;
 import org.noear.solon.test.SolonTest;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,9 +57,11 @@ public class ResourceMonitorHttpContractTest {
 
     static boolean ownsRoute(com.jimuqu.test.coverage.RuntimeRouteCoverage.RouteKey key) {
         return key.path().startsWith("/resource/oss")
+                || key.path().startsWith("/monitor/cache")
                 || key.path().startsWith("/monitor/online")
                 || key.path().startsWith("/monitor/operlog")
-                || key.path().startsWith("/monitor/loginInfo");
+                || key.path().startsWith("/monitor/loginInfo")
+                || key.path().startsWith("/monitor/job");
     }
 
     @AfterAll
@@ -63,6 +76,9 @@ public class ResourceMonitorHttpContractTest {
                 .expectStatus(401)
                 .expectCode(401);
         api.get("/resource/oss/config/list?pageNum=1&pageSize=10", deniedToken)
+                .expectStatus(403)
+                .expectCode(403);
+        api.get("/monitor/cache", deniedToken)
                 .expectStatus(403)
                 .expectCode(403);
         api.get("/monitor/online/list?pageNum=1&pageSize=10", deniedToken)
@@ -203,7 +219,13 @@ public class ResourceMonitorHttpContractTest {
 
     @Test
     @Order(4)
-    void exercisesOnlineSessionRoutes() {
+    void exercisesCacheAndOnlineSessionRoutes() {
+        Map<String, Object> cache = api.get("/monitor/cache", adminToken)
+                .expectSuccess().dataObject();
+        assertTrue(number(cache.get("dbSize")) >= 0);
+        assertTrue(cache.get("info") instanceof Map<?, ?>, "Redis info 必须是 JSON 对象");
+        assertTrue(cache.get("commandStats") instanceof List<?>);
+
         assertOnlineSession(api.get("/monitor/online", adminToken).expectPage(), adminToken, "admin");
         assertOnlineSession(api.get("/monitor/online/list?pageNum=1&pageSize=100", adminToken).expectPage(),
                 adminToken, "admin");
@@ -271,15 +293,7 @@ public class ResourceMonitorHttpContractTest {
         HttpApiTestSupport.Response failed = api.postEncryptedJsonWithHeaders("/auth/login", failedLogin,
                 Map.of("ClientID", "unknown-client-" + suffix)).expectEnvelope();
         assertNotEquals(200, failed.code());
-        HttpApiTestSupport.Response failedLogs = api.get("/monitor/loginInfo/list"
-                + HttpApiTestSupport.query(Map.of(
-                "userName", "no_permission",
-                "status", "1",
-                "pageNum", 1,
-                "pageSize", 100)), adminToken).expectPage();
-        Map<String, Object> failedRow = pageRows(failedLogs).stream()
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("失败登录必须写入登录日志"));
+        Map<String, Object> failedRow = awaitFailedLoginLog();
         assertNull(failedRow.get("clientKey"), "未知 ClientID 不得伪造 clientKey");
         assertNull(failedRow.get("deviceType"), "未知 ClientID 不得伪造 deviceType");
         assertFalse(String.valueOf(failedRow.get("msg")).isBlank(), "失败登录日志必须保留原因");
@@ -295,6 +309,263 @@ public class ResourceMonitorHttpContractTest {
         api.get("/monitor/loginInfo/unlock/no_permission", adminToken).expectSuccess();
         deleteFirstAuditRowOrAssertMissingFailure(loginPage, "infoId", "/monitor/loginInfo/");
         api.delete("/monitor/loginInfo/clean", adminToken).expectSuccess();
+    }
+
+    @Test
+    @Order(6)
+    void managesSolonRuntimeJobs() throws Exception {
+        Map<String, Object> initial = jobRow();
+        assertEquals("FIXED_DELAY", initial.get("scheduleType"));
+        assertEquals("1000", initial.get("scheduleExpression"));
+        assertEquals(false, initial.get("enabled"));
+        assertEquals(0, number(initial.get("maxRetries")));
+        assertEquals(1000, number(initial.get("retryIntervalMs")));
+
+        api.putJson("/monitor/job/" + ManagedSchedulingTestJob.JOB_NAME + "/config",
+                        Map.of("maxRetries", 1, "retryIntervalMs", 0), adminToken)
+                .expectSuccess();
+        assertEquals(1, number(jobRow().get("maxRetries")));
+        HttpApiTestSupport.Response invalidConfig = api.putJson(
+                "/monitor/job/" + ManagedSchedulingTestJob.JOB_NAME + "/config",
+                Map.of("maxRetries", 11, "retryIntervalMs", 0), adminToken).expectEnvelope();
+        assertNotEquals(200, invalidConfig.code());
+        assertEquals(1, number(jobRow().get("maxRetries")), "非法重试配置不得写入");
+
+        ManagedSchedulingTestJob.mode(ManagedSchedulingTestJob.Mode.SUCCESS);
+        int before = ManagedSchedulingTestJob.executions();
+        HttpApiTestSupport.Response submitted = api.postJson(
+                        "/monitor/job/" + ManagedSchedulingTestJob.JOB_NAME + "/run",
+                        Map.of(), adminToken)
+                .expectSuccess();
+        assertEquals("定时任务已提交执行", submitted.json().get("msg"));
+        awaitExecutions(before + 1);
+        assertEquals(before + 1, ManagedSchedulingTestJob.executions(), "立即执行必须调用原始 Solon 任务处理器");
+        assertEquals(false, jobRow().get("enabled"), "停止状态不得阻止手动执行");
+
+        int logCount = jobLogs().size();
+        ManagedSchedulingTestJob.mode(ManagedSchedulingTestJob.Mode.FAIL_ONCE);
+        api.postJson("/monitor/job/" + ManagedSchedulingTestJob.JOB_NAME + "/run", Map.of(), adminToken)
+                .expectSuccess();
+        List<Map<String, Object>> retrySuccess = awaitJobLogs(logCount + 2).subList(0, 2);
+        assertTrue(retrySuccess.stream().anyMatch(row -> "RETRY".equals(row.get("status"))
+                && number(row.get("attempt")) == 1));
+        assertTrue(retrySuccess.stream().anyMatch(row -> "SUCCESS".equals(row.get("status"))
+                && number(row.get("attempt")) == 2));
+
+        logCount += 2;
+        ManagedSchedulingTestJob.mode(ManagedSchedulingTestJob.Mode.ALWAYS_FAIL);
+        api.postJson("/monitor/job/" + ManagedSchedulingTestJob.JOB_NAME + "/run", Map.of(), adminToken)
+                .expectSuccess();
+        List<Map<String, Object>> finalFailure = awaitJobLogs(logCount + 2).subList(0, 2);
+        assertTrue(finalFailure.stream().anyMatch(row -> "RETRY".equals(row.get("status"))));
+        assertTrue(finalFailure.stream().anyMatch(row -> "FAILED".equals(row.get("status"))
+                && String.valueOf(row.get("errorSummary")).contains("planned final failure")));
+
+        api.putJson("/monitor/job/" + ManagedSchedulingTestJob.JOB_NAME + "/start", Map.of(), adminToken)
+                .expectSuccess();
+        assertEquals(true, jobRow().get("enabled"));
+        assertSingleScheduledExecutionAcrossConcurrentTriggers();
+
+        api.putJson("/monitor/job/" + ManagedSchedulingTestJob.JOB_NAME + "/stop", Map.of(), adminToken)
+                .expectSuccess();
+        assertEquals(false, jobRow().get("enabled"));
+
+        HttpApiTestSupport.Response missing = api.postJson(
+                "/monitor/job/missing-" + suffix + "/run", Map.of(), adminToken).expectEnvelope();
+        assertNotEquals(200, missing.code(), "不存在的运行时任务不得执行");
+
+        List<Map<String, Object>> logs = jobLogs();
+        assertTrue(logs.stream().allMatch(row -> row.get("instanceId") != null
+                && row.get("startTime") != null && row.get("endTime") != null
+                && row.get("durationMs") != null));
+        assertJobLogNameFilterIsExact();
+        long firstLogId = number(logs.get(0).get("logId"));
+        api.delete("/monitor/job/log/" + firstLogId, adminToken).expectSuccess();
+        assertFalse(jobLogs().stream().anyMatch(row -> number(row.get("logId")) == firstLogId));
+        api.delete("/monitor/job/log/clean", adminToken).expectSuccess();
+        assertTrue(jobLogs().isEmpty());
+    }
+
+    @Test
+    @Order(7)
+    void preservesCronCadenceAndReconcilesDatabaseState() throws Exception {
+        assertCronExecutionIsClaimedUntilItsNextFireTime();
+        assertDatabaseStateIsPeriodicallyReconciled();
+    }
+
+    private Map<String, Object> jobRow() {
+        return api.get("/monitor/job/list", adminToken).expectSuccess().dataList().stream()
+                .filter(Map.class::isInstance)
+                .map(Map.class::cast)
+                .map(row -> (Map<String, Object>) row)
+                .filter(row -> ManagedSchedulingTestJob.JOB_NAME.equals(row.get("jobName")))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("测试定时任务必须注册到 Solon IJobManager"));
+    }
+
+    private void assertSingleScheduledExecutionAcrossConcurrentTriggers() throws Exception {
+        ManagedSchedulingTestJob.mode(ManagedSchedulingTestJob.Mode.BLOCKING);
+        int executions = ManagedSchedulingTestJob.executions();
+        int logs = jobLogs().size();
+        JobHolder job = Solon.context().getBean(IJobManager.class)
+                .jobGet(ManagedSchedulingTestJob.JOB_NAME);
+        CompletableFuture<Void> first = CompletableFuture.runAsync(() -> invokeJob(job));
+        assertTrue(ManagedSchedulingTestJob.awaitEntered(), "第一个实例必须进入任务处理器");
+        long firstBucket = System.currentTimeMillis() / 1000L;
+        while (System.currentTimeMillis() / 1000L == firstBucket) {
+            Thread.sleep(2L);
+        }
+        CompletableFuture<Void> second = CompletableFuture.runAsync(() -> invokeJob(job));
+        second.get();
+        ManagedSchedulingTestJob.release();
+        first.get();
+        invokeJob(job);
+        assertEquals(executions + 1, ManagedSchedulingTestJob.executions(),
+                "fixedDelay 必须从上次执行完成后开始计时");
+        List<Map<String, Object>> newLogs = awaitJobLogs(logs + 3).subList(0, 3);
+        assertTrue(newLogs.stream().anyMatch(row -> "SCHEDULED".equals(row.get("triggerType"))
+                && "SUCCESS".equals(row.get("status"))));
+        assertEquals(2L, newLogs.stream().filter(row -> "SCHEDULED".equals(row.get("triggerType"))
+                && "SKIPPED".equals(row.get("status"))).count());
+    }
+
+    private void assertCronExecutionIsClaimedUntilItsNextFireTime() throws Exception {
+        String jobName = ManagedSchedulingTestJob.CRON_JOB_NAME;
+        api.putJson("/monitor/job/" + jobName + "/start", Map.of(), adminToken).expectSuccess();
+        try {
+            JobHolder job = Solon.context().getBean(IJobManager.class).jobGet(jobName);
+            int executions = ManagedSchedulingTestJob.cronExecutions();
+            int logs = jobLogs(jobName).size();
+            invokeJob(job);
+            assertEquals(executions + 1, ManagedSchedulingTestJob.cronExecutions());
+            Thread.sleep(1_100L);
+            invokeJob(job);
+            assertEquals(executions + 1, ManagedSchedulingTestJob.cronExecutions(),
+                    "Cron 去重必须持续到表达式的下一次合法触发，而不是固定一秒时间桶");
+            List<Map<String, Object>> newLogs = awaitJobLogs(jobName, logs + 2).subList(0, 2);
+            assertTrue(newLogs.stream().anyMatch(row -> "SUCCESS".equals(row.get("status"))));
+            assertTrue(newLogs.stream().anyMatch(row -> "SKIPPED".equals(row.get("status"))));
+        } finally {
+            api.putJson("/monitor/job/" + jobName + "/stop", Map.of(), adminToken).expectSuccess();
+        }
+    }
+
+    private void assertDatabaseStateIsPeriodicallyReconciled() throws Exception {
+        String jobName = ManagedSchedulingTestJob.RECONCILE_JOB_NAME;
+        SysScheduledJobConfigMapper mapper = Solon.context().getBean(SysScheduledJobConfigMapper.class);
+        SysScheduledJobConfig config = QueryChain.of(mapper)
+                .eq(SysScheduledJobConfig::getJobName, jobName)
+                .get();
+
+        SysScheduledJobConfig enable = new SysScheduledJobConfig()
+                .setConfigId(config.getConfigId())
+                .setEnabled(true);
+        enable.setUpdateBy(0L);
+        int before = ManagedSchedulingTestJob.reconcileExecutions();
+        assertEquals(1, mapper.update(enable));
+        awaitReconcileExecutions(before + 1);
+
+        SysScheduledJobConfig disable = new SysScheduledJobConfig()
+                .setConfigId(config.getConfigId())
+                .setEnabled(false);
+        disable.setUpdateBy(0L);
+        assertEquals(1, mapper.update(disable));
+        Thread.sleep(ManagedSchedulingTestJob.RECONCILE_FIXED_DELAY_MS + 200L);
+        int stoppedAt = ManagedSchedulingTestJob.reconcileExecutions();
+        Thread.sleep(ManagedSchedulingTestJob.RECONCILE_FIXED_DELAY_MS * 2L + 100L);
+        assertEquals(stoppedAt, ManagedSchedulingTestJob.reconcileExecutions(),
+                "数据库直接停用后，至少两个 fixedDelay 窗口内不得再执行任务");
+    }
+
+    private void assertJobLogNameFilterIsExact() {
+        SysScheduledJobLogMapper mapper = Solon.context().getBean(SysScheduledJobLogMapper.class);
+        Date now = new Date();
+        SysScheduledJobLog similarName = new SysScheduledJobLog()
+                .setJobName(ManagedSchedulingTestJob.JOB_NAME + "Extended")
+                .setStatus("SUCCESS")
+                .setTriggerType("SCHEDULED")
+                .setAttempt(1)
+                .setInstanceId("filter-contract")
+                .setStartTime(now)
+                .setEndTime(now)
+                .setDurationMs(0L);
+        similarName.setCreateDept(0L);
+        similarName.setCreateBy(0L);
+        similarName.setUpdateBy(0L);
+        mapper.save(similarName);
+        try {
+            assertTrue(jobLogs().stream().allMatch(
+                            row -> ManagedSchedulingTestJob.JOB_NAME.equals(row.get("jobName"))),
+                    "任务日志抽屉必须按任务名精确隔离，不能混入相似名称任务");
+        } finally {
+            mapper.delete(where -> where.eq(SysScheduledJobLog::getLogId, similarName.getLogId()));
+        }
+    }
+
+    private List<Map<String, Object>> awaitJobLogs(int expected) throws InterruptedException {
+        return awaitJobLogs(ManagedSchedulingTestJob.JOB_NAME, expected);
+    }
+
+    private List<Map<String, Object>> awaitJobLogs(String jobName, int expected) throws InterruptedException {
+        List<Map<String, Object>> logs = jobLogs(jobName);
+        for (int attempt = 0; attempt < 80 && logs.size() < expected; attempt++) {
+            Thread.sleep(25L);
+            logs = jobLogs(jobName);
+        }
+        assertTrue(logs.size() >= expected, "定时任务执行日志未按时写入");
+        return logs;
+    }
+
+    private List<Map<String, Object>> jobLogs() {
+        return jobLogs(ManagedSchedulingTestJob.JOB_NAME);
+    }
+
+    private List<Map<String, Object>> jobLogs(String jobName) {
+        return pageRows(api.get("/monitor/job/log/list" + HttpApiTestSupport.query(Map.of(
+                "jobName", jobName,
+                "pageNum", 1,
+                "pageSize", 100)), adminToken).expectPage());
+    }
+
+    private Map<String, Object> awaitFailedLoginLog() throws InterruptedException {
+        Map<String, Object> query = Map.of(
+                "userName", "no_permission",
+                "status", "1",
+                "pageNum", 1,
+                "pageSize", 100);
+        for (int attempt = 0; attempt < 80; attempt++) {
+            List<Map<String, Object>> rows = pageRows(api.get("/monitor/loginInfo/list"
+                    + HttpApiTestSupport.query(query), adminToken).expectPage());
+            if (!rows.isEmpty()) {
+                return rows.get(0);
+            }
+            Thread.sleep(25L);
+        }
+        throw new AssertionError("失败登录必须写入登录日志");
+    }
+
+    private void awaitExecutions(int expected) throws InterruptedException {
+        for (int attempt = 0; attempt < 80 && ManagedSchedulingTestJob.executions() < expected; attempt++) {
+            Thread.sleep(25L);
+        }
+    }
+
+    private static void awaitReconcileExecutions(int expected) throws InterruptedException {
+        for (int attempt = 0;
+             attempt < 80 && ManagedSchedulingTestJob.reconcileExecutions() < expected;
+             attempt++) {
+            Thread.sleep(25L);
+        }
+        assertTrue(ManagedSchedulingTestJob.reconcileExecutions() >= expected,
+                "数据库直接启用后，周期对账必须真正启动任务");
+    }
+
+    private static void invokeJob(JobHolder job) {
+        try {
+            job.handle(null);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void assertProfileOperationLogMasksSensitiveFields() throws InterruptedException {
