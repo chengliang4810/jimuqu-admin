@@ -110,6 +110,19 @@ class BaseControllerTest {
         assertSame(plain, BaseController.normalizeResponse(plain));
     }
 
+    @Test
+    void keepsPaginationTotalConsistentWhenRowsChangeDuringTheCountQuery() {
+        InternalPage<String> internalPage = new InternalPage<>();
+        internalPage.setRows(List.of("first", "concurrent"));
+        internalPage.setTotal(1L);
+
+        R<?> response = BaseController.normalizeResponse(internalPage);
+        PageResult<?> data = assertInstanceOf(PageResult.class, response.getData());
+
+        assertEquals(List.of("first", "concurrent"), data.getRows());
+        assertEquals(2L, data.getTotal());
+    }
+
     @NoRepeatSubmit
     private void protectedWrite() {
     }

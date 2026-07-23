@@ -121,7 +121,9 @@ public class BaseController implements Render {
 
     private static Object normalizeData(Object value) {
         if (value instanceof PageResult<?> page) {
-            return new PageResult<>(page.getRows(), page.getTotal());
+            // 总数和数据行不是同一条查询，并发写入时 total 可能短暂落后于 rows。
+            long visibleRows = page.getRows() == null ? 0L : page.getRows().size();
+            return new PageResult<>(page.getRows(), Math.max(page.getTotal(), visibleRows));
         }
         return value;
     }
