@@ -19,7 +19,7 @@ justauth:
     gitee:
       client-id: "http-contract-client"
       client-secret: "http-contract-secret"
-      redirect-uri: "http://127.0.0.1:15555/social-callback?source=gitee"
+      redirect-uri: "${JIMU_JUSTAUTH_GITEE_REDIRECT_URI:http://127.0.0.1:15555/social-callback?source=gitee}"
       local-code: "http-contract-code"
       local-user-id: "http-contract-user"
       local-username: "http_contract_social"
@@ -46,6 +46,9 @@ jimuqu.cache:
 
 jimuqu:
   scheduling:
+    # 集成测试缩短认领租约，用于验证节点宕机后的快速接管。
+    claimLeaseMs: ${JIMU_TEST_SCHEDULING_CLAIM_LEASE_MS:300}
+    # 集成测试缩短任务定义对账间隔，用于验证跨节点状态收敛。
     reconcileIntervalMs: ${JIMU_TEST_SCHEDULING_RECONCILE_INTERVAL_MS:100}
   test:
     schedulerClusterProbe: ${JIMU_TEST_SCHEDULER_CLUSTER_PROBE:false}

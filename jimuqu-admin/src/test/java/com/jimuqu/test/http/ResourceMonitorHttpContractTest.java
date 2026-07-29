@@ -314,6 +314,7 @@ public class ResourceMonitorHttpContractTest {
     @Test
     @Order(6)
     void managesSolonRuntimeJobs() throws Exception {
+        assertJobRoutePermissionFailures();
         Map<String, Object> initial = jobRow();
         assertEquals("FIXED_DELAY", initial.get("scheduleType"));
         assertEquals("1000", initial.get("scheduleExpression"));
@@ -325,6 +326,8 @@ public class ResourceMonitorHttpContractTest {
                         Map.of("maxRetries", 1, "retryIntervalMs", 0), adminToken)
                 .expectSuccess();
         assertEquals(1, number(jobRow().get("maxRetries")));
+        assertEquals("FORBID", jobRow().get("concurrentPolicy"),
+                "启用失败重试后必须自动禁止同一任务并发执行");
         HttpApiTestSupport.Response invalidConfig = api.putJson(
                 "/monitor/job/" + ManagedSchedulingTestJob.JOB_NAME + "/config",
                 Map.of("maxRetries", 11, "retryIntervalMs", 0), adminToken).expectEnvelope();
@@ -386,11 +389,303 @@ public class ResourceMonitorHttpContractTest {
         assertTrue(jobLogs().isEmpty());
     }
 
+    /** 验证所有受保护的定时任务操作同时拒绝未登录和无权限用户。 */
+    private void assertJobRoutePermissionFailures() {
+        String jobPath = "/monitor/job/" + ManagedSchedulingTestJob.JOB_NAME;
+        api.get("/monitor/job/list").expectStatus(401).expectCode(401);
+        api.get("/monitor/job/list", deniedToken).expectStatus(403).expectCode(403);
+        api.putJson(jobPath + "/config", Map.of("maxRetries", 1, "retryIntervalMs", 0))
+                .expectStatus(401).expectCode(401);
+        api.putJson(jobPath + "/config", Map.of("maxRetries", 1, "retryIntervalMs", 0),
+                        deniedToken)
+                .expectStatus(403).expectCode(403);
+        api.putJson(jobPath + "/start", Map.of()).expectStatus(401).expectCode(401);
+        api.putJson(jobPath + "/start", Map.of(), deniedToken)
+                .expectStatus(403).expectCode(403);
+        api.putJson(jobPath + "/stop", Map.of()).expectStatus(401).expectCode(401);
+        api.putJson(jobPath + "/stop", Map.of(), deniedToken)
+                .expectStatus(403).expectCode(403);
+        api.postJson(jobPath + "/run", Map.of()).expectStatus(401).expectCode(401);
+        api.postJson(jobPath + "/run", Map.of(), deniedToken)
+                .expectStatus(403).expectCode(403);
+        api.get("/monitor/job/log/list?pageNum=1&pageSize=10")
+                .expectStatus(401).expectCode(401);
+        api.get("/monitor/job/log/list?pageNum=1&pageSize=10", deniedToken)
+                .expectStatus(403).expectCode(403);
+        api.delete("/monitor/job/log/999999999999999999")
+                .expectStatus(401).expectCode(401);
+        api.delete("/monitor/job/log/999999999999999999", deniedToken)
+                .expectStatus(403).expectCode(403);
+        api.delete("/monitor/job/log/clean").expectStatus(401).expectCode(401);
+        api.delete("/monitor/job/log/clean", deniedToken)
+                .expectStatus(403).expectCode(403);
+    }
+
+    /** 验证动态任务白名单、CRUD、执行策略与运行时生命周期。 */
     @Test
     @Order(7)
+    void managesWhitelistedDynamicJobs() throws Exception {
+        String guardedName = "guardedDynamicJob." + suffix;
+        Map<String, Object> guardedPayload = dynamicJobPayload(guardedName);
+        api.get("/monitor/job/handlers").expectStatus(401).expectCode(401);
+        api.get("/monitor/job/handlers", deniedToken).expectStatus(403).expectCode(403);
+        api.postJson("/monitor/job", guardedPayload).expectStatus(401).expectCode(401);
+        api.postJson("/monitor/job", guardedPayload, deniedToken)
+                .expectStatus(403).expectCode(403);
+        api.putJson("/monitor/job/" + guardedName, guardedPayload)
+                .expectStatus(401).expectCode(401);
+        api.putJson("/monitor/job/" + guardedName, guardedPayload, deniedToken)
+                .expectStatus(403).expectCode(403);
+        api.delete("/monitor/job/" + guardedName).expectStatus(401).expectCode(401);
+        api.delete("/monitor/job/" + guardedName, deniedToken)
+                .expectStatus(403).expectCode(403);
+        assertEquals(0, jobConfigCount(guardedName),
+                "认证或授权失败不得写入动态任务配置");
+
+        Map<String, Object> handler = api.get("/monitor/job/handlers", adminToken)
+                .expectSuccess().dataList().stream()
+                .filter(Map.class::isInstance)
+                .map(Map.class::cast)
+                .map(row -> (Map<String, Object>) row)
+                .filter(row -> ManagedSchedulingTestJob.HANDLER_KEY.equals(row.get("handlerKey")))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("测试任务方法必须出现在动态任务白名单中"));
+        assertEquals(ManagedSchedulingTestJob.class.getName(), handler.get("className"));
+        assertEquals("execute", handler.get("methodName"));
+
+        String statusBypassName = "statusBypassJob." + suffix;
+        Map<String, Object> statusBypass = dynamicJobPayload(statusBypassName);
+        statusBypass.put("enabled", true);
+        api.postJson("/monitor/job", statusBypass, adminToken).expectSuccess();
+        assertEquals(false, dynamicJobRow(statusBypassName).get("enabled"),
+                "新增或编辑定义不得绕过独立启停权限");
+        api.delete("/monitor/job/" + statusBypassName, adminToken)
+                .expectSuccess();
+
+        String rejectedName = "rejectedDynamicJob." + suffix;
+        Map<String, Object> rejectedHandler = dynamicJobPayload(rejectedName);
+        rejectedHandler.put("handlerKey", "java.lang.Runtime.exec");
+        HttpApiTestSupport.Response rejected = api.postJson(
+                "/monitor/job", rejectedHandler, adminToken).expectEnvelope();
+        assertNotEquals(200, rejected.code(), "未显式注解的方法不得成为在线任务");
+        assertEquals(0, jobConfigCount(rejectedName), "非法处理器不得写入数据库");
+
+        String invalidCronName = "invalidCronJob." + suffix;
+        Map<String, Object> invalidCron = dynamicJobPayload(invalidCronName);
+        invalidCron.put("scheduleExpression", "not-a-cron");
+        HttpApiTestSupport.Response invalid = api.postJson(
+                "/monitor/job", invalidCron, adminToken).expectEnvelope();
+        assertNotEquals(200, invalid.code(), "非法 Cron 表达式不得创建在线任务");
+        assertEquals(0, jobConfigCount(invalidCronName), "非法 Cron 不得写入数据库");
+
+        String unsafeRetryName = "unsafeRetryJob." + suffix;
+        Map<String, Object> unsafeRetry = dynamicJobPayload(unsafeRetryName);
+        unsafeRetry.put("concurrentPolicy", "ALLOW");
+        HttpApiTestSupport.Response unsafeRetryFailure = api.postJson(
+                "/monitor/job", unsafeRetry, adminToken).expectEnvelope();
+        assertNotEquals(200, unsafeRetryFailure.code(),
+                "启用失败重试的在线任务不得允许并发");
+        assertEquals(0, jobConfigCount(unsafeRetryName),
+                "不安全的重试并发组合不得写入数据库");
+
+        String missingName = "missingDynamicJob." + suffix;
+        Map<String, Object> missingPayload = dynamicJobPayload(missingName);
+        assertNotEquals(200, api.putJson(
+                "/monitor/job/" + missingName, missingPayload, adminToken)
+                .expectEnvelope().code(), "不存在的动态任务不得更新");
+        assertNotEquals(200, api.delete(
+                "/monitor/job/" + missingName, adminToken)
+                .expectEnvelope().code(), "不存在的动态任务不得删除");
+        assertEquals(0, jobConfigCount(missingName),
+                "不存在任务的更新或删除失败后不得写入数据库");
+
+        String jobName = "dynamicContractJob." + suffix;
+        Map<String, Object> createdPayload = dynamicJobPayload(jobName);
+        createdPayload.put("scheduleType", "FIXED_RATE");
+        createdPayload.put("scheduleExpression", "100");
+        createdPayload.put("zone", "");
+        int disabledExecutions = ManagedSchedulingTestJob.executions();
+        api.postJson("/monitor/job", createdPayload, adminToken).expectSuccess();
+        assertEquals(1, jobConfigCount(jobName));
+        Map<String, Object> created = dynamicJobRow(jobName);
+        assertEquals("DYNAMIC", created.get("jobSource"));
+        assertEquals(ManagedSchedulingTestJob.HANDLER_KEY, created.get("handlerKey"));
+        assertEquals("FIXED_RATE", created.get("scheduleType"));
+        assertEquals("100", created.get("scheduleExpression"));
+        assertEquals("", created.get("zone"));
+        assertEquals("FORBID", created.get("concurrentPolicy"));
+        assertEquals("FIRE_ONCE", created.get("misfirePolicy"));
+        assertNull(Solon.context().getBean(IJobManager.class).jobGet(jobName),
+                "禁用的零延迟在线任务不得注册到 Solon IJobManager");
+        Thread.sleep(350L);
+        assertEquals(disabledExecutions, ManagedSchedulingTestJob.executions(),
+                "禁用的零延迟 fixedRate 任务在新增后不得抢跑");
+
+        HttpApiTestSupport.Response duplicate = api.postJson(
+                "/monitor/job", createdPayload, adminToken).expectEnvelope();
+        assertNotEquals(200, duplicate.code(), "在线任务名称不得重复");
+        assertEquals(1, jobConfigCount(jobName), "重复新增不得覆盖已有任务");
+
+        Map<String, Object> renamed = dynamicJobPayload("renamedDynamicJob." + suffix);
+        HttpApiTestSupport.Response renameFailure = api.putJson(
+                "/monitor/job/" + jobName, renamed, adminToken).expectEnvelope();
+        assertNotEquals(200, renameFailure.code(), "更新时不得改变任务唯一名称");
+        assertEquals(1, jobConfigCount(jobName), "非法改名不得删除原任务");
+        assertEquals(0, jobConfigCount(String.valueOf(renamed.get("jobName"))),
+                "非法改名不得写入新任务");
+
+        Map<String, Object> normalizedCron = dynamicJobPayload(jobName);
+        normalizedCron.put("scheduleExpression", " 0 0/5 * * * ? * ");
+        api.putJson("/monitor/job/" + jobName, normalizedCron, adminToken).expectSuccess();
+        assertEquals("0 0/5 * * * ? *",
+                dynamicJobRow(jobName).get("scheduleExpression"),
+                "Cron 校验与运行时注册必须使用同一个规范化表达式");
+
+        Map<String, Object> updatedPayload = dynamicJobPayload(jobName);
+        updatedPayload.put("description", "已更新的动态契约任务");
+        updatedPayload.put("scheduleType", "FIXED_DELAY");
+        updatedPayload.put("scheduleExpression", "600000");
+        updatedPayload.put("zone", "");
+        updatedPayload.put("initialDelayMs", 3_600_000);
+        api.putJson("/monitor/job/" + jobName, updatedPayload, adminToken).expectSuccess();
+        Map<String, Object> updated = dynamicJobRow(jobName);
+        assertEquals("已更新的动态契约任务", updated.get("description"));
+        assertEquals("FIXED_DELAY", updated.get("scheduleType"));
+        assertEquals("600000", updated.get("scheduleExpression"));
+
+        int retryExecutions = ManagedSchedulingTestJob.executions();
+        int retryLogs = jobLogs(jobName).size();
+        ManagedSchedulingTestJob.mode(ManagedSchedulingTestJob.Mode.FAIL_ONCE);
+        api.postJson("/monitor/job/" + jobName + "/run", Map.of(), adminToken)
+                .expectSuccess();
+        awaitExecutions(retryExecutions + 2);
+        List<Map<String, Object>> retried = awaitJobLogs(jobName, retryLogs + 2).subList(0, 2);
+        assertTrue(retried.stream().anyMatch(row -> "RETRY".equals(row.get("status"))
+                && number(row.get("attempt")) == 1));
+        assertTrue(retried.stream().anyMatch(row -> "SUCCESS".equals(row.get("status"))
+                && number(row.get("attempt")) == 2));
+        Object retryExecutionId = retried.get(0).get("executionId");
+        assertTrue(retryExecutionId instanceof String
+                        && !((String) retryExecutionId).isBlank(),
+                "重试执行链必须返回非空 executionId");
+        assertTrue(retried.stream().allMatch(
+                        row -> retryExecutionId.equals(row.get("executionId"))),
+                "同一次手工执行的 RETRY 与 SUCCESS 必须共用 executionId");
+
+        int forbiddenExecutions = ManagedSchedulingTestJob.executions();
+        int forbiddenLogs = jobLogs(jobName).size();
+        ManagedSchedulingTestJob.mode(ManagedSchedulingTestJob.Mode.BLOCKING);
+        api.postJson("/monitor/job/" + jobName + "/run", Map.of(), adminToken)
+                .expectSuccess();
+        assertTrue(ManagedSchedulingTestJob.awaitEntered(), "第一个动态任务必须进入处理器");
+        try {
+            api.postJson("/monitor/job/" + jobName + "/run", Map.of(), adminToken)
+                    .expectSuccess();
+            List<Map<String, Object>> competing = awaitJobLogs(
+                    jobName, forbiddenLogs + 1).subList(0, 1);
+            assertTrue(competing.stream().anyMatch(row -> "SKIPPED".equals(row.get("status"))),
+                    "FORBID 必须跳过同一任务的并发执行");
+            assertEquals(forbiddenExecutions + 1, ManagedSchedulingTestJob.executions());
+        } finally {
+            ManagedSchedulingTestJob.release();
+        }
+        awaitJobLogs(jobName, forbiddenLogs + 2);
+
+        Map<String, Object> concurrentPayload = new LinkedHashMap<>(updatedPayload);
+        concurrentPayload.put("concurrentPolicy", "ALLOW");
+        concurrentPayload.put("maxRetries", 0);
+        api.putJson("/monitor/job/" + jobName, concurrentPayload, adminToken).expectSuccess();
+        int allowedExecutions = ManagedSchedulingTestJob.executions();
+        int allowedLogs = jobLogs(jobName).size();
+        ManagedSchedulingTestJob.mode(ManagedSchedulingTestJob.Mode.BLOCKING);
+        api.postJson("/monitor/job/" + jobName + "/run", Map.of(), adminToken)
+                .expectSuccess();
+        assertTrue(ManagedSchedulingTestJob.awaitEntered(), "并发测试首个任务必须进入处理器");
+        try {
+            api.postJson("/monitor/job/" + jobName + "/run", Map.of(), adminToken)
+                    .expectSuccess();
+            awaitExecutions(allowedExecutions + 2);
+            assertEquals(allowedExecutions + 2, ManagedSchedulingTestJob.executions(),
+                    "ALLOW 必须允许同一任务并发执行");
+        } finally {
+            ManagedSchedulingTestJob.release();
+        }
+        List<Map<String, Object>> allowed = awaitJobLogs(jobName, allowedLogs + 2).subList(0, 2);
+        assertTrue(allowed.stream().allMatch(row -> "SUCCESS".equals(row.get("status"))));
+        Object firstAllowedExecutionId = allowed.get(0).get("executionId");
+        Object secondAllowedExecutionId = allowed.get(1).get("executionId");
+        assertTrue(firstAllowedExecutionId instanceof String
+                        && !((String) firstAllowedExecutionId).isBlank()
+                        && secondAllowedExecutionId instanceof String
+                        && !((String) secondAllowedExecutionId).isBlank(),
+                "并发手工执行日志必须返回非空 executionId");
+        assertNotEquals(firstAllowedExecutionId, secondAllowedExecutionId,
+                "两次 ALLOW 并发手工执行必须使用不同 executionId");
+        ManagedSchedulingTestJob.mode(ManagedSchedulingTestJob.Mode.SUCCESS);
+
+        api.putJson("/monitor/job/" + jobName + "/start", Map.of(), adminToken)
+                .expectSuccess();
+        assertEquals(true, dynamicJobRow(jobName).get("enabled"));
+        assertTrue(Solon.context().getBean(IJobManager.class).jobGet(jobName) != null,
+                "启用在线任务后必须立即注册到 Solon IJobManager");
+        api.putJson("/monitor/job/" + jobName + "/stop", Map.of(), adminToken)
+                .expectSuccess();
+        assertEquals(false, dynamicJobRow(jobName).get("enabled"));
+        assertNull(Solon.context().getBean(IJobManager.class).jobGet(jobName),
+                "停用在线任务后必须立即从 Solon IJobManager 注销");
+
+        HttpApiTestSupport.Response systemDelete = api.delete(
+                "/monitor/job/" + ManagedSchedulingTestJob.JOB_NAME, adminToken).expectEnvelope();
+        assertNotEquals(200, systemDelete.code(), "系统内置任务不得通过在线任务接口删除");
+        assertTrue(Solon.context().getBean(IJobManager.class)
+                .jobGet(ManagedSchedulingTestJob.JOB_NAME) != null);
+
+        api.delete("/monitor/job/" + jobName, adminToken).expectSuccess();
+        assertEquals(0, jobConfigCount(jobName));
+        assertTrue(Solon.context().getBean(IJobManager.class).jobGet(jobName) == null,
+                "删除在线任务后必须同步从 Solon IJobManager 注销");
+    }
+
+    @Test
+    @Order(8)
     void preservesCronCadenceAndReconcilesDatabaseState() throws Exception {
         assertCronExecutionIsClaimedUntilItsNextFireTime();
         assertDatabaseStateIsPeriodicallyReconciled();
+    }
+
+    /** 查询指定在线任务的列表行。 */
+    private Map<String, Object> dynamicJobRow(String jobName) {
+        return api.get("/monitor/job/list", adminToken).expectSuccess().dataList().stream()
+                .filter(Map.class::isInstance)
+                .map(Map.class::cast)
+                .map(row -> (Map<String, Object>) row)
+                .filter(row -> jobName.equals(row.get("jobName")))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("未找到在线任务: " + jobName));
+    }
+
+    /** 统计指定任务名的持久化配置。 */
+    private long jobConfigCount(String jobName) {
+        return QueryChain.of(Solon.context().getBean(SysScheduledJobConfigMapper.class))
+                .eq(SysScheduledJobConfig::getJobName, jobName)
+                .count();
+    }
+
+    /** 构造合法的动态任务请求。 */
+    private static Map<String, Object> dynamicJobPayload(String jobName) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("jobName", jobName);
+        payload.put("description", "动态 HTTP 契约任务");
+        payload.put("handlerKey", ManagedSchedulingTestJob.HANDLER_KEY);
+        payload.put("scheduleType", "CRON");
+        payload.put("scheduleExpression", "0 0 0 1 1 ? *");
+        payload.put("zone", "Asia/Shanghai");
+        payload.put("initialDelayMs", 0);
+        payload.put("concurrentPolicy", "FORBID");
+        payload.put("misfirePolicy", "FIRE_ONCE");
+        payload.put("maxRetries", 1);
+        payload.put("retryIntervalMs", 0);
+        return payload;
     }
 
     private Map<String, Object> jobRow() {
@@ -422,11 +717,9 @@ public class ResourceMonitorHttpContractTest {
         invokeJob(job);
         assertEquals(executions + 1, ManagedSchedulingTestJob.executions(),
                 "fixedDelay 必须从上次执行完成后开始计时");
-        List<Map<String, Object>> newLogs = awaitJobLogs(logs + 3).subList(0, 3);
-        assertTrue(newLogs.stream().anyMatch(row -> "SCHEDULED".equals(row.get("triggerType"))
-                && "SUCCESS".equals(row.get("status"))));
-        assertEquals(2L, newLogs.stream().filter(row -> "SCHEDULED".equals(row.get("triggerType"))
-                && "SKIPPED".equals(row.get("status"))).count());
+        Map<String, Object> newLog = awaitJobLogs(logs + 1).get(0);
+        assertEquals("SCHEDULED", newLog.get("triggerType"));
+        assertEquals("SUCCESS", newLog.get("status"));
     }
 
     private void assertCronExecutionIsClaimedUntilItsNextFireTime() throws Exception {
@@ -442,9 +735,8 @@ public class ResourceMonitorHttpContractTest {
             invokeJob(job);
             assertEquals(executions + 1, ManagedSchedulingTestJob.cronExecutions(),
                     "Cron 去重必须持续到表达式的下一次合法触发，而不是固定一秒时间桶");
-            List<Map<String, Object>> newLogs = awaitJobLogs(jobName, logs + 2).subList(0, 2);
-            assertTrue(newLogs.stream().anyMatch(row -> "SUCCESS".equals(row.get("status"))));
-            assertTrue(newLogs.stream().anyMatch(row -> "SKIPPED".equals(row.get("status"))));
+            Map<String, Object> newLog = awaitJobLogs(jobName, logs + 1).get(0);
+            assertEquals("SUCCESS", newLog.get("status"));
         } finally {
             api.putJson("/monitor/job/" + jobName + "/stop", Map.of(), adminToken).expectSuccess();
         }

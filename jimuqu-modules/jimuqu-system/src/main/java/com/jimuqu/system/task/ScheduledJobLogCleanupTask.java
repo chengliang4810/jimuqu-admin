@@ -16,10 +16,22 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class ScheduledJobLogCleanupTask {
 
+    /**
+     * 执行日志保留时长。
+     */
     private static final long RETENTION_MS = Duration.ofDays(30).toMillis();
 
+    /**
+     * 定时任务执行日志 Mapper。
+     */
     private final SysScheduledJobLogMapper logMapper;
 
+    /**
+     * 清理超过保留时长的执行日志。
+     */
+    @ScheduledJobHandler(
+            key = "system.scheduledJobLog.cleanExpired",
+            description = "清理超过保留期限的定时任务执行日志")
     @Scheduled(name = "scheduledJobLogCleanup", cron = "0 0 3 * * ? *", enable = false)
     public void cleanExpiredLogs() {
         logMapper.delete(where -> where.lt(

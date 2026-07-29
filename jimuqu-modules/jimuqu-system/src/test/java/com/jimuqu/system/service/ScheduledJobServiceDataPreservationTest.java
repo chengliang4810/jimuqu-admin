@@ -52,6 +52,7 @@ class ScheduledJobServiceDataPreservationTest {
                 mock(ExecutorService.class),
                 mock(ScheduledExecutorService.class),
                 configService,
+                mock(ScheduledJobHandlerRegistry.class),
                 mock(SysScheduledJobLogMapper.class)
         );
 
@@ -75,6 +76,7 @@ class ScheduledJobServiceDataPreservationTest {
                 mock(ExecutorService.class),
                 mock(ScheduledExecutorService.class),
                 mock(ScheduledJobConfigService.class),
+                mock(ScheduledJobHandlerRegistry.class),
                 mock(SysScheduledJobLogMapper.class)
         );
         Method apply = ScheduledJobService.class.getDeclaredMethod(

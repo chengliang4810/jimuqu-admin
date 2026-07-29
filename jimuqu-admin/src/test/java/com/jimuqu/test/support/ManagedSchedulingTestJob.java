@@ -1,5 +1,6 @@
 package com.jimuqu.test.support;
 
+import com.jimuqu.system.task.ScheduledJobHandler;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.scheduling.annotation.Scheduled;
 
@@ -13,6 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class ManagedSchedulingTestJob {
 
+    /** 动态任务白名单处理器标识。 */
+    public static final String HANDLER_KEY = "test.managed.execute";
     public static final String JOB_NAME = "httpContractJob";
     public static final String CRON_JOB_NAME = "cronContractJob";
     public static final String RECONCILE_JOB_NAME = "reconcileContractJob";
@@ -25,6 +28,7 @@ public class ManagedSchedulingTestJob {
     private static volatile CountDownLatch entered = new CountDownLatch(0);
     private static volatile CountDownLatch release = new CountDownLatch(0);
 
+    @ScheduledJobHandler(key = HANDLER_KEY, description = "HTTP 契约测试任务")
     @Scheduled(name = JOB_NAME, fixedDelay = 1000L, initialDelay = 3_600_000L, enable = false)
     public void execute() throws InterruptedException {
         EXECUTIONS.incrementAndGet();

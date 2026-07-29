@@ -26,6 +26,8 @@ class ReleaseAndDeploymentContractTest {
         assertTrue(workflow.contains("run: node script/test-fullstack.mjs"));
         assertTrue(fullStackRunner.contains("\"-DskipTests=false\""));
         assertTrue(fullStackRunner.contains("\"-DforkCount=0\""));
+        assertTrue(fullStackRunner.contains("\"JIMU_TEST_MAVEN_OPTS\""));
+        assertTrue(fullStackRunner.contains("-Xms128m -Xmx1536m -XX:+UseSerialGC"));
         assertTrue(fullStackRunner.contains("\"clean\""));
         assertTrue(fullStackRunner.contains("\"verify\""));
         assertTrue(fullStackRunner.contains("\"JIMU_PLAYWRIGHT_INSTALL_DEPS\""));
@@ -106,7 +108,7 @@ class ReleaseAndDeploymentContractTest {
         assertFalse(fullStackRunner.contains(": ${redisPrefix}`"));
 
         int scanStart = fullStackRunner.indexOf("async function scanOwnedRedisKeys");
-        int scanEnd = fullStackRunner.indexOf("async function removeOwnedRedisKeys");
+        int scanEnd = fullStackRunner.indexOf("async function deleteOwnedRedisKeys");
         assertTrue(scanStart >= 0 && scanEnd > scanStart);
         String scanBlock = fullStackRunner.substring(scanStart, scanEnd);
         assertTrue(scanBlock.contains("`${redisPrefix}*`"));

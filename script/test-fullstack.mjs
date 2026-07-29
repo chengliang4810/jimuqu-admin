@@ -25,11 +25,27 @@ const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
-const backendPort = 15320;
-const frontendPort = 15555;
+const backendPort = portEnvironment("JIMU_TEST_BACKEND_PORT", 15320);
+const frontendPort = portEnvironment("JIMU_TEST_FRONTEND_PORT", 15555);
 const redisDatabase = 15;
-const expectedHttpOperationCount = 145;
+const expectedHttpOperationCount = 149;
 const serviceLogCloseTimeoutMs = 10_000;
+/**
+ * Redis 清理等待上限，覆盖测试 JVM 退出时仍在收尾的异步写入。
+ */
+const redisCleanupTimeoutMs = 20_000;
+/**
+ * Redis 连续空扫描次数，只有达到该次数才判定测试前缀已稳定清空。
+ */
+const redisCleanupStableChecks = 5;
+/**
+ * Redis 稳定性扫描间隔，避免紧密轮询占用本地服务资源。
+ */
+const redisCleanupPollIntervalMs = 500;
+/**
+ * 完整门禁中 Maven 主 JVM 的保守默认内存，避免宿主机大内存推导出过高堆预留。
+ */
+const defaultMavenOptions = "-Xms128m -Xmx1536m -XX:+UseSerialGC";
 const startupTimeoutSeconds = Number(
   process.env.JIMU_TEST_STARTUP_TIMEOUT_SECONDS ?? 180,
 );
@@ -49,6 +65,9 @@ if (!Number.isInteger(startupTimeoutSeconds) || startupTimeoutSeconds <= 0) {
   throw new Error(
     "JIMU_TEST_STARTUP_TIMEOUT_SECONDS must be a positive integer.",
   );
+}
+if (backendPort === frontendPort) {
+  throw new Error("Backend and frontend test ports must be different.");
 }
 
 const runStartedAt = new Date();
@@ -110,6 +129,22 @@ function booleanEnvironment(name, fallback) {
     return false;
   }
   throw new Error(`${name} must be true or false.`);
+}
+
+/**
+ * 读取可选测试端口，并拒绝无效或越界值。
+ *
+ * @param {string} name 环境变量名称
+ * @param {number} fallback 默认端口
+ * @returns {number} 校验后的端口
+ */
+function portEnvironment(name, fallback) {
+  const value = process.env[name]?.trim();
+  const port = Number(value || fallback);
+  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+    throw new Error(`${name} must be an integer between 1 and 65535.`);
+  }
+  return port;
 }
 
 function isFile(filePath) {
@@ -345,6 +380,27 @@ function firstPatternFinding(filePath, text, pattern) {
   return match ? findingLocation(filePath, text, match.index) : undefined;
 }
 
+/**
+ * 移除经过逐项审计的非 SQL 协议动作，避免把任务控制消息误判为删除语句。
+ *
+ * @param {string} normalized 统一分隔符后的源码路径
+ * @param {string} text Java 源码
+ * @returns {string} 用于 SQL 字面量扫描的源码
+ */
+function withoutAllowlistedNonSqlLiterals(normalized, text) {
+  if (
+    !normalized.endsWith(
+      "/jimuqu-system/src/main/java/com/jimuqu/system/service/ScheduledJobService.java",
+    )
+  ) {
+    return text;
+  }
+  return text.replace(
+    /private\s+static\s+final\s+String\s+ACTION_DELETE\s*=\s*"DELETE";/,
+    "",
+  );
+}
+
 function assertNoMapperSql() {
   const xmlFindings = [];
   for (const filePath of listFilesRecursively(repoRoot, {
@@ -392,7 +448,10 @@ function assertNoMapperSql() {
     ) {
       continue;
     }
-    const text = readFileSync(filePath, "utf8");
+    const text = withoutAllowlistedNonSqlLiterals(
+      normalized,
+      readFileSync(filePath, "utf8"),
+    );
     const finding = firstPatternFinding(
       filePath,
       text,
@@ -974,8 +1033,13 @@ async function scanOwnedRedisKeys(database) {
     .filter(Boolean);
 }
 
-async function removeOwnedRedisKeys(database) {
-  const keys = await scanOwnedRedisKeys(database);
+/**
+ * 删除一次扫描得到的本次测试专属 Redis 键。
+ *
+ * @param {number} database Redis 数据库编号
+ * @param {string[]} keys 本次测试前缀下仍存在的键
+ */
+async function deleteOwnedRedisKeys(database, keys) {
   for (let index = 0; index < keys.length; index += 100) {
     const batch = keys.slice(index, index + 100);
     if (batch.some((key) => !key.startsWith(redisPrefix))) {
@@ -1003,6 +1067,16 @@ async function removeOwnedRedisKeys(database) {
       },
     );
   }
+}
+
+/**
+ * 执行一次 Redis 清理并立即校验，供启动前隔离检查复用。
+ *
+ * @param {number} database Redis 数据库编号
+ */
+async function removeOwnedRedisKeys(database) {
+  const keys = await scanOwnedRedisKeys(database);
+  await deleteOwnedRedisKeys(database, keys);
   const remaining = await filterExistingRedisKeys(
     database,
     await scanOwnedRedisKeys(database),
@@ -1012,6 +1086,45 @@ async function removeOwnedRedisKeys(database) {
       `Redis cleanup left ${remaining.length} run-owned key(s). Key names and prefixes are intentionally omitted.`,
     );
   }
+}
+
+/**
+ * 在所有测试进程退出后持续清理 Redis，直至连续多次扫描均无残留。
+ *
+ * @param {number} database Redis 数据库编号
+ */
+async function removeOwnedRedisKeysUntilStable(database) {
+  const deadline = Date.now() + redisCleanupTimeoutMs;
+  let stableChecks = 0;
+  let remainingCount = 0;
+
+  while (Date.now() <= deadline) {
+    const existing = await filterExistingRedisKeys(
+      database,
+      await scanOwnedRedisKeys(database),
+    );
+    remainingCount = existing.length;
+    if (remainingCount > 0) {
+      await deleteOwnedRedisKeys(database, existing);
+      stableChecks = 0;
+    } else {
+      stableChecks++;
+      if (stableChecks >= redisCleanupStableChecks) {
+        return;
+      }
+    }
+    await delay(redisCleanupPollIntervalMs);
+  }
+
+  remainingCount = (
+    await filterExistingRedisKeys(
+      database,
+      await scanOwnedRedisKeys(database),
+    )
+  ).length;
+  throw new Error(
+    `Redis cleanup did not reach ${redisCleanupStableChecks} stable empty scans within ${redisCleanupTimeoutMs}ms; ${remainingCount} run-owned key(s) remain. Key names and prefixes are intentionally omitted.`,
+  );
 }
 
 async function assertNoOwnedRedisKeys(phase) {
@@ -1287,6 +1400,10 @@ async function runFullStack() {
 
   backendEnvironment = {
     ...process.env,
+    MAVEN_OPTS: environmentOrDefault(
+      "JIMU_TEST_MAVEN_OPTS",
+      environmentOrDefault("MAVEN_OPTS", defaultMavenOptions),
+    ),
     JIMU_TEST_SERVER_PORT: String(backendPort),
     JIMU_TEST_MYSQL_HOST: mysqlHost,
     JIMU_TEST_MYSQL_PORT: mysqlPort,
@@ -1546,7 +1663,7 @@ async function runFullStack() {
     /^\d+:\d+:\d+:\d+$/,
     "first-start seed cardinality",
   );
-  if (firstSeedCardinality !== "7:6:1:82") {
+  if (firstSeedCardinality !== "7:6:1:84") {
     throw new Error(
       `Fresh E2E database has unexpected seed cardinality: ${firstSeedCardinality}`,
     );
@@ -1736,7 +1853,7 @@ async function cleanup() {
     if (redisReady) {
       for (const database of [redisDatabase, 0]) {
         try {
-          await removeOwnedRedisKeys(database);
+          await removeOwnedRedisKeysUntilStable(database);
         } catch (error) {
           failures.push(`Redis DB${database} cleanup failed: ${error.message}`);
         }

@@ -65,8 +65,8 @@ class AutoTableInitDataTest {
             assertNotNull(input);
             String sql = new String(input.readAllBytes(), StandardCharsets.UTF_8);
             assertEquals(111, CCJSqlParserUtil.parseStatements(sql).getStatements().size());
-            assertEquals(63, sql.split("'F','0','0','", -1).length - 1);
-            assertEquals(81, sql.split("NULL,'N','Y','", -1).length - 1);
+            assertEquals(65, sql.split("'F','0','0','", -1).length - 1);
+            assertEquals(83, sql.split("NULL,'N','Y','", -1).length - 1);
             assertEquals(1, sql.split("INSERT INTO `sys_oss_config`", -1).length - 1);
             assertEquals(2, sql.split("INSERT INTO `sys_client`", -1).length - 1);
             assertEquals(4, sql.split("INSERT INTO `sys_post`", -1).length - 1);
@@ -74,7 +74,7 @@ class AutoTableInitDataTest {
                     .matcher(sql).results().count(), "岗位种子必须包含管理员创建部门与创建人");
             assertEquals(6, Pattern.compile("INSERT INTO `sys_role` [^;]+,NULL,103,1,CURRENT_TIMESTAMP,NULL,NULL\\);")
                     .matcher(sql).results().count(), "角色种子必须包含管理员创建部门与创建人");
-            assertEquals(154, Pattern.compile(",103,1,CURRENT_TIMESTAMP,NULL,NULL\\)")
+            assertEquals(156, Pattern.compile(",103,1,CURRENT_TIMESTAMP,NULL,NULL\\)")
                     .matcher(sql).results().count(), "管理员创建的种子必须保留完整审计字段");
             assertEquals(1, Pattern.compile("INSERT INTO `sys_user` [^;]+'self_user'[^;]+,104,5,CURRENT_TIMESTAMP,NULL,NULL\\);")
                     .matcher(sql).results().count(), "仅本人测试用户必须由自己创建");
@@ -108,6 +108,9 @@ class AutoTableInitDataTest {
             assertTrue(sql.contains("(202,108,'登录日志',2,'logininfo'"));
             assertTrue(sql.contains("(203,2,'缓存监控',5,'cache','monitor/cache/index'"));
             assertTrue(sql.contains("(204,2,'定时任务',4,'job','monitor/job/index'"));
+            assertTrue(sql.contains("'monitor:job:add'"), "初始化 SQL 必须包含定时任务新增权限");
+            assertTrue(sql.contains("'monitor:job:edit'"), "初始化 SQL 必须包含定时任务修改权限");
+            assertTrue(sql.contains("'monitor:job:remove'"), "初始化 SQL 必须包含定时任务删除权限");
             assertTrue(sql.contains("(109,1,'客户端管理',11,'client','system/client/index',NULL,'N','Y','C','0','0','system:client:list','solar:monitor-smartphone-outline'"));
             assertTrue(sql.contains("(105,1,'字典管理',6,'dict','system/dict/index'"),
                     "字典菜单必须加载包含类型与数据面板的 Bell 页面");
@@ -153,7 +156,7 @@ class AutoTableInitDataTest {
                 assertTrue(menuIds.add(Long.parseLong(menuMatcher.group(1))), "菜单 ID 不得重复");
                 parentIds.add(Long.parseLong(menuMatcher.group(2)));
             }
-            assertEquals(82, menuIds.size());
+            assertEquals(84, menuIds.size());
             assertEquals(2, parentIds.stream().filter(parentId -> parentId == 0L).count());
             assertTrue(menuIds.containsAll(parentIds.stream().filter(parentId -> parentId != 0L).toList()),
                     "所有菜单父节点必须存在");

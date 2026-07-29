@@ -83,6 +83,14 @@ jimuqu.cache:
 
 # 限流配置
 jimuqu:
+  # 定时任务集群协调配置。
+  scheduling:
+    # 周期认领租约时长（毫秒）；健康实例会按三分之一租期自动续租。
+    claimLeaseMs: ${JIMU_SCHEDULING_CLAIM_LEASE_MS:30000}
+    # 数据库任务定义与本机调度器的周期对账间隔（毫秒）。
+    reconcileIntervalMs: ${JIMU_SCHEDULING_RECONCILE_INTERVAL_MS:30000}
+    # 单个节点允许同时提交的手动立即执行任务数量，必须大于零。
+    manualMaxConcurrent: ${JIMU_SCHEDULING_MANUAL_MAX_CONCURRENT:16}
   ratelimit:
     # 是否启用限流
     enabled: true
