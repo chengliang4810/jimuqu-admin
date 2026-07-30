@@ -38,7 +38,7 @@ public class SolonDataSourceHandler implements IDataSourceHandler {
         if (dynamicSources.isEmpty()) {
             throw new DataSourceNotFoundException("未找到数据源");
         }
-        DynamicDataSource dynamic = dynamicSources.get(0);
+        DynamicDataSource dynamic = dynamicSources.getFirst();
         DataSource target = name == null || name.isBlank()
                 ? dynamic.getDefaultTargetDataSource()
                 : dynamic.getTargetDataSource(name);

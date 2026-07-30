@@ -90,7 +90,7 @@ public class WechatMiniProgramIdentityAdapter implements MiniProgramIdentityAdap
         List<MiniProgramProperties.App> apps = configuredApps();
         if (StringUtil.isBlank(requestedAppId)) {
             if (apps.size() == 1) {
-                return apps.get(0);
+                return apps.getFirst();
             }
             throw new ServiceException("存在多个小程序配置时 appid 不能为空");
         }

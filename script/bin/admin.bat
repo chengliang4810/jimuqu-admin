@@ -3,7 +3,7 @@ setlocal
 
 rem The JAR is expected beside this script; SOLON_ENV may override prod.
 set "AppName=jimuqu-admin.jar"
-set "JVM_OPTS=-Dname=%AppName% -Duser.timezone=Asia/Shanghai -Xms512m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:+UseZGC"
+set "JVM_OPTS=-Dname=%AppName% -Duser.timezone=Asia/Shanghai -Xms512m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:+UseZGC -XX:+ZGenerational"
 if not defined SOLON_ENV set "SOLON_ENV=prod"
 
 echo.

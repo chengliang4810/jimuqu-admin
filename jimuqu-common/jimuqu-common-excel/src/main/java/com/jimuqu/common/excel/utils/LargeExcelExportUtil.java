@@ -167,7 +167,7 @@ public class LargeExcelExportUtil {
                     LargeExcelExportResult.ZIP_CONTENT_TYPE, true, totalRows, parts.size());
         }
 
-        PartFile part = parts.get(0);
+        PartFile part = parts.getFirst();
         return new LargeExcelExportResult(part.path, baseName + ".xlsx",
                 LargeExcelExportResult.XLSX_CONTENT_TYPE, false, totalRows, 1);
     }

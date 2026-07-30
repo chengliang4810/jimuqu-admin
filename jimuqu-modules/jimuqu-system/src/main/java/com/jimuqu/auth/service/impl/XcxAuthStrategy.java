@@ -80,7 +80,7 @@ public class XcxAuthStrategy implements AuthStrategyService {
         if (bindings.isEmpty()) {
             throw new ServiceException("你还没有绑定小程序账号，绑定后才可以登录！");
         }
-        return bindings.get(0).getUserId();
+        return bindings.getFirst().getUserId();
     }
 
     private SysUserVo loadUser(Long userId, String openId) {

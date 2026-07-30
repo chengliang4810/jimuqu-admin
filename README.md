@@ -1,6 +1,6 @@
 # Jimuqu Admin
 
-Jimuqu Admin 是基于 Java 17、Solon 3、Xbatis、AutoTable 与 Sa-Token 的企业管理后台。
+Jimuqu Admin 是基于 Java 21、Solon 3、Xbatis、AutoTable 与 Sa-Token 的企业管理后台。
 
 > ❤️ 项目代码、文档均**开源免费可商用**，保留开源协议文件即可  
 > 💡 活到老写到老 • 为兴趣而开源 • 为学习而开源 • 为技术共享而开源
@@ -74,7 +74,7 @@ Jimuqu Admin 是基于 Java 17、Solon 3、Xbatis、AutoTable 与 Sa-Token 的�
 
 ## 快速启动
 
-准备 Java 17、MySQL 8 和 Redis 后，直接运行 Release 中的 JAR：
+准备 Java 21、MySQL 8 和 Redis 后，直接运行 Release 中的 JAR：
 
 ```bash
 export JIMU_DB_USERNAME='<数据库账号>'

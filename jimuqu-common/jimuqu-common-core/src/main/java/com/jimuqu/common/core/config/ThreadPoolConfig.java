@@ -3,7 +3,6 @@ package com.jimuqu.common.core.config;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Bean;
 import org.noear.solon.annotation.Configuration;
-import org.noear.solon.core.util.NamedThreadFactory;
 
 import java.util.concurrent.*;
 
@@ -24,8 +23,10 @@ public class ThreadPoolConfig {
      */
     @Bean(destroyMethod = "shutdown")
     public ExecutorService executorService() {
-        return Executors.newCachedThreadPool(
-                new NamedThreadFactory("jimuqu-async-").daemon(true));
+        ThreadFactory threadFactory = Thread.ofVirtual()
+                .name("jimuqu-async-", 0)
+                .factory();
+        return Executors.newThreadPerTaskExecutor(threadFactory);
     }
 
     /**
@@ -35,7 +36,7 @@ public class ThreadPoolConfig {
     public ScheduledExecutorService scheduledExecutorService() {
         return Executors.newScheduledThreadPool(
                 Runtime.getRuntime().availableProcessors() + 1,
-                new NamedThreadFactory("jimuqu-schedule-").daemon(true));
+                Thread.ofPlatform().daemon(true).name("jimuqu-schedule-", 0).factory());
     }
 
 }

@@ -6,7 +6,7 @@ AppHome=$(pwd)
 AppPath="$AppHome/$AppName"
 LogPath="$AppHome/logs/$AppName.log"
 SolonEnv="${SOLON_ENV:-prod}"
-JVM_OPTS="${JVM_OPTS:--Dname=$AppName -Duser.timezone=Asia/Shanghai -Xms512m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:+UseZGC}"
+JVM_OPTS="${JVM_OPTS:--Dname=$AppName -Duser.timezone=Asia/Shanghai -Xms512m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:+UseZGC -XX:+ZGenerational}"
 
 find_pid() {
     ps -eo pid=,args= | awk -v app="$AppName" '$0 ~ /[j]ava/ && index($0, "-jar") > 0 && index($0, app) > 0 { print $1; exit }'

@@ -29,8 +29,8 @@ xss:
   enabled: true
   excludeUrls:
     - /system/notice
-# 项目基线为 Java 17，不启用 Java 21 虚拟线程。
-solon.threads.virtual.enabled: false
+# 项目基线为 Java 21，启用虚拟线程以提升阻塞式 I/O 场景的并发能力。
+solon.threads.virtual.enabled: true
 
 solon:
   # 应用环境配置

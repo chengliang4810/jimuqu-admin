@@ -127,7 +127,7 @@ public class TranslationService {
     }
 
     private void translateBatch(TranslationGroup group, List<TranslationTask> tasks) {
-        Trans trans = tasks.get(0).trans();
+        Trans trans = tasks.getFirst().trans();
         try {
             List<Object> values = tasks.stream()
                     .map(TranslationTask::sourceValue)

@@ -69,7 +69,7 @@ public class DefaultTranslator implements TranslationInterface {
                     if (StrUtil.isNotBlank(pair)) {
                         List<String> kv = StrUtil.split(pair, keyValueSeparator, 2, true, true);
                         if (kv.size() == 2) {
-                            map.put(kv.get(0).trim(), kv.get(1).trim());
+                            map.put(kv.getFirst().trim(), kv.get(1).trim());
                         }
                     }
                 }

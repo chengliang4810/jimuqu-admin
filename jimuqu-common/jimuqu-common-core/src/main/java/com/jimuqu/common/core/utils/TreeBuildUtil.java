@@ -40,7 +40,7 @@ public class TreeBuildUtil extends TreeUtil {
         if (CollUtil.isEmpty(list)) {
             return new ArrayList<>();
         }
-        K k = ReflectUtil.invokeGetter(list.get(0), "parentId");
+        K k = ReflectUtil.invokeGetter(list.getFirst(), "parentId");
         return TreeUtil.build(list, k, DEFAULT_CONFIG, nodeParser);
     }
 

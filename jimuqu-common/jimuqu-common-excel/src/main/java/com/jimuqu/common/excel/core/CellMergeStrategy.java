@@ -59,7 +59,7 @@ public class CellMergeStrategy extends AbstractMergeStrategy {
         if (CollUtil.isEmpty(list)) {
             return cellList;
         }
-        Field[] fields = Arrays.stream(ReflectUtil.getFields(list.get(0).getClass()))
+        Field[] fields = Arrays.stream(ReflectUtil.getFields(list.getFirst().getClass()))
                 .filter(field -> !"serialVersionUID".equals(field.getName()))
                 .toArray(Field[]::new);
 
@@ -109,7 +109,7 @@ public class CellMergeStrategy extends AbstractMergeStrategy {
                         }
                     } else {
                         // 判断前面的是否合并了
-                        RepeatCell firstCell = map.get(mergeFields.get(0));
+                        RepeatCell firstCell = map.get(mergeFields.getFirst());
                         if (repeatCell.getCurrent() != firstCell.getCurrent()) {
                             if (i == list.size() - 1) {
                                 if (i > repeatCell.getCurrent()) {

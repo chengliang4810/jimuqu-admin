@@ -58,7 +58,7 @@ public class SocialAuthStrategy implements AuthStrategyService {
         if (bindings.isEmpty()) {
             throw new ServiceException("你还没有绑定第三方账号，绑定后才可以登录！");
         }
-        SysUserVo user = loadUser(bindings.get(0).getUserId());
+        SysUserVo user = loadUser(bindings.getFirst().getUserId());
         LoginUser loginUser = loginService.buildLoginUser(user);
         loginUser.setClientKey(client.getClientKey());
         loginUser.setDeviceType(client.getDeviceType());

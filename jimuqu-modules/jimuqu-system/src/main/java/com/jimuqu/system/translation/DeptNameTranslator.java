@@ -22,7 +22,7 @@ public class DeptNameTranslator implements TranslationInterface {
     @Override
     public String translate(Object value, Trans trans) {
         if (value instanceof String text && text.contains(",")) {
-            return translateBatch(List.of(value), trans).get(0);
+            return translateBatch(List.of(value), trans).getFirst();
         }
         Long deptId = TranslationValueSupport.toLong(value);
         if (deptId == null) {
