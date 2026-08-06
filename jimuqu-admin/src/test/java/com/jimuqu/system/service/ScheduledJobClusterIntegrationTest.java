@@ -78,7 +78,10 @@ import static org.mockito.Mockito.when;
 @SolonTest(
         value = Application.class,
         env = "test",
-        properties = {"jimuqu.scheduling.reconcileIntervalMs=100"},
+        properties = {
+                "jimuqu.scheduling.reconcileIntervalMs=100",
+                "jimuqu.scheduling.claimLeaseMs=1500"
+        },
         debug = false)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ScheduledJobClusterIntegrationTest {
@@ -92,6 +95,12 @@ public class ScheduledJobClusterIntegrationTest {
     private static final Duration STATE_TIMEOUT = Duration.ofSeconds(8);
     private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(15);
     private static final Duration CLUSTER_EXECUTION_TIMEOUT = Duration.ofSeconds(30);
+    /** 集成测试认领租约，需覆盖共享 CI 运行器的短时调度抖动。 */
+    private static final long CLAIM_LEASE_MS = 1_500L;
+    /** 至少跨越两个心跳周期后再验证存活 owner 的续租结果。 */
+    private static final long HEARTBEAT_OBSERVATION_MS = CLAIM_LEASE_MS + 700L;
+    /** owner 宕机后等待完整租约窗口过去，再验证其他节点接管。 */
+    private static final long TAKEOVER_WAIT_MS = CLAIM_LEASE_MS + 300L;
     private static final int PORT_BIND_ATTEMPTS = 5;
 
     /**
@@ -435,7 +444,7 @@ public class ScheduledJobClusterIntegrationTest {
             assertFalse(blockedFire.isDone(),
                     "故障注入前 owner 必须仍阻塞在业务处理器中");
 
-            Thread.sleep(700L);
+            Thread.sleep(HEARTBEAT_OBSERVATION_MS);
             Double renewedLeaseUntil = pending.getScore(cycleId);
             assertTrue(initialLeaseUntil != null && renewedLeaseUntil != null
                             && renewedLeaseUntil > initialLeaseUntil,
@@ -447,7 +456,7 @@ public class ScheduledJobClusterIntegrationTest {
             claimingNode.crash();
             await("强制终止节点后阻塞请求必须结束",
                     blockedFire::isDone, STATE_TIMEOUT);
-            Thread.sleep(450L);
+            Thread.sleep(TAKEOVER_WAIT_MS);
 
             takeoverNode.fire(jobName);
             ClusterNode survivor = takeoverNode;
