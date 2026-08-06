@@ -51,3 +51,7 @@ settings.local.json
 /runtime/
 /frontend-dist/
 /output/
+
+# Codex 与浏览器自动化生成的本地临时文件
+/.codex-tmp/
+/.playwright-cli/

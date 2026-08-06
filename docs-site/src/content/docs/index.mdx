@@ -1,0 +1,126 @@
+---
+title: Jimuqu Admin
+description: 基于 Solon 的轻量级企业管理后台
+template: splash
+hero:
+  tagline: 用 Java 21 与国产技术栈，快速搭建权限清晰、模块完整、可持续维护的企业后台。
+  actions:
+    - text: 5 分钟开始
+      link: /guide/getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: 了解项目
+      link: /guide/introduction/
+      icon: open-book
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## 一套后端，覆盖后台系统的公共底座
+
+<CardGrid>
+  <Card title="权限与组织" icon="seti:config">
+    用户、角色、部门、岗位、菜单、数据范围与在线会话，形成完整 RBAC 基础。
+  </Card>
+  <Card title="开发效率" icon="rocket">
+    Xbatis 链式查询、AutoTable 表结构维护、统一响应与对象转换，减少重复工程代码。
+  </Card>
+  <Card title="可插拔能力" icon="puzzle">
+    文件、缓存、Redis、Excel、限流、幂等、翻译、SSE、WebSocket、短信与邮件按需组合。
+  </Card>
+  <Card title="面向生产" icon="shield-check">
+    Sa-Token 鉴权、接口加解密、数据脱敏、操作审计与多环境配置共同守住上线边界。
+  </Card>
+</CardGrid>
+
+<section class="home-showcase">
+  <div class="home-section-heading">
+    <span>REAL WORKSPACE</span>
+    <h2>从登录到权限管理，开箱就是完整工作台</h2>
+    <p>配套 Vue 管理端已经接通动态菜单、按钮权限、组织数据范围、文件与系统监控，不是只有接口的后端脚手架。</p>
+  </div>
+  <figure class="home-product-shot">
+    <img src="/screenshots/admin-workspace.png" alt="Jimuqu Admin 管理端工作台" loading="lazy" />
+    <figcaption>管理端工作台 · 菜单、标签页、快捷导航与业务区域</figcaption>
+  </figure>
+</section>
+
+## 系统能力全景
+
+<div class="home-capability-columns">
+  <section>
+    <span>01 / ACCESS</span>
+    <h3>身份与权限</h3>
+    <p>密码、短信、邮箱、社交账号与小程序登录，配合客户端授权、Sa-Token 会话和完整 RBAC。</p>
+    <a href="/system/auth-client/">认证与客户端 →</a>
+  </section>
+  <section>
+    <span>02 / BUSINESS</span>
+    <h3>组织与业务底座</h3>
+    <p>用户、部门、岗位、角色、菜单、字典、参数、公告和数据权限，覆盖后台系统公共模型。</p>
+    <a href="/system/overview/">查看系统功能 →</a>
+  </section>
+  <section>
+    <span>03 / PLATFORM</span>
+    <h3>运行与集成能力</h3>
+    <p>缓存、Redis、文件、Excel、限流、幂等、翻译、定时任务、SSE、WebSocket、短信与邮件按需组合。</p>
+    <a href="/modules/overview/">查看基础模块 →</a>
+  </section>
+</div>
+
+## 一次请求，经过清晰的技术链路
+
+<div class="home-flow" aria-label="Jimuqu Admin 技术链路">
+  <div><span>01</span><strong>Vue 管理端</strong><small>Ant Design Vue</small></div>
+  <i>→</i>
+  <div><span>02</span><strong>Solon Web</strong><small>校验 · 加密 · 限流</small></div>
+  <i>→</i>
+  <div><span>03</span><strong>业务服务</strong><small>权限 · 事务 · 翻译</small></div>
+  <i>→</i>
+  <div><span>04</span><strong>Xbatis</strong><small>查询 · 分页 · 数据范围</small></div>
+  <i>→</i>
+  <div><span>05</span><strong>基础设施</strong><small>MySQL · Redis · OSS</small></div>
+</div>
+
+<div class="home-quickstart">
+  <div>
+    <span>QUICK START</span>
+    <h2>两套终端，启动完整前后端</h2>
+    <p>后端默认运行在 `5320`，前端默认运行在 `5666`，开发代理已配置为 `/dev-api`。</p>
+    <a href="/guide/getting-started/">查看数据库、环境与完整命令 →</a>
+  </div>
+  <pre aria-label="快速启动命令"><code>{`# Terminal 1 · Backend
+mvn clean package -Pdev
+java -jar jimuqu-admin/target/jimuqu-admin.jar --solon.env=dev
+
+# Terminal 2 · Frontend
+pnpm install --frozen-lockfile
+pnpm dev`}</code></pre>
+</div>
+
+## 面向生产，而不止能跑起来
+
+<div class="home-production-list">
+  <p><strong>认证边界</strong><span>Sa-Token、客户端授权、按钮权限与数据范围共同约束访问。</span></p>
+  <p><strong>接口保护</strong><span>RSA 加解密、XSS 校验、限流、幂等与敏感字段脱敏按请求链路生效。</span></p>
+  <p><strong>运行可见</strong><span>操作日志、登录日志、在线用户、缓存监控和任务执行记录便于定位问题。</span></p>
+  <p><strong>部署可控</strong><span>生产凭据使用环境变量注入，数据库、Redis 与 OSS 坚持最小权限。</span></p>
+</div>
+
+## 技术基线
+
+**Java 21** · **Solon 4.0.3** · **Xbatis 1.10.7** · **Sa-Token 1.45.0** · **AutoTable 2.6.1**
+
+项目采用 Maven 多模块结构，默认服务端口为 `5320`，支持 MySQL 与 SQLite，并提供配套的 Vue 管理端。
+
+<section class="home-final-cta">
+  <span>BUILD WITH JIMUQU</span>
+  <h2>从公共底座开始，把时间留给真正的业务</h2>
+  <p>先运行完整项目，再从标准 CRUD、数据权限和模块能力中选择你的开发入口。</p>
+  <div>
+    <a class="primary" href="/guide/getting-started/">开始使用</a>
+    <a href="/development/crud/">开发第一个模块</a>
+    <a href="https://github.com/chengliang4810/jimuqu-admin">查看源码</a>
+  </div>
+</section>

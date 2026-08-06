@@ -1,0 +1,136 @@
+---
+title: 定时任务完整说明
+description: 系统任务、动态任务、重试、集群协调和接口
+---
+
+## 功能边界
+
+系统同时管理 Solon `@Scheduled` 注册的系统任务和页面创建的动态任务。动态任务只能选择后端显式加入白名单的 Solon Bean 方法，不允许输入任意类名、方法名、SQL 或脚本。管理页面支持：
+
+- 新增、编辑和删除动态任务
+- 选择白名单 Bean 方法并配置 Cron、固定频率或固定延迟
+- 启动、停止、立即执行、并发策略和错过补偿
+- 配置失败重试次数和重试间隔
+- 查询、筛选、删除和清空执行记录
+
+这种方式不会恢复已排除的 `ruoyi-job` 模块，也不会引入 Mapper XML。
+
+## 注册系统任务
+
+在 Solon 组件方法上声明名称唯一且长期稳定的 `@Scheduled`：
+
+```java
+@Component
+public class DataSyncTask {
+
+    @Scheduled(
+            name = "dataSync",
+            cron = "0 0/5 * * * ? *",
+            zone = "Asia/Shanghai",
+            enable = false
+    )
+    public void execute() {
+        // 业务处理
+    }
+}
+```
+
+也可以在实现 `Runnable` 的组件类上使用 `@Scheduled`。建议显式设置 `name`；名称同时用于持久化配置、集群锁、执行记录和管理接口，发布后不要随意修改。
+
+任务首次被发现时，系统会把注解中的 `enable` 作为默认状态写入 `sys_scheduled_job_config`。之后页面保存的启停和重试配置优先，应用重启不会恢复为注解默认值。
+
+## 注册动态任务处理器
+
+需要供管理员在线编排的方法必须属于 Solon Bean，并显式声明 `@ScheduledJobHandler`：
+
+```java
+@Component
+public class DataSyncService {
+
+    @ScheduledJobHandler(
+            key = "data.sync",
+            description = "同步业务数据"
+    )
+    public void sync() {
+        // 业务处理
+    }
+}
+```
+
+白名单方法必须是 `public`、非 `static`、无参数且返回 `void` 的方法。`key` 是持久化的稳定标识，发布后不要随意修改。页面会显示处理器说明以及实际类名和方法名；执行通过 Solon 方法代理进入，因此事务和其他方法切面仍然有效。
+
+管理员在“系统监控 / 定时任务”中新增任务后，可以选择处理器、调度方式、时区、并发策略、错过策略和重试参数。新增任务固定为停用状态，编辑定义也不会改变启停状态，启停只能通过列表中的独立操作完成。系统任务的代码调度定义只读，但仍可在线启停、立即执行和设置重试。
+
+## 执行与重试
+
+一次触发及其重试共享同一个 `executionId`，最多执行 `1 + maxRetries` 次。业务处理抛出普通异常且重试等待完成后，当前尝试记录为 `RETRY` 并开始下一次执行；最后一次仍失败则记录为 `FAILED`。如果线程在重试等待阶段被中断，只把已经发生的当前尝试记录为 `FAILED`，不会虚构尚未执行的下一次尝试。业务处理与集群完成标记都成功才记录为 `SUCCESS`；手动执行因 `FORBID` 并发策略未获得执行权时记录为 `SKIPPED`。正常的多节点调度落选属于协调过程，不写入执行日志。
+
+启用失败重试（`maxRetries > 0`）时，并发策略必须为 `FORBID`。动态任务提交 `ALLOW` 会被拒绝，系统任务保存重试配置时会自动切换为 `FORBID`；即使旧数据仍为 `ALLOW`，运行时也会持有跨实例执行锁，避免一次触发正在重试时又启动同一任务。
+
+`Error`、线程中断和 `InterruptedException` 不会进入普通重试。成功日志写入失败不会重新执行业务，避免因为审计存储故障产生重复副作用。
+
+任务处理器执行期间可以通过 `ScheduledJobExecutionContext.current()` 读取当前的 `jobName`、`executionId`、`triggerType` 和 `attempt`。上下文不可修改，处理器退出后自动清理；同一次触发的所有重试共享 `executionId`，但 `attempt` 从 1 递增。涉及外部接口时，建议直接把 `executionId` 作为对方支持的幂等请求号；涉及本地数据库时，应把业务主键与 `executionId` 建立唯一约束或幂等记录，不能只依赖分布式锁。
+
+立即执行不受任务启停状态限制，但仍经过相同的集群互斥、重试和日志链路。立即执行接口异步提交任务，接口成功只表示任务已经进入本实例执行队列；`FORBID` 会把并发手动触发记录为 `SKIPPED`，`ALLOW` 则允许同时执行。每个节点默认最多同时承载 16 个已提交但尚未结束的手动任务，可通过 `jimuqu.scheduling.manualMaxConcurrent` 或环境变量 `JIMU_SCHEDULING_MANUAL_MAX_CONCURRENT` 调整；容量已满或执行器拒绝提交时，接口会同步返回统一业务错误，调用方应稍后重试。任务结束（包括失败和重试完成）后会释放本节点名额。业务执行是否成功以及每次重试结果以执行记录为准。
+
+## 多实例部署
+
+MySQL 中的任务定义和运行配置是最终状态，Redis 用于以下运行时协调：
+
+- 同一任务的集群互斥锁
+- 调度周期去重
+- Redis 服务端时间基准
+- 定义、启停和重试配置变更通知
+- 节点启动恢复和周期状态对账
+
+同一调度周期内只由获得执行权的一个实例执行，其余实例静默结束，避免正常集群竞争持续放大执行日志。这是一种竞争式负载分配，不保证轮询到每个节点。调度周期先以 `PENDING` 状态和租约写入 Redis，健康实例按三分之一租期续租；实例宕机且租约到期后，其他实例接管同一个周期和 `executionId`，成功后转为 `COMPLETED`。因此集群执行提供的是至少一次语义，而不是严格一次语义。
+
+Redis 中的 `PENDING`、`COMPLETED`、调度锚点和恢复水位都按任务定义代际隔离。动态任务代际以数据库定义为准；`SYSTEM` 代码任务直接根据当前节点运行时 `Scheduled` 的调度类型、表达式、时区和首次延迟生成代际。代码中的 `@Scheduled` 定义变化后会进入新代际，不复用旧定义的锚点、待接管周期或恢复水位，适合滚动发布期间新旧节点各自按实际代码定义协调。
+
+Cron 回调如果延迟到非合法触发秒，会归属于当前时间之前最近的真实 Cron 触发边界，周期标识和 `executionId` 不使用回调到达时间。`FIRE_ONCE` 启动恢复会由集群共同认领一个错过周期，并写入只覆盖截至认领时刻既有周期的恢复水位；水位至少保留到下一个真实调度边界并加一分钟宽限，但不会覆盖尚未发生的后续周期。因此同一错过周期不会被多节点重复补偿，而下一边界之后发生的新故障仍可再次补偿；有限 Cron 已无未来边界时，恢复终态永久保留。
+
+`fixedDelay` 在整个执行窗口持有互斥锁；配置为 `FORBID` 的任务在正常调度和手动触发时也会持锁。`fixedDelay` 完成标记写入失败时继续持锁到延迟期结束，避免其他节点提前执行。配置为 `ALLOW` 的 `cron` 和 `fixedRate` 按 Solon 原生语义只做周期去重，不阻止后续调度周期与尚未结束的前一周期并行。Redis 不可用时任务失败关闭，禁止退化为每个节点各自执行。
+
+分布式调度无法自动提供业务层“严格一次”语义。例如实例可能在外部系统已经处理成功、但本地进程尚未确认结果时退出。因此任务必须按业务键实现幂等，涉及数据库和外部系统时应使用唯一约束、状态机、幂等请求号或事务消息。
+
+## 调度实现
+
+项目默认依赖：
+
+```xml
+<dependency>
+    <groupId>org.noear</groupId>
+    <artifactId>solon-scheduling-simple</artifactId>
+</dependency>
+```
+
+需要 Quartz 时，将上述依赖替换为：
+
+```xml
+<dependency>
+    <groupId>org.noear</groupId>
+    <artifactId>solon-scheduling-quartz</artifactId>
+</dependency>
+```
+
+业务管理层只依赖 Solon 的 `IJobManager`、`JobHolder` 和 `JobInterceptor` 公共契约。Quartz 适配不支持 `fixedDelay` 和 `initialDelay`，替换前必须把相关任务改为 `cron` 或 Quartz 支持的 `fixedRate` 配置，并完成一次全量测试。
+
+## 数据与接口
+
+AutoTable 自动维护：
+
+- `sys_scheduled_job_config`：系统任务运行配置和动态任务完整定义
+- `sys_scheduled_job_log`：每次执行尝试的执行标识、状态、实例、时间、耗时和异常摘要
+
+控制器位于 `/monitor/job`，使用以下权限：
+
+- `monitor:job:list`
+- `monitor:job:add`
+- `monitor:job:edit`
+- `monitor:job:remove`
+- `monitor:job:changeStatus`
+- `monitor:job:run`
+- `monitor:job:log:list`
+- `monitor:job:log:remove`
+
+所有数据库查询和写入均通过 Xbatis Mapper、`QueryChain` 或类型化条件完成，不使用 Mapper XML、MyBatis SQL 注解或应用层 SQL 字符串。

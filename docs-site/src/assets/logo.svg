@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 96" role="img" aria-labelledby="title">
+  <title id="title">Jimuqu Admin</title>
+  <g fill="none" fill-rule="evenodd">
+    <defs>
+      <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#58E7FF"/>
+        <stop offset="1" stop-color="#875CFF"/>
+      </linearGradient>
+    </defs>
+    <rect width="76" height="76" x="6" y="10" rx="19" fill="url(#mark)"/>
+    <path fill="#080D1A" d="M27 29h18v18H27zm21 21h18v18H48z"/>
+    <path fill="#F2FBFF" d="M48 29h18v18H48zM27 50h18v18H27z"/>
+    <text x="101" y="64" fill="#F3F7FF" font-family="Inter,Segoe UI,sans-serif" font-size="46" font-weight="750" letter-spacing="-1.8">Jimuqu</text>
+    <text x="270" y="64" fill="#58E7FF" font-family="Inter,Segoe UI,sans-serif" font-size="46" font-weight="520" letter-spacing="-1.8">Admin</text>
+  </g>
+</svg>
