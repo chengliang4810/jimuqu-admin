@@ -46,10 +46,11 @@ jobs:
           ref: main
           path: frontend
 
+      # 使用与项目编译基线一致的 JDK 21，避免 Maven 在 Java 17 下无法加载 Java 21 字节码。
       - uses: actions/setup-java@v4
         with:
           distribution: liberica
-          java-version: "17"
+          java-version: "21"
           cache: maven
           cache-dependency-path: backend/pom.xml
 
@@ -145,10 +146,11 @@ jobs:
           ref: main
           path: frontend
 
+      # 发布构建同样使用 JDK 21，确保验证结果与最终产物运行时一致。
       - uses: actions/setup-java@v4
         with:
           distribution: liberica
-          java-version: "17"
+          java-version: "21"
           cache: maven
           cache-dependency-path: backend/pom.xml
 
