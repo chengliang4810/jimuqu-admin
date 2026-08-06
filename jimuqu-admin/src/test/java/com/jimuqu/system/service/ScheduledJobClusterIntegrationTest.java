@@ -1009,10 +1009,11 @@ public class ScheduledJobClusterIntegrationTest {
                     java.toString(),
                     CHILD_JVM_INITIAL_HEAP,
                     CHILD_JVM_MAX_HEAP,
-                    CHILD_JVM_GC,
-                    "-Djimuqu.scheduling.reconcileIntervalMs="
-                            + reconcileIntervalMs,
-                    "-Dsecurity.excludes[2]=/__test/scheduler-cluster/**",
+                     CHILD_JVM_GC,
+                     "-Djimuqu.scheduling.reconcileIntervalMs="
+                             + reconcileIntervalMs,
+                     "-Djimuqu.scheduling.claimLeaseMs=" + CLAIM_LEASE_MS,
+                     "-Dsecurity.excludes[2]=/__test/scheduler-cluster/**",
                     "-cp", classpathJar.toString(),
                     Application.class.getName(),
                     "--solon.env=test"
