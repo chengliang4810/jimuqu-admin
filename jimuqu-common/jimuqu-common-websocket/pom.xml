@@ -34,12 +34,10 @@
             <groupId>com.jimuqu</groupId>
             <artifactId>jimuqu-common-redis</artifactId>
         </dependency>
-        <!-- 关于solon-websocket https://solon.noear.org/article/643 -->
-        <!-- 单独的websocket组件： solon-server-websocket (端口为：主端口 + 10000) / solon-server-websocket-netty (端口为：主端口 + 10000)  -->
-        <!-- 支持web-docket的web服务器：（项目中默认使用）solon-server-smarthttp /  solon-server-undertow -->
+        <!-- FeatHttp 容器：复用主端口提供 WebSocket 服务 -->
         <dependency>
             <groupId>org.noear</groupId>
-            <artifactId>solon-server-smarthttp</artifactId>
+            <artifactId>solon-server-feathttp</artifactId>
         </dependency>
     </dependencies>
 

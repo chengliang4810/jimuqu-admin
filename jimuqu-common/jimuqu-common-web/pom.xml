@@ -18,17 +18,11 @@
             <artifactId>jimuqu-common-core</artifactId>
         </dependency>
 
-        <!-- Http 启动器（包大小:0.8Mb，aio, http, ws） -->
+        <!-- FeatHttp 容器：提供 HTTP 与 WebSocket 服务 -->
         <dependency>
             <groupId>org.noear</groupId>
-            <artifactId>solon-server-smarthttp</artifactId>
+            <artifactId>solon-server-feathttp</artifactId>
         </dependency>
-
-        <!-- 更强的Http 启动器（包大小:4.8Mb，nio, http, ws, http2） -->
-<!--        <dependency>-->
-<!--            <groupId>org.noear</groupId>-->
-<!--            <artifactId>solon-server-undertow</artifactId>-->
-<!--        </dependency>-->
 
         <!-- Json序列化支持组件 -->
         <dependency>
