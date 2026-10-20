@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import org.noear.solon.validation.annotation.Email;
 import org.noear.solon.validation.annotation.Length;
 import org.noear.solon.validation.annotation.Pattern;
-import org.noear.snack4.annotation.ONodeAttr;
+import org.apache.fory.json.annotation.JsonProperty;
 
 
 /**
@@ -45,7 +45,7 @@ public class SysUserProfileBo extends BoBaseEntity {
      */
     @Sensitive(type = SensitiveType.MOBILE)
     @Pattern(value = RegexConstants.MOBILE, message = "手机号格式不正确")
-    @ONodeAttr(name = "phoneNumber")
+    @JsonProperty("phoneNumber")
     private String phonenumber;
 
     /**

@@ -5,7 +5,8 @@ import com.jimuqu.common.core.sensitive.annotation.Sensitive;
 import com.jimuqu.common.core.sensitive.enums.SensitiveType;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.noear.snack4.annotation.ONodeAttr;
+import org.apache.fory.json.annotation.JsonProperty;
+import org.apache.fory.json.annotation.JsonIgnore;
 
 import java.lang.reflect.Array;
 import java.lang.annotation.Annotation;
@@ -143,13 +144,13 @@ public class SensitiveUtil {
                 || Modifier.isTransient(modifiers)
                 || field.isSynthetic()
                 || hasAnnotation(field, "com.fasterxml.jackson.annotation.JsonIgnore")
-                || hasIgnoredNodeAttr(field);
+                || hasIgnoredJsonField(field);
     }
 
     private static String serializedName(Field field) {
-        ONodeAttr nodeAttr = field.getAnnotation(ONodeAttr.class);
-        if (nodeAttr != null && !nodeAttr.name().isBlank()) {
-            return nodeAttr.name();
+        JsonProperty property = field.getAnnotation(JsonProperty.class);
+        if (property != null && !property.value().isBlank()) {
+            return property.value();
         }
         String jsonProperty = annotationStringValue(
                 field, "com.fasterxml.jackson.annotation.JsonProperty", "value");
@@ -159,9 +160,9 @@ public class SensitiveUtil {
         return field.getName();
     }
 
-    private static boolean hasIgnoredNodeAttr(Field field) {
-        ONodeAttr nodeAttr = field.getAnnotation(ONodeAttr.class);
-        return nodeAttr != null && nodeAttr.ignore();
+    private static boolean hasIgnoredJsonField(Field field) {
+        JsonIgnore ignored = field.getAnnotation(JsonIgnore.class);
+        return ignored != null && ignored.ignoreWrite();
     }
 
     private static boolean hasAnnotation(Field field, String annotationType) {

@@ -7,7 +7,7 @@ import com.jimuqu.common.core.domain.model.PasswordLoginBody;
 import com.jimuqu.common.web.validation.ValidationMessageResolver;
 import org.junit.jupiter.api.Test;
 import org.noear.solon.core.exception.StatusException;
-import org.noear.snack4.json.JsonParseException;
+import com.jimuqu.common.core.utils.JsonReadException;
 import org.noear.solon.validation.ValidUtils;
 import org.noear.solon.validation.ValidatorException;
 
@@ -66,11 +66,11 @@ class GlobalExceptionFilterTest {
     }
 
     @Test
-    void recognizesWrappedSnackJsonParseException() {
-        RuntimeException wrapped = new RuntimeException(new JsonParseException("invalid json"));
+    void recognizesWrappedJsonReadException() {
+        RuntimeException wrapped = new RuntimeException(new JsonReadException("invalid json", null));
 
-        assertEquals(JsonParseException.class,
-                GlobalExceptionFilter.findCause(wrapped, JsonParseException.class).getClass());
+        assertEquals(JsonReadException.class,
+                GlobalExceptionFilter.findCause(wrapped, JsonReadException.class).getClass());
     }
 
     @Test

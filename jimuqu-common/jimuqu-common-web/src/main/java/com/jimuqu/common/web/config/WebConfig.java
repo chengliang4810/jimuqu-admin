@@ -7,13 +7,11 @@ import org.noear.solon.core.convert.Converter;
 import org.noear.solon.core.handle.Context;
 import org.noear.solon.core.handle.Handler;
 import org.noear.solon.core.route.RouterInterceptorChain;
-import org.noear.snack4.Feature;
-import org.noear.solon.serialization.snack4.Snack4StringSerializer;
+import com.jimuqu.common.web.serialization.ForyJsonStringSerializer;
 import org.noear.solon.web.cors.CrossInterceptor;
 import com.jimuqu.common.web.config.properties.CorsProperties;
 import com.jimuqu.common.web.sensitive.SensitiveJsonRender;
 import com.jimuqu.common.core.service.SensitiveService;
-import com.jimuqu.common.core.utils.JsonNumberCodec;
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.core.xss.Xss;
 import com.jimuqu.common.core.xss.XssValidator;
@@ -117,19 +115,9 @@ public class WebConfig {
      * 替换默认 JSON 渲染器，统一处理 @Sensitive 响应字段。
      */
     @Bean
-    public void sensitiveJsonRender(Snack4StringSerializer snack4StringSerializer,
+    public void sensitiveJsonRender(ForyJsonStringSerializer serializer,
                                     SensitiveService sensitiveService) {
-        configureJsonSerializer(snack4StringSerializer);
-        Solon.app().renders().register("@json", new SensitiveJsonRender(snack4StringSerializer, sensitiveService));
-    }
-
-    static void configureJsonSerializer(Snack4StringSerializer serializer) {
-        serializer.getSerializeConfig().removeFeatures(
-                Feature.Write_LongAsString,
-                Feature.Write_NullListAsEmpty,
-                Feature.Write_NullStringAsEmpty);
-        serializer.getSerializeConfig().addFeatures(Feature.Write_Nulls);
-        JsonNumberCodec.configure(serializer.getSerializeConfig().getOptions());
+        Solon.app().renders().register("@json", new SensitiveJsonRender(serializer, sensitiveService));
     }
 
     static final class JsonMapConverter implements Converter<String, Map> {

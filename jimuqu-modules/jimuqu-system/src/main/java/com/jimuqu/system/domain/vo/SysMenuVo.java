@@ -1,6 +1,5 @@
 package com.jimuqu.system.domain.vo;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import cn.xbatis.db.annotations.Ignores;
 import cn.xbatis.db.annotations.ResultEntity;
 import com.jimuqu.common.core.constant.UserConstants;
@@ -9,7 +8,7 @@ import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-import org.noear.snack4.annotation.ONodeAttr;
+import org.apache.fory.json.annotation.JsonProperty;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -37,7 +36,6 @@ public class SysMenuVo implements Serializable {
      * 菜单ID
      */
     @JsonProperty("menuId")
-    @ONodeAttr(name = "menuId")
     private Long id;
     /**
      * 父菜单ID

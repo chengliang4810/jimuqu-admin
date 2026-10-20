@@ -1,6 +1,5 @@
 package com.jimuqu.system.domain.vo;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import cn.idev.excel.annotation.ExcelIgnoreUnannotated;
 import cn.idev.excel.annotation.ExcelProperty;
 import cn.xbatis.db.annotations.Ignore;
@@ -13,7 +12,7 @@ import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-import org.noear.snack4.annotation.ONodeAttr;
+import org.apache.fory.json.annotation.JsonProperty;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -39,7 +38,6 @@ public class SysRoleVo implements Serializable {
      * 角色ID
      */
     @JsonProperty("roleId")
-    @ONodeAttr(name = "roleId")
     @ExcelProperty(value = "角色序号")
     private Long id;
     /**
@@ -97,7 +95,7 @@ public class SysRoleVo implements Serializable {
     @Ignore
     private boolean flag = false;
 
-    @ONodeAttr(name = "superAdmin")
+    @JsonProperty("superAdmin")
     public boolean isSuperAdmin() {
         return UserConstants.SUPER_ADMIN_ID.equals(this.id);
     }

@@ -1,10 +1,9 @@
 package com.jimuqu.system.domain.vo;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jimuqu.common.translation.annotation.Trans;
 import com.jimuqu.common.translation.enums.TransType;
 import lombok.Data;
-import org.noear.snack4.annotation.ONodeAttr;
+import org.apache.fory.json.annotation.JsonProperty;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -18,7 +17,6 @@ public class ProfileUserVo implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @JsonProperty("userId")
-    @ONodeAttr(name = "userId")
     private Long id;
     private Long deptId;
     private String userName;
@@ -26,7 +24,6 @@ public class ProfileUserVo implements Serializable {
     private String userType;
     private String email;
     @JsonProperty("phoneNumber")
-    @ONodeAttr(name = "phoneNumber")
     private String phonenumber;
     private String sex;
     private Long avatar;

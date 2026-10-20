@@ -101,7 +101,7 @@ class BellVoJsonContractTest {
     }
 
     @Test
-    void deserializesBellRequestFieldNamesWithSnack4() {
+    void deserializesBellRequestFieldNamesWithForyJson() {
         SysUserBo user = JsonUtil.toObject("""
                 {"userId":41,"phoneNumber":"13700137000","roleIds":[1,2],"postIds":[3],
                  "loginIp":"203.0.113.9","loginDate":"2026-07-19 12:00:00"}
@@ -136,7 +136,7 @@ class BellVoJsonContractTest {
     }
 
     @Test
-    void serializesBellFieldAliasesWithSnack4() {
+    void serializesBellFieldAliasesWithForyJson() {
         assertAlias(new SysConfigVo().setId(11L), "configId", "id", 11L);
         assertAlias(new SysDeptVo().setId(12L), "deptId", "id", 12L);
         assertAlias(new SysMenuVo().setId(13L), "menuId", "id", 13L);

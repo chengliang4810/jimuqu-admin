@@ -3,7 +3,7 @@ package com.jimuqu.common.core.domain.model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.noear.solon.validation.annotation.NotBlank;
-import org.noear.snack4.annotation.ONodeAttr;
+import org.apache.fory.json.annotation.JsonProperty;
 
 /**
  * 短信登录对象
@@ -19,7 +19,7 @@ public class SmsLoginBody extends LoginBody {
      * 手机号
      */
     @NotBlank(message = "{user.phonenumber.not.blank}")
-    @ONodeAttr(name = "phoneNumber")
+    @JsonProperty("phoneNumber")
     private String phonenumber;
 
     /**

@@ -15,7 +15,7 @@ import org.noear.solon.core.handle.Context;
 import org.noear.solon.core.handle.Filter;
 import org.noear.solon.core.handle.FilterChain;
 import org.noear.solon.validation.ValidatorException;
-import org.noear.snack4.json.JsonParseException;
+import com.jimuqu.common.core.utils.JsonReadException;
 
 import java.io.IOException;
 
@@ -70,19 +70,24 @@ public class GlobalExceptionFilter implements Filter {
             ctx.status(200);
             ctx.render(baseError(e));
         }
-        catch (JsonParseException e) {
+        catch (JsonReadException e) {
             log.error("请求数据格式错误: {}", e.getMessage());
             ctx.status(200);
             ctx.render(R.fail(400, "请求数据格式错误"));
         }
         catch (StatusException e) {
             drainRequestBody(ctx);
+            if (findCause(e, JsonReadException.class) != null) {
+                ctx.status(200);
+                ctx.render(R.fail(400, "请求数据格式错误"));
+                return;
+            }
             ctx.status(transportStatus(e.getCode()));
             ctx.render(statusError(e));
         }
         // 其他异常
         catch (Throwable e) {
-            if (findCause(e, JsonParseException.class) != null) {
+            if (findCause(e, JsonReadException.class) != null) {
                 log.error("请求数据格式错误: {}", e.getMessage());
                 ctx.status(200);
                 ctx.render(R.fail(400, "请求数据格式错误"));

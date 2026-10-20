@@ -4,10 +4,11 @@ import com.jimuqu.common.core.domain.R;
 import com.jimuqu.common.core.sensitive.annotation.Sensitive;
 import com.jimuqu.common.core.sensitive.enums.SensitiveType;
 import org.junit.jupiter.api.Test;
-import org.noear.snack4.ONode;
-import org.noear.snack4.annotation.ONodeAttr;
+import com.jimuqu.common.core.utils.JsonUtil;
+import org.apache.fory.json.annotation.JsonProperty;
+import org.apache.fory.json.annotation.JsonIgnore;
 import org.noear.solon.core.handle.ContextEmpty;
-import org.noear.solon.serialization.snack4.Snack4StringSerializer;
+import com.jimuqu.common.web.serialization.ForyJsonStringSerializer;
 
 import java.util.List;
 import java.util.Map;
@@ -20,10 +21,10 @@ class SensitiveJsonRenderTest {
 
     @Test
     void preservesComputedAndGetterValuesWhileMaskingSensitiveFields() throws Throwable {
-        SensitiveJsonRender render = new SensitiveJsonRender(new Snack4StringSerializer());
+        SensitiveJsonRender render = new SensitiveJsonRender(new ForyJsonStringSerializer());
 
         String json = render.renderAndReturn(new Envelope(new RoleView()), ContextEmpty.create());
-        Map<?, ?> response = ONode.deserialize(json, Map.class);
+        Map<?, ?> response = JsonUtil.toObject(json, Map.class);
         Map<?, ?> data = (Map<?, ?>) response.get("data");
 
         assertEquals(1, data.get("roleId"));
@@ -35,11 +36,11 @@ class SensitiveJsonRenderTest {
 
     @Test
     void preservesExactEnvelopeAndPaginationSurface() throws Throwable {
-        SensitiveJsonRender render = new SensitiveJsonRender(new Snack4StringSerializer());
+        SensitiveJsonRender render = new SensitiveJsonRender(new ForyJsonStringSerializer());
         PaginationView page = new PaginationView();
 
         String json = render.renderAndReturn(R.ok(page), ContextEmpty.create());
-        Map<?, ?> response = ONode.deserialize(json, Map.class);
+        Map<?, ?> response = JsonUtil.toObject(json, Map.class);
         Map<?, ?> data = (Map<?, ?>) response.get("data");
 
         assertEquals(Set.of("code", "msg", "data"), response.keySet());
@@ -78,16 +79,16 @@ class SensitiveJsonRenderTest {
     }
 
     private static final class RoleView {
-        @ONodeAttr(name = "roleId")
+        @JsonProperty("roleId")
         private final Long id = 1L;
 
         private final String status = "0";
 
         @Sensitive(type = SensitiveType.MOBILE)
-        @ONodeAttr(name = "phoneNumber")
+        @JsonProperty("phoneNumber")
         private final String mobile = "13812345678";
 
-        @ONodeAttr(ignore = true)
+        @JsonIgnore
         private final String password = "secret";
 
         public Long getId() {
@@ -106,7 +107,7 @@ class SensitiveJsonRenderTest {
             return password;
         }
 
-        @ONodeAttr(name = "superAdmin")
+        @JsonProperty("superAdmin")
         public boolean isSuperAdmin() {
             return id == 1L;
         }

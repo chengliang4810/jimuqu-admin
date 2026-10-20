@@ -1,7 +1,6 @@
 package com.jimuqu.system.domain.bo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jimuqu.common.core.constant.RegexConstants;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
@@ -15,7 +14,7 @@ import org.noear.solon.validation.annotation.Length;
 import org.noear.solon.validation.annotation.NotBlank;
 import org.noear.solon.validation.annotation.NotNull;
 import org.noear.solon.validation.annotation.Pattern;
-import org.noear.snack4.annotation.ONodeAttr;
+import org.apache.fory.json.annotation.JsonProperty;
 
 /**
  * 菜单权限业务对象 menu
@@ -34,7 +33,6 @@ public class SysMenuBo extends BoBaseEntity {
      */
     @NotNull(message = "菜单ID不能为空", groups = { UpdateGroup.class })
     @JsonProperty("menuId")
-    @ONodeAttr(name = "menuId")
     private Long id;
     /**
      * 父菜单ID

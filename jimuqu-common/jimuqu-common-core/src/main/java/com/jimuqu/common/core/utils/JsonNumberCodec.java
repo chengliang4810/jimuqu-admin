@@ -2,7 +2,6 @@ package com.jimuqu.common.core.utils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.noear.snack4.Options;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -19,18 +18,15 @@ public final class JsonNumberCodec {
     private static final BigInteger MIN_SAFE_BIG_INTEGER = BigInteger.valueOf(MIN_SAFE_INTEGER);
 
     /**
-     * 为 Snack4 写配置注册与上游一致的浏览器安全数字编码规则。
-     *
-     * @param options Snack4 写配置
+     * 保留安全整数的数字类型，超出浏览器精度范围的整数和金额使用字符串。
      */
-    public static void configure(Options options) {
-        options.addEncoder(Long.class, (ctx, value, target) -> isSafe(value)
-                ? target.setValue(value)
-                : target.setValue(value.toString()));
-        options.addEncoder(BigInteger.class, (ctx, value, target) -> isSafe(value)
-                ? target.setValue(value)
-                : target.setValue(value.toString()));
-        options.addEncoder(BigDecimal.class, (ctx, value, target) -> target.setValue(value.toString()));
+    public static Object encode(Number value) {
+        if (value instanceof Long longValue && !isSafe(longValue)
+                || value instanceof BigInteger bigValue && !isSafe(bigValue)
+                || value instanceof BigDecimal) {
+            return value.toString();
+        }
+        return value;
     }
 
     private static boolean isSafe(long value) {

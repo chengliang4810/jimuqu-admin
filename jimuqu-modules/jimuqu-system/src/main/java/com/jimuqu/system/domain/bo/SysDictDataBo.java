@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.noear.solon.validation.annotation.*;
-import org.noear.snack4.annotation.ONodeAttr;
+import org.apache.fory.json.annotation.JsonProperty;
 
 /**
  * 字典数据业务对象 sys_dict_data
@@ -27,7 +27,7 @@ public class SysDictDataBo extends BoBaseEntity {
      * 字典ID
      */
     @NotNull(message = "字典ID不能为空", groups = { UpdateGroup.class })
-    @ONodeAttr(name = "dictCode")
+    @JsonProperty("dictCode")
     private Long id;
     /**
      * 父级ID

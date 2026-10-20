@@ -36,6 +36,7 @@
         <mapstruct-plus.lombok.version>0.2.0</mapstruct-plus.lombok.version>
         <!-- JSON 组件统一版本 -->
         <jackson.version>2.21.5</jackson.version>
+        <fory.version>1.7.7</fory.version>
         <!-- MinIO 9 使用的 HTTP 客户端版本 -->
         <okhttp.version>5.3.2</okhttp.version>
         <!-- 数据源 -->
@@ -102,6 +103,16 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.apache.fory</groupId>
+                <artifactId>fory-json</artifactId>
+                <version>${fory.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.fory</groupId>
+                <artifactId>fory-core</artifactId>
+                <version>${fory.version}</version>
+            </dependency>
             <!-- common 的依赖配置-->
             <dependency>
                 <groupId>com.jimuqu</groupId>

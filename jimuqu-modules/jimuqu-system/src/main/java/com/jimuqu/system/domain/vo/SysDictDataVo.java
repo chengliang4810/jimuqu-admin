@@ -10,7 +10,7 @@ import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-import org.noear.snack4.annotation.ONodeAttr;
+import org.apache.fory.json.annotation.JsonProperty;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -35,7 +35,7 @@ public class SysDictDataVo implements Serializable {
     /**
      * 字典ID
      */
-    @ONodeAttr(name = "dictCode")
+    @JsonProperty("dictCode")
     @ExcelProperty(value = "字典编码")
     private Long id;
     /**
@@ -60,7 +60,7 @@ public class SysDictDataVo implements Serializable {
     /**
      * 字典类型
      */
-    @ONodeAttr(name = "dictType")
+    @JsonProperty("dictType")
     @ExcelProperty(value = "字典类型")
     private String dictTypeKey;
     /**

@@ -1,20 +1,17 @@
 package com.jimuqu.common.core.utils;
 
-import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Dict;
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.text.StrPool;
 import cn.hutool.core.util.ObjectUtil;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.noear.snack4.Feature;
-import org.noear.snack4.ONode;
-import org.noear.snack4.Options;
-import org.noear.snack4.codec.TypeRef;
+import org.apache.fory.json.ForyJson;
+import org.apache.fory.reflect.TypeRef;
+import cn.hutool.core.lang.ParameterizedTypeImpl;
 
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -26,8 +23,14 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class JsonUtil {
 
-    private static final Options WRITE_OPTIONS = createWriteOptions();
-    private static final Options PRETTY_WRITE_OPTIONS = createWriteOptions(Feature.Write_PrettyFormat);
+    private static final ForyJson JSON = ForyJson.builder()
+            .withFieldMode(true)
+            .writeNullFields(true)
+            .byteArrayFormat(org.apache.fory.json.annotation.JsonByteArray.Format.ARRAY)
+            .maxDepth(64)
+            .registerCodec(java.util.Date.class, new JsonDateCodec())
+            .registerCodec(Object.class, new JsonObjectCodec())
+            .build();
 
     /**
      * 对象转 JsonString
@@ -39,7 +42,7 @@ public class JsonUtil {
         if (ObjectUtil.isNull(object)) {
             return null;
         }
-        return ONode.serialize(object, WRITE_OPTIONS);
+        return JSON.toJson(JsonWriteSupport.toTree(object, false, null));
     }
 
     /**
@@ -52,7 +55,7 @@ public class JsonUtil {
         if (ObjectUtil.isNull(object)) {
             return StrPool.EMPTY_JSON;
         }
-        return ONode.serialize(object, PRETTY_WRITE_OPTIONS);
+        return JSON.toPrettyJson(JsonWriteSupport.toTree(object, false, null));
     }
 
     /**
@@ -66,7 +69,11 @@ public class JsonUtil {
         if (StringUtil.isEmpty(jsonString)) {
             return null;
         }
-        return ONode.deserialize(jsonString, type);
+        try {
+            return JSON.fromJson(jsonString, TypeRef.of(type == null ? Object.class : type));
+        } catch (org.apache.fory.json.ForyJsonException e) {
+            throw new JsonReadException("Invalid JSON input", e);
+        }
     }
 
     /**
@@ -80,7 +87,7 @@ public class JsonUtil {
         if (StringUtil.isEmpty(jsonString)) {
             return java.util.Collections.emptyList();
         }
-        return ONode.deserialize(jsonString, TypeRef.listOf(type));
+        return toObject(jsonString, new ParameterizedTypeImpl(new Type[]{type}, null, List.class));
     }
 
     /**
@@ -94,7 +101,7 @@ public class JsonUtil {
         if (StringUtil.isEmpty(jsonString)) {
             return java.util.Collections.emptySet();
         }
-        return ONode.deserialize(jsonString, TypeRef.setOf(type));
+        return toObject(jsonString, new ParameterizedTypeImpl(new Type[]{type}, null, Set.class));
     }
 
     /**
@@ -107,13 +114,18 @@ public class JsonUtil {
         if (StringUtil.isBlank(jsonString)) {
             return Dict.of();
         }
-        return ONode.deserialize(jsonString, Dict.class);
+        Map<String, Object> values = toObject(jsonString, Map.class);
+        if (values == null) {
+            return null;
+        }
+        Dict result = Dict.of();
+        result.putAll(values);
+        return result;
     }
 
-    private static Options createWriteOptions(Feature... features) {
-        Options options = Options.of(features);
-        JsonNumberCodec.configure(options);
-        return options;
+    /** 编码已经投影过的 JSON 值；保留 null 和现有数值类型。 */
+    public static String writeTree(Object value) {
+        return JSON.toJson(value);
     }
 
 }

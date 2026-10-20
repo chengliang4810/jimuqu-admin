@@ -27,7 +27,7 @@
         <!-- Json序列化支持组件 -->
         <dependency>
             <groupId>org.noear</groupId>
-            <artifactId>solon-serialization-snack4</artifactId>
+            <artifactId>solon-serialization</artifactId>
         </dependency>
 
         <!-- 跨域处理组件 -->

@@ -19,9 +19,9 @@ import com.jimuqu.system.domain.vo.SysUserVo;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.noear.snack4.ONode;
+import com.jimuqu.common.core.utils.JsonUtil;
 import org.noear.solon.core.handle.ContextEmpty;
-import org.noear.solon.serialization.snack4.Snack4StringSerializer;
+import com.jimuqu.common.web.serialization.ForyJsonStringSerializer;
 
 import java.util.Map;
 import java.util.Set;
@@ -88,9 +88,9 @@ class SysSensitiveServiceImplTest {
             if (loginUser != null) {
                 LoginHelper.login(loginUser, new SaLoginParameter().setExtraData(Map.of()));
             }
-            String json = new SensitiveJsonRender(new Snack4StringSerializer(), SERVICE)
+            String json = new SensitiveJsonRender(new ForyJsonStringSerializer(), SERVICE)
                     .renderAndReturn(value, ContextEmpty.create());
-            return ONode.deserialize(json, Map.class);
+            return JsonUtil.toObject(json, Map.class);
         } finally {
             if (loginUser != null) {
                 StpUtil.logout();

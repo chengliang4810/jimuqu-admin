@@ -8,7 +8,8 @@ import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-import org.noear.snack4.annotation.ONodeAttr;
+import org.apache.fory.json.annotation.JsonProperty;
+import org.apache.fory.json.annotation.JsonIgnore;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -43,13 +44,13 @@ public class SysDictTypeVo implements Serializable {
     /**
      * 字典key
      */
-    @ONodeAttr(name = "dictType")
+    @JsonProperty("dictType")
     @ExcelProperty(value = "字典类型")
     private String dictKey;
     /**
      * 字典类型 L 列表 T 树
      */
-    @ONodeAttr(ignore = true)
+    @JsonIgnore
     private String dictType;
     /**
      * 系统内置（Y是 N否）

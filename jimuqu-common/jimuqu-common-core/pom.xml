@@ -13,6 +13,10 @@
     <description>通用核心模块</description>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.fory</groupId>
+            <artifactId>fory-json</artifactId>
+        </dependency>
         <!-- solon内核 -->
         <dependency>
             <groupId>org.noear</groupId>

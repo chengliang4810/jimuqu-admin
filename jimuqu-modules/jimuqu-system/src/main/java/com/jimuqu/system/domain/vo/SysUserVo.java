@@ -1,7 +1,5 @@
 package com.jimuqu.system.domain.vo;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import cn.xbatis.db.annotations.Ignore;
 import cn.xbatis.db.annotations.NestedResultEntity;
 import cn.xbatis.db.annotations.ResultEntity;
@@ -16,7 +14,8 @@ import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
-import org.noear.snack4.annotation.ONodeAttr;
+import org.apache.fory.json.annotation.JsonProperty;
+import org.apache.fory.json.annotation.JsonIgnore;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -42,7 +41,6 @@ public class SysUserVo implements Serializable {
      * 用户ID
      */
     @JsonProperty("userId")
-    @ONodeAttr(name = "userId")
     private Long id;
     /**
      * 部门ID
@@ -70,7 +68,6 @@ public class SysUserVo implements Serializable {
      */
     @Sensitive(type = SensitiveType.MOBILE, perms = "system:user:edit")
     @JsonProperty("phoneNumber")
-    @ONodeAttr(name = "phoneNumber")
     private String phonenumber;
     /**
      * 用户性别（0男 1女 2未知）
@@ -90,7 +87,6 @@ public class SysUserVo implements Serializable {
      * 密码
      */
     @JsonIgnore
-    @ONodeAttr(ignore = true)
     private String password;
     /**
      * 帐号状态（0正常 1停用）
