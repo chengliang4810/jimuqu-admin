@@ -4,6 +4,7 @@ import cn.hutool.core.lang.Dict;
 import cn.hutool.core.lang.TypeReference;
 import org.apache.fory.json.ForyJsonException;
 import org.apache.fory.json.annotation.JsonIgnore;
+import org.apache.fory.json.annotation.JsonInclude;
 import org.apache.fory.json.annotation.JsonProperty;
 import org.junit.jupiter.api.Test;
 
@@ -17,6 +18,23 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class JsonUtilCompatibilityTest {
+    @Test
+    void preservesTinyNonzeroDecimalsWhenOmittingDefaultValues() {
+        DefaultValues value = new DefaultValues();
+        value.amount = new BigDecimal("1e-1000");
+        Dict tree = JsonUtil.toMap(JsonUtil.toString(value));
+        assertEquals(value.amount.toString(), tree.get("amount"));
+        assertFalse(tree.containsKey("zero"));
+        assertFalse(tree.containsKey("disabled"));
+    }
+
+    @JsonInclude(JsonProperty.Include.NON_DEFAULT)
+    public static class DefaultValues {
+        public BigDecimal amount;
+        public int zero;
+        public boolean disabled;
+    }
+
     @Test
     void preservesNullEmptyAndPrettyPrintingContracts() {
         assertNull(JsonUtil.toString(null));

@@ -6,7 +6,6 @@ import com.jimuqu.common.core.service.SensitiveService;
 import com.jimuqu.common.core.sensitive.annotation.Sensitive;
 import com.jimuqu.common.core.sensitive.utils.SensitiveUtil;
 import com.jimuqu.common.core.utils.JsonUtil;
-import com.jimuqu.common.core.utils.JsonWriteSupport;
 import com.jimuqu.common.web.encrypt.ApiEncryptSupport;
 import com.jimuqu.common.web.serialization.ForyJsonStringSerializer;
 import org.noear.solon.core.handle.Context;
@@ -45,7 +44,7 @@ public class SensitiveJsonRender implements Render {
 
     @Override
     public String renderAndReturn(Object obj, Context ctx) throws Throwable {
-        Object body = JsonWriteSupport.toTree(obj, true, (field, value) -> {
+        Object body = serializer.toTree(obj, (field, value) -> {
             Sensitive sensitive = field.getAnnotation(Sensitive.class);
             if (sensitive != null && value instanceof CharSequence text
                     && sensitiveService.isSensitive(sensitive.roleKey(), sensitive.perms())) {

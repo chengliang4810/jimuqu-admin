@@ -1,6 +1,7 @@
 package com.jimuqu.system.domain.vo;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.fory.json.annotation.JsonInclude;
+import org.apache.fory.json.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
  * @date 2024/08/08
  */
 @Data
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonInclude(JsonProperty.Include.NON_EMPTY)
 public class RouterVo {
 
     /**

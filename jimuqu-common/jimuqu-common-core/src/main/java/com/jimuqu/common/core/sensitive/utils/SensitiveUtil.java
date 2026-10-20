@@ -9,7 +9,6 @@ import org.apache.fory.json.annotation.JsonProperty;
 import org.apache.fory.json.annotation.JsonIgnore;
 
 import java.lang.reflect.Array;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.time.temporal.TemporalAccessor;
@@ -143,7 +142,6 @@ public class SensitiveUtil {
         return Modifier.isStatic(modifiers)
                 || Modifier.isTransient(modifiers)
                 || field.isSynthetic()
-                || hasAnnotation(field, "com.fasterxml.jackson.annotation.JsonIgnore")
                 || hasIgnoredJsonField(field);
     }
 
@@ -152,40 +150,12 @@ public class SensitiveUtil {
         if (property != null && !property.value().isBlank()) {
             return property.value();
         }
-        String jsonProperty = annotationStringValue(
-                field, "com.fasterxml.jackson.annotation.JsonProperty", "value");
-        if (jsonProperty != null && !jsonProperty.isBlank()) {
-            return jsonProperty;
-        }
         return field.getName();
     }
 
     private static boolean hasIgnoredJsonField(Field field) {
         JsonIgnore ignored = field.getAnnotation(JsonIgnore.class);
         return ignored != null && ignored.ignoreWrite();
-    }
-
-    private static boolean hasAnnotation(Field field, String annotationType) {
-        for (Annotation annotation : field.getDeclaredAnnotations()) {
-            if (annotation.annotationType().getName().equals(annotationType)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static String annotationStringValue(Field field, String annotationType, String attribute) {
-        for (Annotation annotation : field.getDeclaredAnnotations()) {
-            if (!annotation.annotationType().getName().equals(annotationType)) {
-                continue;
-            }
-            try {
-                return String.valueOf(annotation.annotationType().getMethod(attribute).invoke(annotation));
-            } catch (ReflectiveOperationException ignored) {
-                return null;
-            }
-        }
-        return null;
     }
 
     private static boolean isSimpleValue(Class<?> type) {

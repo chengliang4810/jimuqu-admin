@@ -1,6 +1,5 @@
 package com.jimuqu.system.domain.bo;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.jimuqu.common.core.constant.RegexConstants;
 import com.jimuqu.common.core.validate.group.AddGroup;
 import com.jimuqu.common.core.validate.group.UpdateGroup;
@@ -88,7 +87,7 @@ public class SysMenuBo extends BoBaseEntity {
     /**
      * 权限标识
      */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonProperty(include = JsonProperty.Include.NON_NULL)
     @Length(min = 0, max = 100, message = "权限标识长度不能超过{max}个字符")
     @Pattern(value = RegexConstants.PERMISSION_STRING, message = "权限标识必须符合 tool:build:list 格式")
     private String perms;

@@ -19,6 +19,9 @@ import org.noear.solon.annotation.Body;
 import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Mapping;
 import org.noear.solon.core.handle.MethodType;
+import org.noear.solon.core.event.EventBus;
+import org.noear.solon.core.event.EventListener;
+import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.math.BigDecimal;
 import java.net.ServerSocket;
@@ -27,6 +30,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.nio.channels.AsynchronousChannelGroup;
+import java.nio.channels.spi.AsynchronousChannelProvider;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -38,13 +43,18 @@ class ForyJsonHttpTest {
     private static int port;
     private static RsaKeyPair keyPair;
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
+    private static AsynchronousChannelGroup channelGroup;
+    private static final EventListener<ServerOptions> CHANNEL_OBSERVER = options -> channelGroup = options.group();
 
     @BeforeAll
     static void startServer() throws Exception {
         try (ServerSocket socket = new ServerSocket(0)) {
             port = socket.getLocalPort();
         }
-        Solon.start(ForyJsonHttpTest.class, new String[]{"--server.port=" + port}, app -> {
+        EventBus.subscribe(ServerOptions.class, 100, CHANNEL_OBSERVER);
+        Solon.start(ForyJsonHttpTest.class, new String[]{"--server.port=" + port,
+                "--server.http.useJdkAio=true",
+                "--solon.config.load=config/common-web.yml"}, app -> {
             app.enableScanning(false);
             app.router().add("/json-test", TestController.class);
             app.router().filter(new GlobalExceptionFilter());
@@ -60,7 +70,20 @@ class ForyJsonHttpTest {
 
     @AfterAll
     static void stopServer() {
+        CLIENT.close();
         Solon.stopBlock(false, 0);
+        EventBus.unsubscribe(CHANNEL_OBSERVER);
+    }
+
+    @Test
+    void usesJdkAioAndKeepsQueryPriorityPostConnectionsReusable() throws Exception {
+        assertNotNull(channelGroup);
+        assertSame(AsynchronousChannelProvider.provider(), channelGroup.provider());
+        for (int i = 0; i < 100; i++) {
+            var response = post("/param?id=4", "{\"id\":5}", "application/json");
+            assertEquals(200, response.statusCode());
+            assertEquals(4, JsonUtil.toMap(response.body()).get("id"));
+        }
     }
 
     @Test
@@ -76,11 +99,22 @@ class ForyJsonHttpTest {
         assertEquals("350000000000000001", data.get("userId"));
         assertEquals("138****5678", data.get("phoneNumber"));
         assertEquals("12345678901234567890.123400", data.get("amount"));
-        assertInstanceOf(Number.class, data.get("createdAt"));
+        assertEquals("2026-10-20 12:30:00", data.get("createdAt"));
         assertTrue(data.containsKey("absent"));
         assertNull(data.get("absent"));
         assertFalse(data.containsKey("password"));
         assertFalse(data.containsKey("id"));
+    }
+
+    @Test
+    void formatsNestedDatesThroughTheConfiguredHttpSerializer() throws Exception {
+        var response = CLIENT.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
+                        + "/json-test/dates")).timeout(Duration.ofSeconds(10)).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        Map<?, ?> body = JsonUtil.toObject(response.body(), Map.class);
+        Map<?, ?> data = (Map<?, ?>) body.get("data");
+        assertEquals("1970-01-01 08:00:00", data.get("date"));
+        assertEquals(List.of("1970-01-01 08:00:00"), data.get("nested"));
     }
 
     @Test
@@ -133,6 +167,11 @@ class ForyJsonHttpTest {
 
     @Controller
     public static class TestController {
+        @Mapping("/dates")
+        public R<Map<String, Object>> dates() {
+            return R.ok(Map.of("date", new Date(0), "nested", List.of(new Date(0))));
+        }
+
         @Mapping(value = "/echo", method = MethodType.POST)
         public R<Payload> echo(@Body Payload value) {
             return R.ok(value);

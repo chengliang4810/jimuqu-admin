@@ -30,6 +30,8 @@ public final class ForyJsonEntityConverter extends AbstractStringEntityConverter
                                  LazyReference bodyRef) throws Throwable {
         if (param.spec().isRequiredPath() || param.spec().isRequiredCookie() || param.spec().isRequiredHeader()
                 || !param.spec().isRequiredBody() && ctx.paramMap().containsKey(param.spec().getName())) {
+            // 查询参数优先，但仍需消费 JSON body，否则 FeatHTTP 会关闭含未读请求体的连接。
+            ctx.bodyNew();
             return super.changeValue(ctx, param, index, type, bodyRef);
         }
         Object body = bodyRef.get();
