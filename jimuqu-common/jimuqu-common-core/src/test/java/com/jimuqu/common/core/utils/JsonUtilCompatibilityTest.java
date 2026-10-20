@@ -19,6 +19,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class JsonUtilCompatibilityTest {
     @Test
+    void acceptsHutoolTypeReferenceDirectlyForFileMetadataAndNestedValues() {
+        Map<String, String> metadata = JsonUtil.toObject("{\"content-type\":\"text/plain\"}",
+                new TypeReference<Map<String, String>>() {});
+        assertEquals(Map.of("content-type", "text/plain"), metadata);
+        Map<String, List<Long>> nested = JsonUtil.toObject("{\"ids\":[1,350000000000000001]}",
+                new TypeReference<Map<String, List<Long>>>() {});
+        assertEquals(List.of(1L, 350_000_000_000_000_001L), nested.get("ids"));
+    }
+
+    @Test
     void preservesTinyNonzeroDecimalsWhenOmittingDefaultValues() {
         DefaultValues value = new DefaultValues();
         value.amount = new BigDecimal("1e-1000");

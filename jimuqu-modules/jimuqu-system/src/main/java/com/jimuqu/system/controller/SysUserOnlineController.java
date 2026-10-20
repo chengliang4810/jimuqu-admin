@@ -48,8 +48,7 @@ public class SysUserOnlineController extends BaseController {
     @Get
     @Mapping
     public Page<SysUserOnlineVo> currentUserDevices() {
-        String loginId = StpUtil.getLoginIdAsString();
-        List<SysUserOnlineVo> rows = newestFirst(StpUtil.getTokenValueListByLoginId(loginId).stream()
+        List<SysUserOnlineVo> rows = newestFirst(LoginHelper.getTokenValuesForCurrentUser().stream()
                 .map(this::toOnlineVo)
                 .filter(Objects::nonNull)
                 .toList());
@@ -77,7 +76,7 @@ public class SysUserOnlineController extends BaseController {
     @Log(title = "在线设备", businessType = BusinessType.FORCE)
     @NoRepeatSubmit
     public R<Void> removeMyself(String tokenId) {
-        if (ownsToken(StpUtil.getTokenValueListByLoginId(StpUtil.getLoginIdAsString()), tokenId)) {
+        if (ownsToken(LoginHelper.getTokenValuesForCurrentUser(), tokenId)) {
             kickout(tokenId);
         }
         return R.ok();

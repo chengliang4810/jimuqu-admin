@@ -3,6 +3,7 @@ package com.jimuqu.system.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.xbatis.core.sql.executor.chain.QueryChain;
 import com.jimuqu.common.core.enums.UserType;
+import com.jimuqu.common.satoken.utils.LoginHelper;
 import com.jimuqu.system.domain.SysUserRole;
 import com.jimuqu.system.mapper.SysUserRoleMapper;
 import lombok.RequiredArgsConstructor;
@@ -47,10 +48,12 @@ public class OnlineUserSessionCleaner {
     private void cleanUsers(Collection<Long> userIds) {
         for (Long userId : userIds) {
             for (UserType userType : UserType.values()) {
-                try {
-                    StpUtil.logout(userType.getUserType() + ":" + userId);
-                } catch (RuntimeException ex) {
-                    log.warn("清理用户在线会话失败，userId={}, type={}", userId, userType.getUserType(), ex);
+                for (String loginId : LoginHelper.getLoginIds(userType.getUserType(), userId)) {
+                    try {
+                        StpUtil.logout(loginId);
+                    } catch (RuntimeException ex) {
+                        log.warn("清理用户在线会话失败，userId={}, type={}", userId, userType.getUserType(), ex);
+                    }
                 }
             }
         }

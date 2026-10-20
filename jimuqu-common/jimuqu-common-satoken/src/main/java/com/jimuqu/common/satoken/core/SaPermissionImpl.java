@@ -85,6 +85,9 @@ public class SaPermissionImpl implements StpInterface {
         }
         String value = loginId.toString();
         int separatorIndex = value.indexOf(':');
+        if (separatorIndex < 0) {
+            separatorIndex = value.lastIndexOf('_');
+        }
         if (separatorIndex < 0 || separatorIndex == value.length() - 1) {
             throw new ServiceException("登录ID格式错误");
         }
@@ -100,7 +103,8 @@ public class SaPermissionImpl implements StpInterface {
             return false;
         }
         try {
-            return Objects.equals(loginUser.getLoginId(), loginId);
+            return Objects.equals(loginUser.getLoginId(), loginId)
+                    || Objects.equals(loginUser.getUserType() + ":" + loginUser.getUserId(), loginId);
         } catch (RuntimeException exception) {
             return false;
         }

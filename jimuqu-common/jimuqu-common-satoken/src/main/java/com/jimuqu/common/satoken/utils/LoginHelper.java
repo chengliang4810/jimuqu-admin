@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import cn.hutool.core.util.ObjectUtil;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.function.Supplier;
 
 /**
@@ -197,6 +199,23 @@ public class LoginHelper {
 
     public static boolean isLogin() {
         return StpUtil.isLogin();
+    }
+
+    /** 新登录使用下划线；旧 ID 仅用于读取和清理升级前尚未过期的会话。 */
+    public static List<String> getLoginIds(String userType, Long userId) {
+        return List.of(userType + "_" + userId, userType + ":" + userId);
+    }
+
+    public static List<String> getTokenValuesForCurrentUser() {
+        LoginUser user = getLoginUser();
+        if (user == null) {
+            return List.of();
+        }
+        LinkedHashSet<String> tokens = new LinkedHashSet<>();
+        for (String loginId : getLoginIds(user.getUserType(), user.getUserId())) {
+            tokens.addAll(StpUtil.getTokenValueListByLoginId(loginId));
+        }
+        return List.copyOf(tokens);
     }
 
     public static <T> T getStorageIfAbsentSet(String key, Supplier<T> handle) {

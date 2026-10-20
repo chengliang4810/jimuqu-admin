@@ -7,7 +7,8 @@ import com.jimuqu.system.domain.vo.CacheListInfoVo;
 import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Get;
 import org.noear.solon.annotation.Mapping;
-import org.redisson.api.Node;
+import org.redisson.api.redisnode.RedisNode;
+import org.redisson.api.redisnode.RedisNodes;
 import org.redisson.api.RedissonClient;
 
 import java.util.ArrayList;
@@ -28,10 +29,9 @@ public class CacheController extends BaseController {
     @SaCheckPermission("monitor:cache:list")
     public CacheListInfoVo getInfo() {
         RedissonClient client = RedisUtils.getClient();
-        Node node = client.getNodesGroup().getNodes().stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("Redis 节点不可用"));
-        Map<String, String> rawInfo = node.info(Node.InfoSection.ALL);
-        Map<String, String> commandInfo = node.info(Node.InfoSection.COMMANDSTATS);
+        RedisNode node = monitoringNode(client);
+        Map<String, String> rawInfo = node.info(RedisNode.InfoSection.ALL);
+        Map<String, String> commandInfo = node.info(RedisNode.InfoSection.COMMANDSTATS);
         Properties info = new Properties();
         info.putAll(rawInfo);
         List<Map<String, String>> commandStats = new ArrayList<>();
@@ -46,6 +46,20 @@ public class CacheController extends BaseController {
         result.setDbSize(client.getKeys().count());
         result.setCommandStats(commandStats);
         return result;
+    }
+
+    static RedisNode monitoringNode(RedissonClient client) {
+        if (client.getConfig().isSingleConfig()) {
+            return client.getRedisNodes(RedisNodes.SINGLE).getInstance();
+        }
+        if (client.getConfig().isClusterConfig()) {
+            return client.getRedisNodes(RedisNodes.CLUSTER).getMasters().stream().findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Redis 节点不可用"));
+        }
+        if (client.getConfig().isSentinelConfig()) {
+            return client.getRedisNodes(RedisNodes.SENTINEL_MASTER_SLAVE).getMaster();
+        }
+        return client.getRedisNodes(RedisNodes.MASTER_SLAVE).getMaster();
     }
 
     private String extractCalls(String value) {

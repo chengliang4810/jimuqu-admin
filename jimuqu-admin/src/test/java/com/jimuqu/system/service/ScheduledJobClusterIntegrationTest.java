@@ -449,8 +449,10 @@ public class ScheduledJobClusterIntegrationTest {
             assertTrue(initialLeaseUntil != null && renewedLeaseUntil != null
                             && renewedLeaseUntil > initialLeaseUntil,
                     "存活节点执行超过初始租约后必须持续刷新 PENDING 租约");
+            // 探针计数由同一子 JVM 的全部测试任务共享，以增量断言隔离测试执行顺序。
+            int takeoverExecutionsBefore = takeoverNode.state(jobName).executions();
             takeoverNode.fire(jobName);
-            assertEquals(0, takeoverNode.state(jobName).executions(),
+            assertEquals(takeoverExecutionsBefore, takeoverNode.state(jobName).executions(),
                     "owner 心跳仍存活时，其他节点不得接管同一周期");
 
             claimingNode.crash();
@@ -461,7 +463,7 @@ public class ScheduledJobClusterIntegrationTest {
             takeoverNode.fire(jobName);
             ClusterNode survivor = takeoverNode;
             await("租约到期后存活节点必须接管并完成原周期",
-                    () -> survivor.state(jobName).executions() == 1,
+                    () -> survivor.state(jobName).executions() == takeoverExecutionsBefore + 1,
                     STATE_TIMEOUT);
             await("租约接管必须完成日志与 Redis 终态持久化",
                     () -> QueryChain.of(logMapper)

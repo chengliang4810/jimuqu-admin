@@ -21,8 +21,41 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class SaPermissionImplTest {
+    @Test
+    void readsLegacySessionAndListsBothLoginIdFormatsWithTheNewDefaultValidation() {
+        LoginUser user = user(8106L, UserType.APP_USER, Set.of("app:profile:read"), Set.of("app_user"));
+        Boolean allowColon = SaManager.getConfig().getAllowLoginIdColon();
+        SaTokenContextMockUtil.setMockContext();
+        try {
+            // 模拟升级前已持久化的会话，随后恢复新版默认校验验证读取路径。
+            SaManager.getConfig().setAllowLoginIdColon(true);
+            StpUtil.login("app_user:8106");
+            StpUtil.getTokenSession().set(LoginHelper.LOGIN_USER_KEY, user);
+            String legacyToken = StpUtil.getTokenValue();
+            SaManager.getConfig().setAllowLoginIdColon(false);
+            assertEquals("app_user:8106", StpUtil.getLoginIdAsString());
+            assertEquals(Set.of("app:profile:read"), Set.copyOf(
+                    permissions.getPermissionList("app_user:8106", "login")));
+            assertTrue(LoginHelper.getTokenValuesForCurrentUser().contains(legacyToken));
+            LoginHelper.login(user, new SaLoginParameter());
+            assertEquals("app_user_8106", StpUtil.getLoginIdAsString());
+            assertTrue(LoginHelper.getTokenValuesForCurrentUser().contains(legacyToken));
+            assertFalse(SaManager.getConfig().getAllowLoginIdColon());
+            assertEquals(Set.of("app:profile:read"), Set.copyOf(
+                    permissions.getPermissionList(user.getLoginId(), "login")));
+        } finally {
+            for (String id : LoginHelper.getLoginIds(user.getUserType(), user.getUserId())) {
+                StpUtil.logout(id);
+            }
+            SaManager.getConfig().setAllowLoginIdColon(allowColon);
+            SaTokenContextMockUtil.clearContext();
+        }
+    }
+
 
     private static SaTokenContext originalContext;
     private final TestPermissionProvider provider = new TestPermissionProvider();

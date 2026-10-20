@@ -69,6 +69,9 @@ public class JsonUtil {
         if (StringUtil.isEmpty(jsonString)) {
             return null;
         }
+        if (type instanceof cn.hutool.core.lang.TypeReference<?> reference) {
+            type = reference.getType();
+        }
         try {
             return JSON.fromJson(jsonString, TypeRef.of(type == null ? Object.class : type));
         } catch (org.apache.fory.json.ForyJsonException e) {

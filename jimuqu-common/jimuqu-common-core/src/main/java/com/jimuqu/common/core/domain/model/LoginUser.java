@@ -144,7 +144,8 @@ public class LoginUser implements Serializable {
         if (userId == null) {
             throw new IllegalArgumentException("用户ID不能为空");
         }
-        return userType + ":" + userId;
+        // Sa-Token 1.46 起禁止登录 ID 含冒号。
+        return userType + "_" + userId;
     }
 
 }

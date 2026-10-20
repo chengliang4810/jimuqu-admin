@@ -610,7 +610,7 @@ public class ScheduledJobInterceptor implements JobInterceptor {
         Number delay = client.getScript(StringCodec.INSTANCE).eval(
                 RScript.Mode.READ_ONLY,
                 PENDING_RETRY_DELAY_SCRIPT,
-                RScript.ReturnType.INTEGER,
+                RScript.ReturnType.LONG,
                 List.of(keys.pending(), keys.states()));
         return Math.max(0L, delay.longValue());
     }
@@ -810,7 +810,7 @@ public class ScheduledJobInterceptor implements JobInterceptor {
         Number renewed = client.getScript(StringCodec.INSTANCE).eval(
                 RScript.Mode.READ_WRITE,
                 RENEW_SCHEDULED_SCRIPT,
-                RScript.ReturnType.INTEGER,
+                RScript.ReturnType.LONG,
                 List.of(claim.keys().pending(), claim.keys().states()),
                 String.valueOf(claim.cycleId()), claim.token(),
                 String.valueOf(leaseMs),
@@ -956,7 +956,7 @@ public class ScheduledJobInterceptor implements JobInterceptor {
         Number result = client.getScript(StringCodec.INSTANCE).eval(
                 RScript.Mode.READ_WRITE,
                 CLAIM_RECOVERY_SCRIPT,
-                RScript.ReturnType.INTEGER,
+                RScript.ReturnType.LONG,
                 List.of(
                         keys.pending(), keys.states(),
                         keys.completed(), scheduledKeys.anchor(),
@@ -1058,7 +1058,7 @@ public class ScheduledJobInterceptor implements JobInterceptor {
             Number result = client.getScript(StringCodec.INSTANCE).eval(
                     RScript.Mode.READ_WRITE,
                     CLAIM_SCHEDULED_SCRIPT,
-                    RScript.ReturnType.INTEGER,
+                    RScript.ReturnType.LONG,
                     List.of(
                             keys.pending(), keys.states(),
                             keys.completed(), keys.anchor(),
@@ -1098,7 +1098,7 @@ public class ScheduledJobInterceptor implements JobInterceptor {
         Object result = client.getScript(StringCodec.INSTANCE).eval(
                 RScript.Mode.READ_WRITE,
                 FIND_EXPIRED_SCRIPT,
-                RScript.ReturnType.MULTI,
+                RScript.ReturnType.LIST,
                 List.of(keys.pending(), keys.states(), keys.completed()),
                 String.valueOf(claimTime),
                 String.valueOf(GENERATION_STATE_TTL_MS));
@@ -1113,7 +1113,7 @@ public class ScheduledJobInterceptor implements JobInterceptor {
                     StringCodec.INSTANCE).eval(
                     RScript.Mode.READ_WRITE,
                     RECLAIM_EXPIRED_SCRIPT,
-                    RScript.ReturnType.INTEGER,
+                    RScript.ReturnType.LONG,
                     List.of(keys.pending(), keys.states()),
                     String.valueOf(cycleId),
                     String.valueOf(claimTime), token,
@@ -1170,7 +1170,7 @@ public class ScheduledJobInterceptor implements JobInterceptor {
         Number completed = client.getScript(StringCodec.INSTANCE).eval(
                 RScript.Mode.READ_WRITE,
                 COMPLETE_SCHEDULED_SCRIPT,
-                RScript.ReturnType.INTEGER,
+                RScript.ReturnType.LONG,
                 List.of(
                         keys.pending(), keys.states(), keys.completed(),
                         keys.anchor(), keys.waterline(),
@@ -1193,7 +1193,7 @@ public class ScheduledJobInterceptor implements JobInterceptor {
     private static long redisTimeMillis(
             RedissonClient client, String markerKey) {
         Number value = client.getScript(StringCodec.INSTANCE).eval(
-                RScript.Mode.READ_WRITE, REDIS_TIME_SCRIPT, RScript.ReturnType.INTEGER,
+                RScript.Mode.READ_WRITE, REDIS_TIME_SCRIPT, RScript.ReturnType.LONG,
                 List.of(markerKey));
         return value.longValue();
     }

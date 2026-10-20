@@ -9,6 +9,7 @@ import com.jimuqu.common.core.sensitive.enums.SensitiveType;
 import com.jimuqu.common.core.utils.JsonUtil;
 import com.jimuqu.common.web.config.WebConfig;
 import com.jimuqu.common.web.filter.GlobalExceptionFilter;
+import com.jimuqu.common.web.filter.FeatHttpEmptyBodyFilter;
 import org.apache.fory.json.annotation.JsonIgnore;
 import org.apache.fory.json.annotation.JsonProperty;
 import org.junit.jupiter.api.AfterAll;
@@ -57,6 +58,7 @@ class ForyJsonHttpTest {
                 "--solon.config.load=config/common-web.yml"}, app -> {
             app.enableScanning(false);
             app.router().add("/json-test", TestController.class);
+            app.router().filter(new FeatHttpEmptyBodyFilter());
             app.router().filter(new GlobalExceptionFilter());
         });
         ForyJsonStringSerializer serializer = Solon.context().getBean(ForyJsonStringSerializer.class);
@@ -73,6 +75,54 @@ class ForyJsonHttpTest {
         CLIENT.close();
         Solon.stopBlock(false, 0);
         EventBus.unsubscribe(CHANNEL_OBSERVER);
+    }
+
+    @Test
+    void acceptsExplicitZeroLengthBodiesWithoutWaitingForTheConnectionToClose() throws Exception {
+        for (String method : List.of("GET", "POST", "PUT", "DELETE", "GET_WITHOUT_BODY_PUBLISHER")) {
+            var builder = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
+                        + "/json-test/read-empty-body")).timeout(Duration.ofSeconds(5));
+            var request = "GET_WITHOUT_BODY_PUBLISHER".equals(method)
+                    ? builder.GET().build() : builder.method(method, HttpRequest.BodyPublishers.noBody()).build();
+            var response = CLIENT.send(request,
+                HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, response.statusCode());
+            Map<?, ?> data = (Map<?, ?>) JsonUtil.toMap(response.body()).get("data");
+            assertEquals("", data.get("body"));
+        }
+        var missing = CLIENT.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
+                        + "/missing-empty-body")).timeout(Duration.ofSeconds(5))
+                        .method("GET", HttpRequest.BodyPublishers.noBody()).build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(404, JsonUtil.toMap(missing.body()).get("code"));
+    }
+
+    @Test
+    void parsesEmptyAndNonemptyFormsWhileKeepingQueryParameters() throws Exception {
+        for (String body : List.of("", "filter=body+value")) {
+            var response = CLIENT.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
+                            + "/json-test/form?query=kept")).timeout(Duration.ofSeconds(5))
+                            .header("Content-Type", "application/x-www-form-urlencoded")
+                            .POST(HttpRequest.BodyPublishers.ofString(body)).build(),
+                    HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, response.statusCode());
+            Map<?, ?> data = (Map<?, ?>) JsonUtil.toMap(response.body()).get("data");
+            assertEquals("kept", data.get("query"));
+            assertEquals(body.isEmpty() ? "" : "body value", data.get("filter"));
+        }
+    }
+
+    @Test
+    void retainsChunkedJsonBodiesWhenNoContentLengthIsDeclared() throws Exception {
+        var publisher = HttpRequest.BodyPublishers.fromPublisher(
+                HttpRequest.BodyPublishers.ofString("{\"userId\":8}"));
+        var response = CLIENT.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port
+                        + "/json-test/echo")).timeout(Duration.ofSeconds(5))
+                        .header("Content-Type", "application/json").POST(publisher).build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, response.statusCode());
+        Map<?, ?> data = (Map<?, ?>) JsonUtil.toMap(response.body()).get("data");
+        assertEquals(8, data.get("userId"));
     }
 
     @Test
@@ -167,6 +217,19 @@ class ForyJsonHttpTest {
 
     @Controller
     public static class TestController {
+        @Mapping("/form")
+        public R<Map<String, String>> form(org.noear.solon.core.handle.Context ctx) throws Exception {
+            String query = ctx.param("query");
+            String filter = ctx.paramOrDefault("filter", "");
+            ctx.bodyNew();
+            return R.ok(Map.of("query", query, "filter", filter));
+        }
+
+        @Mapping("/read-empty-body")
+        public R<Map<String, String>> readEmptyBody(org.noear.solon.core.handle.Context ctx) throws Exception {
+            return R.ok(Map.of("body", ctx.bodyNew()));
+        }
+
         @Mapping("/dates")
         public R<Map<String, Object>> dates() {
             return R.ok(Map.of("date", new Date(0), "nested", List.of(new Date(0))));

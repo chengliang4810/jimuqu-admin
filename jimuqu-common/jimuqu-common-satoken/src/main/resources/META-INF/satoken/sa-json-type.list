@@ -1,0 +1,4 @@
+# 登录会话中实际持久化的业务类型；保持 Sa-Token 1.46 的类型白名单检查。
+com.jimuqu.common.core.domain.model.LoginUser
+com.jimuqu.common.core.domain.dto.RoleDTO
+com.jimuqu.common.core.domain.dto.PostDTO
